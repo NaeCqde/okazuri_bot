@@ -1,0 +1,14 @@
+name = "okazuri-bot"
+main = "src/index.ts"
+compatibility_date = "2024-01-12"
+compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
+
+[vars]
+APPLICATION_ID = "1241014631024037898"
+PUBLIC_KEY = "186c8372ae901d9f9e067177022204f6d3e951b87cde320cdb2dd74926d63c1b"
+BOT_TOKEN = "MTI0MTAxNDYzMTAyNDAzNzg5OA.GMNmDH.fLPFDtShQokcxppBqtNBCuPGbUt-nJIiWIP7Cg"
+HERMES_API_URL = "http://hermes-api.nae.quest/api"
+ERROR_LOG_WEBHOOK = "https://discord.com/api/webhooks/1243841272045637643/Jw_15fhAgJRR2vmdxOPwLap3ogk-LXdkVW0fMCuIaZ3L-8opNbX9j-wNYuj9k3HN-oQs"
