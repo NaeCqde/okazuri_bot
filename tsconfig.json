@@ -5,7 +5,7 @@
         "outDir": "./build",
         "target": "ESNext",
         "lib": ["ESNext", "WebWorker"],
-        "module": "CommonJS",
+        "module": "ESNext",
         "moduleResolution": "node",
         "types": ["@cloudflare/workers-types", "./src/index.d.ts"],
         "resolveJsonModule": true,
