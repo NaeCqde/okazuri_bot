@@ -30,7 +30,7 @@ export const searchThisCommand: Command = {
         }, {} as Record<Locale, string>),
         default_member_permissions: new Permissions(["ViewChannel"]).compute(),
         type: ApplicationCommandType.Message,
-        nsfw: true,
+        nsfw: false,
         integration_types: [
             ApplicationIntegrationType.GuildInstall,
             ApplicationIntegrationType.UserInstall,

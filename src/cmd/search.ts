@@ -30,7 +30,7 @@ export const searchCommand: Command = {
             return data;
         }, {} as Record<Locale, string>),
         type: ApplicationCommandType.ChatInput,
-        nsfw: true,
+        nsfw: false,
         integration_types: [
             ApplicationIntegrationType.GuildInstall,
             ApplicationIntegrationType.UserInstall,
