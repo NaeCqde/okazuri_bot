@@ -99,7 +99,7 @@ export const WEBSITES: Website[] = [
     {
         name: "HentaiOMG",
         isLegal: false,
-        pattern: /^https:\/\/hentaiomg\.com\/[a-z]+\/\d+.*/i,
+        pattern: /^https:\/\/hentaiomg\.com\/[^\s]+/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
