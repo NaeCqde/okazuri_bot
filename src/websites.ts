@@ -92,7 +92,7 @@ export const WEBSITES: Website[] = [
     {
         name: "R18Best",
         isLegal: false,
-        pattern: /^https:\/\/r18\.best\/[a-z]+\/\d+.*/i,
+        pattern: /^https:\/\/r18\.best\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
@@ -111,9 +111,9 @@ export const WEBSITES: Website[] = [
         clean: noClean,
     },
     {
-        name: "SukebeiNyaa",
+        name: "Sukebei",
         isLegal: false,
-        pattern: /^https:\/\/sukebei\.nyaa\.si\/view\/\d+.*/i,
+        pattern: /^https:\/\/sukebei\.nyaa\.si\/view\/(?:\d+|[a-zA-Z0-9]+).*/i,
         title: regexpTitleGetter(/<title>(?<title>.+) \| Sukebei \| Nyaa/, noClean),
         clean: noClean,
     },
