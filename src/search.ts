@@ -51,6 +51,7 @@ export async function search(query: string): Promise<SearchResult[]> {
 
         for (const result of results) {
             for (const website of WEBSITES) {
+                console.log(`${website.name}: ${website.pattern.exec(result.url)}`);
                 if (website.pattern.exec(result.url)) {
                     const url = await website.clean(result.url);
 
@@ -63,6 +64,7 @@ export async function search(query: string): Promise<SearchResult[]> {
                 }
             }
         }
+        console.log(...filteredResults.values());
 
         return [...filteredResults.values()];
     } else {
