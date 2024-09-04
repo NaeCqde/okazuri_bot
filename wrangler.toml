@@ -7,8 +7,8 @@ compatibility_flags = ["nodejs_compat"]
 mode = "smart"
 
 [vars]
-APPLICATION_ID = "1279716906688839711"
-PUBLIC_KEY = "afab84e384302cf3e563efd194f96d13b15613f26926bad395ce601bc68e54f2"
-BOT_TOKEN = "MTI3OTcxNjkwNjY4ODgzOTcxMQ.GrDfh-.IqZp_wbV8bfn0ojRGZE8yLOdeAQfeykioIjztQ"
+APPLICATION_ID = "1241014631024037898"
+PUBLIC_KEY = "186c8372ae901d9f9e067177022204f6d3e951b87cde320cdb2dd74926d63c1b"
+BOT_TOKEN = "MTI0MTAxNDYzMTAyNDAzNzg5OA.GMNmDH.fLPFDtShQokcxppBqtNBCuPGbUt-nJIiWIP7Cg"
 HERMES_API_URL = "https://hermes-api.nae.quest/api"
-ERROR_LOG_WEBHOOK = "https://discord.com/api/webhooks/1279738358297530388/lIzz9DUOb1LtEeG28SOOAxeIwJnWHUJxTHrFn_KrHhcmLHKk4LsGlhwK4C8j0rqrGlKN"
+ERROR_LOG_WEBHOOK = "https://discord.com/api/webhooks/1243841272045637643/Jw_15fhAgJRR2vmdxOPwLap3ogk-LXdkVW0fMCuIaZ3L-8opNbX9j-wNYuj9k3HN-oQs"
