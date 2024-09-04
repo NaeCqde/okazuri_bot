@@ -59,7 +59,6 @@ export async function google(query: string, start: number): Promise<GoogleSearch
                     }
                 }
             }
-
             return results;
         }
     }
