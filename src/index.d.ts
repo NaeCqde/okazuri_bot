@@ -3,7 +3,6 @@ interface Env {
     PUBLIC_KEY: string;
     BOT_TOKEN: string;
     HERMES_API_URL: string;
-    DB: D1Database;
 }
 
 interface SearchResult {

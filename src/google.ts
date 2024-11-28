@@ -1,4 +1,4 @@
-import { env } from "./envs";
+import { env } from "./env.js";
 
 export async function googleN(
     query: string,
@@ -28,7 +28,7 @@ export async function google(query: string, start: number): Promise<GoogleSearch
     query = encodeURIComponent(query);
 
     const resp = await fetch(
-        env.HERMES_API_URL + `/search?q=${query}&start=${start}` //&sourceid=chrome&ie=UTF-8
+        env.HERMES_API_URL + `?q=${query}&start=${start}` //&sourceid=chrome&ie=UTF-8
     );
 
     if (resp.status != 200) {
