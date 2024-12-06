@@ -2,7 +2,9 @@ interface Env {
     APPLICATION_ID: string;
     PUBLIC_KEY: string;
     BOT_TOKEN: string;
-    HERMES_API_URL: string;
+    GOOGLE_SEARCH_URL: string;
+
+    ERROR_LOG_WEBHOOK: string;
 }
 
 interface SearchResult {

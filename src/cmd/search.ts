@@ -50,6 +50,20 @@ export const searchCommand: Command = {
                 type: ApplicationCommandOptionType.String,
                 required: true,
             },
+            {
+                name: "to_magazine",
+                description: "Find a magazine that contains this comic instead",
+                description_localizations: Object.values(Locale).reduce((data, key) => {
+                    if (Locale.Japanese === key) {
+                        data[key] = "代わりにこのコミックを含む雑誌を探します";
+                    } else {
+                        data[key] = "Find a magazine that contains this comic instead";
+                    }
+                    return data;
+                }, {} as Record<Locale, string>),
+                type: ApplicationCommandOptionType.Boolean,
+                required: false,
+            },
         ],
     },
     handler: async (ctx: Context): Promise<APIInteractionResponse> => {
