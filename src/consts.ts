@@ -9,8 +9,9 @@ export const MAX_MESSAGE_LENGTH: number = 2000;
 export const URL_PATTERN: RegExp = /https?:\/\/(?:[^ \n\t\.]+\.)+\w+\/[^ \n\t]+/g;
 
 export const ERROR_MESSAGE: string = `エラーが発生しました
-正しく実行しているのに何度もエラーが発生する場合は @kusony のDMへ
-「オカズリBOTの検索でエラーが発生した」とDiscordの画面全体が収まっているスクリーンショットを送信してください`;
+エラー通知チャンネルへ検索クエリを送信しました。
+今後の改善に努めますので性癖バレは許してください。
+ごめんなさい`;
 
 export const ERROR_RESPONSE: APIInteractionResponse = {
     type: InteractionResponseType.ChannelMessageWithSource,
