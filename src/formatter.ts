@@ -68,16 +68,17 @@ export function splitText(lines: string[], maxLength: number = 2000): string[] {
 }
 
 export function createErrorLog(
-    source: APIChatInputApplicationCommandInteraction | APIMessageApplicationCommandInteraction,
+    queries: string[],
+    command: string,
+    isMagazine: boolean,
     e: Error,
-    command: string
 ): string {
-    return `サーバーID: 　\`${source.guild_id || "DM"}\`
-チャンネルID: \`${source.channel.id}\`
-
-ユーザーID: 　\`${(source.member ? source.member.user : source.user)?.id}\`
-コマンド: 　　\`/${command}\`
-
+    return `コマンド: \`/${command}\`
+雑誌か:   \`/${isMagazine ? "はい" : "いいえ"}\`
+検索クエリ:
+\`\`\`
+${queries.join("\n")}
+\`\`\`
 エラー内容:
 \`\`\`
 ${(e as any as Error).stack}
