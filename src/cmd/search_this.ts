@@ -66,7 +66,7 @@ export const searchThisCommand: Command = {
                                 "Content-Type": "application/json",
                             },
                             body: JSON.stringify({
-                                content: createErrorLog(source, e as Error, "search_this"),
+                                content: createErrorLog(urls, "search_this", false, e as Error),
                             }),
                         });
 
