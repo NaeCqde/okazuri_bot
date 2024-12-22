@@ -92,7 +92,7 @@ export const searchCommand: Command = {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            content: createErrorLog(source, e as Error, "search"),
+                            content: createErrorLog(urls, "search", options[1].value, e as Error),
                         }),
                     });
 
