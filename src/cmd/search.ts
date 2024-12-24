@@ -74,11 +74,11 @@ export const searchCommand: Command = {
                   APIApplicationCommandInteractionDataStringOption,
                   APIApplicationCommandInteractionDataBooleanOption
               ]
+            | [APIApplicationCommandInteractionDataStringOption]
             | undefined = source.data.options as any;
 
-        console.log(options);
-
         if (options && options.length && options[0].value.length) {
+            const toMagazine: boolean = options.length === 2 ? options[1].value : false;
             const query: string = options[0].value;
 
             ctx.defer(async (ctx: Context): Promise<void> => {
@@ -100,12 +100,7 @@ export const searchCommand: Command = {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            content: createErrorLog(
-                                [query],
-                                "search",
-                                options[1].value,
-                                e as Error
-                            ),
+                            content: createErrorLog([query], "search", toMagazine, e as Error),
                         }),
                     });
 
