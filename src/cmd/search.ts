@@ -1,4 +1,5 @@
 import {
+    APIApplicationCommandInteractionDataBooleanOption,
     APIApplicationCommandInteractionDataStringOption,
     APIChatInputApplicationCommandInteraction,
     APIInteractionResponse,
@@ -67,17 +68,24 @@ export const searchCommand: Command = {
         ],
     },
     handler: async (ctx: Context): Promise<APIInteractionResponse> => {
-        const source: APIChatInputApplicationCommandInteraction = ctx.interaction
-            .structure as APIChatInputApplicationCommandInteraction;
-        const options: APIApplicationCommandInteractionDataStringOption[] | undefined = source.data
-            .options as APIApplicationCommandInteractionDataStringOption[] | undefined;
+        const source: APIChatInputApplicationCommandInteraction = ctx.interaction.structure as any;
+        const options:
+            | [
+                  APIApplicationCommandInteractionDataStringOption,
+                  APIApplicationCommandInteractionDataBooleanOption
+              ]
+            | undefined = source.data.options as any;
+
+        console.log(options);
 
         if (options && options.length && options[0].value.length) {
+            const query: string = options[0].value;
+
             ctx.defer(async (ctx: Context): Promise<void> => {
                 let result: SearchResultMap;
 
                 try {
-                    result = await searchMultiple([options[0].value]);
+                    result = await searchMultiple([query]);
                 } catch (e: any) {
                     await ctx.followup.reply({
                         content: ERROR_MESSAGE,
@@ -92,7 +100,12 @@ export const searchCommand: Command = {
                             "Content-Type": "application/json",
                         },
                         body: JSON.stringify({
-                            content: createErrorLog(urls, "search", options[1].value, e as Error),
+                            content: createErrorLog(
+                                [query],
+                                "search",
+                                options[1].value,
+                                e as Error
+                            ),
                         }),
                     });
 
