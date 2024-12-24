@@ -3,8 +3,9 @@ interface Env {
     PUBLIC_KEY: string;
     BOT_TOKEN: string;
     GOOGLE_SEARCH_URL: string;
-
     ERROR_LOG_WEBHOOK: string;
+
+    DB: D1Database;
 }
 
 interface SearchResult {

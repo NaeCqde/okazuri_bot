@@ -1,3 +1,4 @@
+// TODO
 import {
     APIInteractionResponse,
     APIMessage,
@@ -12,18 +13,18 @@ import {
     Permissions,
 } from "@discordcf/framework";
 
-import { ERROR_MESSAGE } from "../../consts.js";
-import { createErrorLog, getUrls, resultToText, splitText } from "../../formatter.js";
-import { searchMultiple } from "../../search.js";
+import { ERROR_MESSAGE } from "../consts.js";
+import { createErrorLog, getUrls, resultToText, splitText } from "../formatter.js";
+import { searchMultiple, titleByUrl } from "../search.js";
 
-export const searchThisCommand: Command = {
+export const searchThisOptionCommand: Command = {
     command: {
-        name: "Search this",
+        name: "Search this with option",
         name_localizations: Object.values(Locale).reduce((data, key) => {
             if (key === Locale.Japanese) {
-                data[key] = "それらを検索";
+                data[key] = "これらを設定付きで検索";
             } else {
-                data[key] = "Search this";
+                data[key] = "Search this with option";
             }
 
             return data;
@@ -48,10 +49,15 @@ export const searchThisCommand: Command = {
 
             if (urls.length) {
                 ctx.defer(async (ctx: Context): Promise<void> => {
+                    const queries: string[] = [];
                     let result: SearchResultMap;
 
                     try {
-                        result = await searchMultiple(urls);
+                        for (const url of urls) {
+                            queries.push(await titleByUrl(url));
+                        }
+
+                        result = await searchMultiple(queries);
                     } catch (e: any) {
                         await ctx.followup.reply({
                             content: ERROR_MESSAGE,
@@ -66,7 +72,7 @@ export const searchThisCommand: Command = {
                                 "Content-Type": "application/json",
                             },
                             body: JSON.stringify({
-                                content: createErrorLog(source, e as Error, "search_this"),
+                                content: createErrorLog(urls, "search_this", false, e as Error),
                             }),
                         });
 

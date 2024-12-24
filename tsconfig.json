@@ -7,7 +7,7 @@
         "lib": ["ESNext", "WebWorker"],
         "module": "ESNext",
         "moduleResolution": "node",
-        "types": ["@cloudflare/workers-types", "./src/index.d.ts"],
+        "types": ["@cloudflare/workers-types", "./src/type.d.ts"],
         "resolveJsonModule": true,
         "allowJs": true,
         "checkJs": false,

@@ -4,15 +4,11 @@ import { WEBSITES } from "./websites.js";
 export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
     const resultMap: SearchResultMap = {};
 
-    for (const q of queries) {
+    for (const q of new Set(queries)) {
         let results: SearchResult[] = [];
 
         try {
-            if (/^https?:\/\//.exec(q)) {
-                results = await searchByUrl(q);
-            } else {
-                results = await search(q);
-            }
+            results = await search(q);
         } catch (e: any) {
             if (
                 !["okazuri: Unsupported website", "okazuri: Title not found"].includes(
@@ -29,12 +25,12 @@ export async function searchMultiple(queries: string[]): Promise<SearchResultMap
     return resultMap;
 }
 
-export async function searchByUrl(url: string): Promise<SearchResult[]> {
+export async function titleByUrl(url: string): Promise<string> {
     for (const website of WEBSITES) {
         if (website.pattern.exec(url)) {
             const title: string = await website.title(url);
 
-            return await search(title);
+            return title;
         }
     }
 

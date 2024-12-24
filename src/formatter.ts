@@ -1,21 +1,24 @@
-import type {
-    APIChatInputApplicationCommandInteraction,
-    APIMessageApplicationCommandInteraction,
-} from "@discordcf/framework";
-
 import { URL_PATTERN } from "./consts.js";
 
 export function getUrls(content: string): string[] {
     return [...content.matchAll(URL_PATTERN)].map((el) => el[0]);
 }
 
-export function resultToText(resultMap: SearchResultMap): string[] {
+export function resultToText(
+    resultMap: SearchResultMap,
+    originalQuery: string[] | undefined = undefined
+): string[] {
     let lines: string[] = [];
+    const results = Object.entries(resultMap);
 
-    for (const [query, result] of Object.entries(resultMap)) {
+    for (let i: number = 0; results.length > i; i++) {
+        const [query, result] = results[i];
+        lines.push("## " + query);
+        if (originalQuery) {
+            lines.push("-# 元のクエリ：" + originalQuery[i]);
+        }
+
         if (result.length) {
-            lines.push("## " + query);
-
             const legal: string[] = result
                 .filter((r) => r.isLegal)
                 .map((r, i) => `${i + 1}. ${r.url}`);
@@ -32,7 +35,7 @@ export function resultToText(resultMap: SearchResultMap): string[] {
                 lines.push("### 違法：", ...leak);
             }
         } else {
-            lines.push("## " + query, "### 無し");
+            lines.push("### 無し");
         }
     }
 
@@ -71,11 +74,11 @@ export function createErrorLog(
     queries: string[],
     command: string,
     isMagazine: boolean,
-    e: Error,
+    e: Error
 ): string {
     return `コマンド: \`/${command}\`
 雑誌か:   \`/${isMagazine ? "はい" : "いいえ"}\`
-検索クエリ:
+入力:
 \`\`\`
 ${queries.join("\n")}
 \`\`\`

@@ -14,14 +14,14 @@ import {
 
 import { ERROR_MESSAGE } from "../consts.js";
 import { createErrorLog, getUrls, resultToText, splitText } from "../formatter.js";
-import { searchMultiple } from "../search.js";
+import { searchMultiple, titleByUrl } from "../search.js";
 
 export const searchThisCommand: Command = {
     command: {
         name: "Search this",
         name_localizations: Object.values(Locale).reduce((data, key) => {
             if (key === Locale.Japanese) {
-                data[key] = "それらを検索";
+                data[key] = "これらを検索";
             } else {
                 data[key] = "Search this";
             }
@@ -43,15 +43,19 @@ export const searchThisCommand: Command = {
 
         if (messages.length) {
             const msg: APIMessage = messages[0];
-
             const urls: string[] = getUrls(msg.content);
 
             if (urls.length) {
                 ctx.defer(async (ctx: Context): Promise<void> => {
+                    const queries: string[] = [];
                     let result: SearchResultMap;
 
                     try {
-                        result = await searchMultiple(urls);
+                        for (const url of urls) {
+                            queries.push(await titleByUrl(url));
+                        }
+
+                        result = await searchMultiple(queries);
                     } catch (e: any) {
                         await ctx.followup.reply({
                             content: ERROR_MESSAGE,
