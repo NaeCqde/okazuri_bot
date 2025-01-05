@@ -110,7 +110,6 @@ export const searchCommand: Command = {
             | undefined = source.data.options as any;
 
         if (options && options.length && options[0].value.length) {
-            const toMagazine: boolean = options.length === 2 ? options[1].value : false;
             const tempRewriteLevel = options.filter((o) => o.name === "focus_on_illegal");
             const tempToMagazine = options.filter((o) => o.name === "to_magazine");
 
