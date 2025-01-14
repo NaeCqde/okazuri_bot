@@ -27,9 +27,7 @@ export async function googleN(
 export async function google(query: string, start: number): Promise<GoogleSearchResult[]> {
     query = encodeURIComponent(query);
 
-    const resp = await fetch(
-        env.GOOGLE_SEARCH_URL + `?q=${query}&start=${start}` //&sourceid=chrome&ie=UTF-8
-    );
+    const resp = await fetch(env.OKAZURI_API_URL + `/search?q=${query}&start=${start}`);
 
     if (!resp.ok) {
         throw Error("okazuri: Status code error from google");

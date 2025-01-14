@@ -18,8 +18,6 @@
     "dependencies": {
         "@discordcf/framework": "^0.1.0",
         "drizzle-orm": "^0.38.3",
-        "kuroshiro": "^1.2.0",
-        "kuroshiro-analyzer-kuromoji": "^1.1.0",
         "soup": "^0.2.3"
     }
 }
