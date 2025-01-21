@@ -1,4 +1,4 @@
-import { env } from "./env.js";
+import { env } from './env.js';
 
 export async function googleN(
     query: string,
@@ -30,7 +30,7 @@ export async function google(query: string, start: number): Promise<GoogleSearch
     const resp = await fetch(env.OKAZURI_API_URL + `/search?q=${query}&start=${start}`);
 
     if (!resp.ok) {
-        throw Error("okazuri: Status code error from google");
+        throw Error('okazuri: Status code error from google');
     }
 
     return await resp.json();

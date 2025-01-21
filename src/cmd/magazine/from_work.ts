@@ -11,22 +11,22 @@ import {
     InteractionResponseType,
     Locale,
     MessageFlags,
-} from "@discordcf/framework";
+} from '@discordcf/framework';
 
-import { ERROR_MESSAGE, ERROR_RESPONSE } from "../../consts.js";
-import type { Number } from "../../db/schema.js";
-import { createErrorLog } from "../../formatter.js";
-import { toNumber } from "../../magazines.js";
+import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts.js';
+import type { Number } from '../../db/schema.js';
+import { createErrorLog } from '../../formatter.js';
+import { toNumber } from '../../magazines.js';
 
 export const fromWorkCommand: Command = {
     command: {
-        name: "from_work",
-        description: "Search for magazine by title",
+        name: 'from_work',
+        description: 'Search for magazine by title',
         description_localizations: Object.values(Locale).reduce((data, key) => {
             if (Locale.Japanese === key) {
-                data[key] = "タイトルから雑誌を検索します";
+                data[key] = 'タイトルから雑誌を検索します';
             } else {
-                data[key] = "Search for magazine by title";
+                data[key] = 'Search for magazine by title';
             }
 
             return data;
@@ -39,13 +39,13 @@ export const fromWorkCommand: Command = {
         ],
         options: [
             {
-                name: "title",
-                description: "Please enter a title",
+                name: 'title',
+                description: 'Please enter a title',
                 description_localizations: Object.values(Locale).reduce((data, key) => {
                     if (Locale.Japanese === key) {
-                        data[key] = "タイトルを入力してください";
+                        data[key] = 'タイトルを入力してください';
                     } else {
-                        data[key] = "Please enter a title";
+                        data[key] = 'Please enter a title';
                     }
                     return data;
                 }, {} as Record<Locale, string>),
@@ -75,12 +75,12 @@ export const fromWorkCommand: Command = {
                     });
 
                     await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-                        method: "POST",
+                        method: 'POST',
                         headers: {
-                            "Content-Type": "application/json",
+                            'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
-                            content: createErrorLog([title], "from_work", true, e as Error),
+                            content: createErrorLog([title], 'from_work', true, e as Error),
                         }),
                     });
 

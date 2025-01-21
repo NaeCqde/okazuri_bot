@@ -12,23 +12,23 @@ import {
     InteractionResponseType,
     Locale,
     MessageFlags,
-} from "@discordcf/framework";
+} from '@discordcf/framework';
 
-import { ERROR_MESSAGE, ERROR_RESPONSE } from "../consts.js";
-import { createErrorLog, resultToText, splitText } from "../formatter.js";
-import { toNumber } from "../magazines.js";
-import { rewrite } from "../rewriter.js";
-import { searchMultiple } from "../search.js";
+import { ERROR_MESSAGE, ERROR_RESPONSE } from '../consts.js';
+import { createErrorLog, resultToText, splitText } from '../formatter.js';
+import { toNumber } from '../magazines.js';
+import { rewrite } from '../rewriter.js';
+import { searchMultiple } from '../search.js';
 
 export const searchCommand: Command = {
     command: {
-        name: "search",
-        description: "Search",
+        name: 'search',
+        description: 'Search',
         description_localizations: Object.values(Locale).reduce((data, key) => {
             if (Locale.Japanese === key) {
-                data[key] = "検索します";
+                data[key] = '検索します';
             } else {
-                data[key] = "Search";
+                data[key] = 'Search';
             }
 
             return data;
@@ -41,13 +41,13 @@ export const searchCommand: Command = {
         ],
         options: [
             {
-                name: "query",
-                description: "Please enter a title or URL",
+                name: 'query',
+                description: 'Please enter a title or URL',
                 description_localizations: Object.values(Locale).reduce((data, key) => {
                     if (Locale.Japanese === key) {
-                        data[key] = "タイトルまたはURLを入力してください";
+                        data[key] = 'タイトルまたはURLを入力してください';
                     } else {
-                        data[key] = "Please enter a title or URL";
+                        data[key] = 'Please enter a title or URL';
                     }
                     return data;
                 }, {} as Record<Locale, string>),
@@ -55,16 +55,16 @@ export const searchCommand: Command = {
                 required: true,
             },
             {
-                name: "focus_on_illegal",
+                name: 'focus_on_illegal',
                 description:
-                    "Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels",
+                    'Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels',
                 description_localizations: Object.values(Locale).reduce((data, key) => {
                     if (Locale.Japanese === key) {
                         data[key] =
-                            "違法アップロードが出やすくなる検索ワードに書き換えます。数字は書き換えレベルです";
+                            '違法アップロードが出やすくなる検索ワードに書き換えます。数字は書き換えレベルです';
                     } else {
                         data[key] =
-                            "Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels";
+                            'Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels';
                     }
                     return data;
                 }, {} as Record<Locale, string>),
@@ -74,13 +74,13 @@ export const searchCommand: Command = {
                 required: false,
             },
             {
-                name: "to_magazine",
-                description: "Find the magazine in which this work appears",
+                name: 'to_magazine',
+                description: 'Find the magazine in which this work appears',
                 description_localizations: Object.values(Locale).reduce((data, key) => {
                     if (Locale.Japanese === key) {
-                        data[key] = "この作品が掲載されている雑誌を探します";
+                        data[key] = 'この作品が掲載されている雑誌を探します';
                     } else {
-                        data[key] = "Find the magazine in which this work appears";
+                        data[key] = 'Find the magazine in which this work appears';
                     }
                     return data;
                 }, {} as Record<Locale, string>),
@@ -110,8 +110,8 @@ export const searchCommand: Command = {
             | undefined = source.data.options as any;
 
         if (options && options.length && options[0].value.length) {
-            const tempRewriteLevel = options.filter((o) => o.name === "focus_on_illegal");
-            const tempToMagazine = options.filter((o) => o.name === "to_magazine");
+            const tempRewriteLevel = options.filter((o) => o.name === 'focus_on_illegal');
+            const tempToMagazine = options.filter((o) => o.name === 'to_magazine');
 
             const originalQuery: string = options[0].value;
             const rewriteLevel: 0 | 1 | 2 =
@@ -148,14 +148,14 @@ export const searchCommand: Command = {
                     });
 
                     await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-                        method: "POST",
+                        method: 'POST',
                         headers: {
-                            "Content-Type": "application/json",
+                            'Content-Type': 'application/json',
                         },
                         body: JSON.stringify({
                             content: createErrorLog(
                                 [originalQuery],
-                                "search",
+                                'search',
                                 toMagazine,
                                 e as Error
                             ),

@@ -1,7 +1,7 @@
-import { eq, type InferSelectModel } from "drizzle-orm";
+import { eq, type InferSelectModel } from 'drizzle-orm';
 
-import { getDB } from "./db/db.js";
-import { numbers, works, type Work } from "./db/schema.js";
+import { getDB } from './db/db.js';
+import { numbers, works, type Work } from './db/schema.js';
 
 export async function listWorks(number: string): Promise<Work[]> {
     const db = getDB();
@@ -13,7 +13,7 @@ export async function listWorks(number: string): Promise<Work[]> {
 
         return works_;
     } else {
-        throw TypeError("no number found");
+        throw TypeError('no number found');
     }
 }
 
@@ -27,7 +27,7 @@ export async function toNumber(work: string): Promise<InferSelectModel<typeof nu
 
         return number[0];
     } else {
-        throw TypeError("no work found");
+        throw TypeError('no work found');
     }
 }
 

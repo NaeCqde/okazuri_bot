@@ -1,5 +1,5 @@
-import { googleN } from "./google.js";
-import { WEBSITES } from "./websites.js";
+import { googleN } from './google.js';
+import { WEBSITES } from './websites.js';
 
 export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
     const resultMap: SearchResultMap = {};
@@ -11,7 +11,7 @@ export async function searchMultiple(queries: string[]): Promise<SearchResultMap
             results = await search(q);
         } catch (e: any) {
             if (
-                !["okazuri: Unsupported website", "okazuri: Title not found"].includes(
+                !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
                     (e as Error).message
                 )
             ) {
@@ -34,7 +34,7 @@ export async function titleByUrl(url: string): Promise<string> {
         }
     }
 
-    throw Error("okazuri: Unsupported website");
+    throw Error('okazuri: Unsupported website');
 }
 
 export async function search(query: string): Promise<SearchResult[]> {
@@ -52,7 +52,7 @@ export async function search(query: string): Promise<SearchResult[]> {
                     const url = await website.clean(result.url);
 
                     filteredResults.set(url, {
-                        title: "",
+                        title: '',
                         url: url,
                         isLegal: website.isLegal,
                         website: website.name,
@@ -64,6 +64,6 @@ export async function search(query: string): Promise<SearchResult[]> {
 
         return [...filteredResults.values()];
     } else {
-        throw Error("okazuri: Title not found");
+        throw Error('okazuri: Title not found');
     }
 }

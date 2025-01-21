@@ -2,7 +2,7 @@ import {
     InteractionResponseType,
     MessageFlags,
     type APIInteractionResponse,
-} from "@discordcf/framework";
+} from '@discordcf/framework';
 
 export const MAX_MESSAGE_LENGTH: number = 2000;
 

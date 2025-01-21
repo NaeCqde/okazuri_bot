@@ -5,13 +5,13 @@ import {
     noClean,
     strip,
     viewToGallery,
-} from "./cleaners.js";
+} from './cleaners.js';
 
 export const HITOMI_LA_ID_PATTERN = /https:\/\/hitomi\.la\/[a-z]+.*(?:\/|-)(\d+)\.html.*/;
 
 export const WEBSITES: Website[] = [
     {
-        name: "DLsite",
+        name: 'DLsite',
         isLegal: true,
         pattern:
             /^https:\/\/(?:[A-Za-z]+\.)?dlsite\.com\/[a-z\-]+\/work\/=\/product_id\/RJ\d+\.html.*/,
@@ -22,7 +22,7 @@ export const WEBSITES: Website[] = [
         clean: deleteLocale,
     },
     {
-        name: "FANZA",
+        name: 'FANZA',
         isLegal: true,
         pattern: /^https:\/\/(?:[a-z]+\.)?dmm\.co\.jp\/[a-z]+\/[^\/]+\/.+/i,
         title: regexpTitleGetter(
@@ -32,28 +32,28 @@ export const WEBSITES: Website[] = [
         clean: noClean,
     },
     {
-        name: "Hitomi.La",
+        name: 'Hitomi.La',
         isLegal: false,
         pattern: /^https:\/\/hitomi\.la\/[a-z]+\/.+/,
         title: hitomiLaTitle,
         clean: hitomiLaReaderToInfo,
     },
     {
-        name: "Anime-Sharing",
+        name: 'Anime-Sharing',
         isLegal: false,
         pattern: /^https:\/\/www\.anime-sharing\.com\/threads\/.+/,
         title: regexpTitleGetter(/<title>(?<title>.+) | Anime-Sharing Community<\/title>/, noClean),
         clean: noClean,
     },
     {
-        name: "IMHentai",
+        name: 'IMHentai',
         isLegal: false,
         pattern: /^https:\/\/imhentai\.xxx\/[a-z]+\/\d+.*/,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, viewToGallery),
         clean: viewToGallery,
     },
     {
-        name: "momon:GA",
+        name: 'momon:GA',
         isLegal: false,
         pattern: /^https:\/\/momon-ga\.com\/(?:fanzine|magazine)\/mo\d+.*/i,
         title: regexpTitleGetter(
@@ -63,7 +63,7 @@ export const WEBSITES: Website[] = [
         clean: noClean,
     },
     {
-        name: "Nya:Hentai",
+        name: 'Nya:Hentai',
         isLegal: false,
         pattern: /^https:\/\/nyahentai\.re\/(?:fanzine|magazine)\/re\d+.*/i,
         title: regexpTitleGetter(
@@ -73,14 +73,14 @@ export const WEBSITES: Website[] = [
         clean: noClean,
     },
     {
-        name: "同人の森",
+        name: '同人の森',
         isLegal: false,
         pattern: /^https:\/\/doujinnomori\.com\/comics\/detail\/?\?uuid=[a-z\d\-]+.*/i,
         title: regexpTitleGetter(/<title>(?<title>.+) \| 同人の森/, noClean),
         clean: noClean,
     },
     {
-        name: "JComic",
+        name: 'JComic',
         isLegal: false,
         pattern: /^https:\/\/jcomic\.net\/(?:page|eps)\/[^\/]+.*/i,
         title: regexpTitleGetter(
@@ -90,133 +90,133 @@ export const WEBSITES: Website[] = [
         clean: EpsToPage,
     },
     {
-        name: "R18Best",
+        name: 'R18Best',
         isLegal: false,
         pattern: /^https:\/\/r18\.best\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiOMG",
+        name: 'HentaiOMG',
         isLegal: false,
         pattern: /^https:\/\/hentaiomg\.com\/[^\s]+/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiCore",
+        name: 'HentaiCore',
         isLegal: false,
         pattern: /^https:\/\/www\.hentaicore\.net\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "Sukebei",
+        name: 'Sukebei',
         isLegal: false,
         pattern: /^https:\/\/sukebei\.nyaa\.si\/view\/(?:\d+|[a-zA-Z0-9]+).*/i,
         title: regexpTitleGetter(/<title>(?<title>.+) \| Sukebei \| Nyaa/, noClean),
         clean: noClean,
     },
     {
-        name: "NijiGazo",
+        name: 'NijiGazo',
         isLegal: false,
         pattern: /^https:\/\/niji-gazo\.com\/view\/\d+.*/i,
         title: regexpTitleGetter(/<title>(?<title>.+) \| NijiGazo/, noClean),
         clean: noClean,
     },
     {
-        name: "RokuHentai",
+        name: 'RokuHentai',
         isLegal: false,
         pattern: /^https:\/\/rokuhentai\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiEnvy",
+        name: 'HentaiEnvy',
         isLegal: false,
         pattern: /^https:\/\/hentaienvy\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiEra",
+        name: 'HentaiEra',
         isLegal: false,
         pattern: /^https:\/\/hentaiera\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "MasDr",
+        name: 'MasDr',
         isLegal: false,
         pattern: /^https:\/\/mas-dr\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "JMwu",
+        name: 'JMwu',
         isLegal: false,
         pattern: /^https:\/\/m\.jmwu\.vip\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "NukiBooks",
+        name: 'NukiBooks',
         isLegal: false,
         pattern: /^https:\/\/nukibooks\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "177Picyy",
+        name: '177Picyy',
         isLegal: false,
         pattern: /^http:\/\/www\.177picyy\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "BatoTo",
+        name: 'BatoTo',
         isLegal: false,
         pattern: /^https:\/\/bato\.to\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "Wnacg",
+        name: 'Wnacg',
         isLegal: false,
         pattern: /^https:\/\/www\.wnacg\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiName",
+        name: 'HentaiName',
         isLegal: false,
         pattern: /^https:\/\/www\.hentai\.name\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiDesi",
+        name: 'HentaiDesi',
         isLegal: false,
         pattern: /^http:\/\/jp\.hentai\.desi\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "AsmHentai",
+        name: 'AsmHentai',
         isLegal: false,
         pattern: /^https:\/\/asmhentai\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "HentaiPaw",
+        name: 'HentaiPaw',
         isLegal: false,
         pattern: /^https:\/\/hentaipaw\.com\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
         clean: noClean,
     },
     {
-        name: "EHentai",
+        name: 'EHentai',
         isLegal: false,
         pattern: /^https:\/\/e-hentai\.org\/[a-z]+\/\d+.*/i,
         title: regexpTitleGetter(/<h1>(?<title>.+)<\/h1>/, noClean),
@@ -237,23 +237,23 @@ export function regexpTitleGetter(
             try {
                 resp = await fetch(s, {
                     headers: {
-                        cookie: s.startsWith("https://book.dmm.co.jp/")
-                            ? "_dd_s=; reco=iecgms; ckcy=1; is_intarnal=true; age_check_done=1"
-                            : "",
+                        cookie: s.startsWith('https://book.dmm.co.jp/')
+                            ? '_dd_s=; reco=iecgms; ckcy=1; is_intarnal=true; age_check_done=1'
+                            : '',
                     },
                 });
             } catch {
-                return "";
+                return '';
             }
 
             if (resp.status === 200) {
                 const match = pattern.exec(await resp.text());
 
-                if (match && match.groups && match.groups["title"]) {
-                    let title: string = match.groups["title"] + " ";
+                if (match && match.groups && match.groups['title']) {
+                    let title: string = match.groups['title'] + ' ';
 
-                    if (match.groups["artist"]) {
-                        title += match.groups["artist"];
+                    if (match.groups['artist']) {
+                        title += match.groups['artist'];
                     }
 
                     return strip(title);
@@ -261,7 +261,7 @@ export function regexpTitleGetter(
             }
         }
 
-        return "";
+        return '';
     };
 }
 
@@ -271,10 +271,10 @@ export async function hitomiLaTitle(s: string): Promise<string> {
     try {
         info = await getHitomiLaGalleryInfo(s);
     } catch {
-        return "";
+        return '';
     }
 
-    let title: string = info.japaneseTitle + " ";
+    let title: string = info.japaneseTitle + ' ';
 
     if (info.artists && info.artists.length) {
         title += info.artists[0].artist;
@@ -287,22 +287,22 @@ export async function getHitomiLaGalleryInfo(s: string): Promise<HitomiLaGallery
     const match = HITOMI_LA_ID_PATTERN.exec(s);
 
     if (match && match.length === 2) {
-        const resp = await fetch("https://ltn.hitomi.la/galleries/" + match[1] + ".js");
+        const resp = await fetch('https://ltn.hitomi.la/galleries/' + match[1] + '.js');
 
         if (resp.status === 200) {
-            const text = (await resp.text()).replace("var galleryinfo = ", "");
+            const text = (await resp.text()).replace('var galleryinfo = ', '');
 
             const rawInfo: any = JSON.parse(text);
 
             return {
-                title: rawInfo["title"],
-                id: rawInfo["id"],
-                artists: rawInfo["artists"],
-                galleryUrl: rawInfo["galleryurl"],
-                japaneseTitle: rawInfo["japanese_title"],
+                title: rawInfo['title'],
+                id: rawInfo['id'],
+                artists: rawInfo['artists'],
+                galleryUrl: rawInfo['galleryurl'],
+                japaneseTitle: rawInfo['japanese_title'],
             };
         }
     }
 
-    throw Error("okazuri: Failed to get hitomi.la id");
+    throw Error('okazuri: Failed to get hitomi.la id');
 }

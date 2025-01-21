@@ -10,25 +10,25 @@ import {
     Locale,
     MessageFlags,
     Permissions,
-} from "@discordcf/framework";
+} from '@discordcf/framework';
 
-import { ERROR_MESSAGE } from "../consts.js";
-import { createErrorLog, getUrls, resultToText, splitText } from "../formatter.js";
-import { searchMultiple, titleByUrl } from "../search.js";
+import { ERROR_MESSAGE } from '../consts.js';
+import { createErrorLog, getUrls, resultToText, splitText } from '../formatter.js';
+import { searchMultiple, titleByUrl } from '../search.js';
 
 export const searchThisCommand: Command = {
     command: {
-        name: "Search this",
+        name: 'Search this',
         name_localizations: Object.values(Locale).reduce((data, key) => {
             if (key === Locale.Japanese) {
-                data[key] = "これらを検索";
+                data[key] = 'これらを検索';
             } else {
-                data[key] = "Search this";
+                data[key] = 'Search this';
             }
 
             return data;
         }, {} as Record<Locale, string>),
-        default_member_permissions: new Permissions(["ViewChannel"]).compute(),
+        default_member_permissions: new Permissions(['ViewChannel']).compute(),
         type: ApplicationCommandType.Message,
         nsfw: false,
         integration_types: [
@@ -65,12 +65,12 @@ export const searchThisCommand: Command = {
                         });
 
                         await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-                            method: "POST",
+                            method: 'POST',
                             headers: {
-                                "Content-Type": "application/json",
+                                'Content-Type': 'application/json',
                             },
                             body: JSON.stringify({
-                                content: createErrorLog(urls, "search_this", false, e as Error),
+                                content: createErrorLog(urls, 'search_this', false, e as Error),
                             }),
                         });
 
@@ -101,7 +101,7 @@ export const searchThisCommand: Command = {
             type: InteractionResponseType.ChannelMessageWithSource,
             data: {
                 flags: MessageFlags.SuppressEmbeds | MessageFlags.Ephemeral,
-                content: "# 検索結果\n## 無し",
+                content: '# 検索結果\n## 無し',
             },
         };
     },

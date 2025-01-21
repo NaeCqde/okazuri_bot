@@ -1,4 +1,4 @@
-import { URL_PATTERN } from "./consts.js";
+import { URL_PATTERN } from './consts.js';
 
 export function getUrls(content: string): string[] {
     return [...content.matchAll(URL_PATTERN)].map((el) => el[0]);
@@ -13,9 +13,9 @@ export function resultToText(
 
     for (let i: number = 0; results.length > i; i++) {
         const [query, result] = results[i];
-        lines.push("## " + query);
+        lines.push('## ' + query);
         if (originalQuery) {
-            lines.push("-# 元のクエリ：" + originalQuery[i]);
+            lines.push('-# 元のクエリ：' + originalQuery[i]);
         }
 
         if (result.length) {
@@ -24,7 +24,7 @@ export function resultToText(
                 .map((r, i) => `${i + 1}. ${r.url}`);
 
             if (legal.length) {
-                lines.push("### 合法：", ...legal);
+                lines.push('### 合法：', ...legal);
             }
 
             const leak: string[] = result
@@ -32,17 +32,17 @@ export function resultToText(
                 .map((r, i) => `${i + 1}. ${r.url}`);
 
             if (leak.length) {
-                lines.push("### 違法：", ...leak);
+                lines.push('### 違法：', ...leak);
             }
         } else {
-            lines.push("### 無し");
+            lines.push('### 無し');
         }
     }
 
     if (lines.length) {
-        lines.unshift("# 検索結果");
+        lines.unshift('# 検索結果');
     } else {
-        lines = ["# 検索結果", "## 無し"];
+        lines = ['# 検索結果', '## 無し'];
     }
 
     return lines;
@@ -51,16 +51,16 @@ export function resultToText(
 export function splitText(lines: string[], maxLength: number = 2000): string[] {
     const contents: string[] = [];
 
-    let text: string = "";
+    let text: string = '';
 
     for (const line of lines) {
         if (text.length + line.length > maxLength) {
             contents.push(text.slice(0, -1));
 
-            text = "";
+            text = '';
         }
 
-        text += line + "\n";
+        text += line + '\n';
     }
 
     if (text) {
@@ -77,10 +77,10 @@ export function createErrorLog(
     e: Error
 ): string {
     return `コマンド: \`/${command}\`
-雑誌か:   \`/${isMagazine ? "はい" : "いいえ"}\`
+雑誌か:   \`/${isMagazine ? 'はい' : 'いいえ'}\`
 入力:
 \`\`\`
-${queries.join("\n")}
+${queries.join('\n')}
 \`\`\`
 エラー内容:
 \`\`\`
