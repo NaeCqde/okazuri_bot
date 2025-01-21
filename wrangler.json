@@ -1,0 +1,21 @@
+{
+    "$schema": "node_modules/wrangler/config-schema.json",
+    "name": "okazuri-bot",
+    "main": "src/index.ts",
+    "compatibility_date": "2025-01-09",
+    "compatibility_flags": ["nodejs_compat"],
+    "placement": {
+        "mode": "smart"
+    },
+    "workers_dev": true,
+    "preview_urls": true,
+    "triggers": { "crons": ["0 0 * * *"] },
+    "d1_databases": [
+        {
+            "binding": "DB",
+            "database_name": "okazuri",
+            "database_id": "f9dc2cfe-17c9-4b58-baf8-692971f19304",
+            "migrations_dir": "drizzle/migrations"
+        }
+    ]
+}
