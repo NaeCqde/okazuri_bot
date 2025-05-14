@@ -1,11 +1,9 @@
 import { eq, type InferSelectModel } from 'drizzle-orm';
 
-import { getDB } from './db/db.js';
+import { db } from './db/db.js';
 import { numbers, works, type Work } from './db/schema.js';
 
 export async function listWorks(number: string): Promise<Work[]> {
-    const db = getDB();
-
     const result = await db.select().from(numbers).where(eq(numbers.name, number));
 
     if (result.length) {
@@ -18,8 +16,6 @@ export async function listWorks(number: string): Promise<Work[]> {
 }
 
 export async function toNumber(work: string): Promise<InferSelectModel<typeof numbers>> {
-    const db = getDB();
-
     const result = await db.select().from(works).where(eq(works.name, work));
 
     if (result.length) {
@@ -32,8 +28,6 @@ export async function toNumber(work: string): Promise<InferSelectModel<typeof nu
 }
 
 export class Fetcher {
-    async run(magazineIds: string[]) {
-        const db = getDB();
-    }
+    async run(magazineIds: string[]) {}
     async fetchAndSaveWorksDiffFromMagazine(magazineId: string) {}
 }

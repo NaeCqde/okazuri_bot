@@ -1,7 +1,10 @@
 {
     "name": "okazuri-bot",
     "version": "0.0.1",
-    "private": true,
+    "author": "NaeCqde <contact@nae.quest> (https://nae.quest/)",
+    "contributors": [
+        "ringoxd"
+    ],
     "scripts": {
         "deploy": "wrangler deploy",
         "dev": "wrangler dev",
@@ -12,13 +15,16 @@
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20241224.0",
+        "discord-api-types": "^0.37.117",
         "drizzle-kit": "^0.30.1",
         "typescript": "^5.7.2",
         "wrangler": "^3.99.0"
     },
     "dependencies": {
         "@discordcf/framework": "^0.1.0",
+        "discord-hono": "^0.11.2",
         "drizzle-orm": "^0.38.3",
+        "hono": "^4.6.17",
         "soup": "^0.2.3"
     }
 }

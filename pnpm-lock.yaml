@@ -11,9 +11,15 @@ importers:
       '@discordcf/framework':
         specifier: ^0.1.0
         version: 0.1.0
+      discord-hono:
+        specifier: ^0.11.2
+        version: 0.11.2
       drizzle-orm:
         specifier: ^0.38.3
         version: 0.38.3(@cloudflare/workers-types@4.20241224.0)
+      hono:
+        specifier: ^4.6.17
+        version: 4.6.17
       soup:
         specifier: ^0.2.3
         version: 0.2.3
@@ -21,6 +27,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20241224.0
         version: 4.20241224.0
+      discord-api-types:
+        specifier: ^0.37.117
+        version: 0.37.117
       drizzle-kit:
         specifier: ^0.30.1
         version: 0.30.1
@@ -584,8 +593,12 @@ packages:
   defu@6.1.4:
     resolution: {integrity: sha512-mEQCMmwJu317oSz8CwdIOdwf3xMif1ttiM8LTufzc3g6kR+9Pe236twL8j3IYT1F7GfRgGcW6MWxzZjLIkuHIg==}
 
-  discord-api-types@0.37.114:
-    resolution: {integrity: sha512-9b9oOpktWSmE6ooToc46wfw151SHC/+idmnZvtwpEzW85BijUspQxj4W2uOmo+nZVTdEyb3fku58k+4rHKpdSQ==}
+  discord-api-types@0.37.117:
+    resolution: {integrity: sha512-d+Z6RKd7v3q22lsil7yASucqMfVVV0s0XSqu3cw7kyHVXiDO/mAnqMzqma26IYnIm2mk3TlupYJDGrdL908ZKA==}
+
+  discord-hono@0.11.2:
+    resolution: {integrity: sha512-wJimauqX8Q20hms0UXomMU47KbBhYlo58jh01X5ACGwov6Q02U/TXtVqhxMdRUTk+K7XL9CShQ7CaAv7uwoW9A==}
+    engines: {node: '>=18.4.0'}
 
   dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
@@ -754,6 +767,10 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  hono@4.6.17:
+    resolution: {integrity: sha512-Kbh4M0so2RzLiIg6iP33DoTU68TdvP2O/kb1Hhhdwa37fazuf402ig8ZRfjkz2dqXwiWl2dAgh0f++TuKAdOtQ==}
+    engines: {node: '>=16.9.0'}
 
   htmlparser2@9.1.0:
     resolution: {integrity: sha512-5zfg6mHUoaer/97TxnGpxmbR7zJtPwIYFMZ/H5ucTlPZhKvtum05yiPK3Mgai3a0DyVxv7qYqoweaEd2nrYQzQ==}
@@ -984,7 +1001,7 @@ snapshots:
 
   '@discordcf/framework@0.1.0':
     dependencies:
-      discord-api-types: 0.37.114
+      discord-api-types: 0.37.117
       itty-router: 2.6.6
       tweetnacl: https://codeload.github.com/Inrixia/tweetnacl-js/tar.gz/5a9c25e0045dadcb2be68705f5e841fa2db3715b
 
@@ -1302,7 +1319,9 @@ snapshots:
 
   defu@6.1.4: {}
 
-  discord-api-types@0.37.114: {}
+  discord-api-types@0.37.117: {}
+
+  discord-hono@0.11.2: {}
 
   dom-serializer@2.0.0:
     dependencies:
@@ -1450,6 +1469,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  hono@4.6.17: {}
 
   htmlparser2@9.1.0:
     dependencies:

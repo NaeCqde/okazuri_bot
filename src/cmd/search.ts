@@ -1,95 +1,58 @@
 import {
-    APIApplicationCommandInteractionDataBooleanOption,
-    APIApplicationCommandInteractionDataNumberOption,
-    APIApplicationCommandInteractionDataStringOption,
-    APIChatInputApplicationCommandInteraction,
-    APIInteractionResponse,
     ApplicationCommandOptionType,
     ApplicationCommandType,
     ApplicationIntegrationType,
-    Command,
-    Context,
-    InteractionResponseType,
     Locale,
-    MessageFlags,
-} from '@discordcf/framework';
-
+} from 'discord-api-types/v10';
+import { Command, CommandContext, type DiscordHono } from 'discord-hono';
 import { ERROR_MESSAGE, ERROR_RESPONSE } from '../consts.js';
 import { createErrorLog, resultToText, splitText } from '../formatter.js';
 import { toNumber } from '../magazines.js';
 import { rewrite } from '../rewriter.js';
 import { searchMultiple } from '../search.js';
 
-export const searchCommand: Command = {
-    command: {
-        name: 'search',
-        description: 'Search',
-        description_localizations: Object.values(Locale).reduce((data, key) => {
-            if (Locale.Japanese === key) {
-                data[key] = '検索します';
-            } else {
-                data[key] = 'Search';
-            }
-
-            return data;
-        }, {} as Record<Locale, string>),
-        type: ApplicationCommandType.ChatInput,
-        nsfw: false,
-        integration_types: [
+export const searchCommand = {
+    command: new Command('search', 'Search')
+        .description_localizations({ [Locale.Japanese]: '検索します' })
+        .type(ApplicationCommandType.ChatInput)
+        .integration_types([
             ApplicationIntegrationType.GuildInstall,
             ApplicationIntegrationType.UserInstall,
-        ],
-        options: [
+        ])
+        .options([
             {
                 name: 'query',
+                type: ApplicationCommandOptionType.String,
+                name_localizations: { [Locale.Japanese]: 'クエリ' },
                 description: 'Please enter a title or URL',
-                description_localizations: Object.values(Locale).reduce((data, key) => {
+                description_localizations: {
+                    [Locale.Japanese]: 'タイトルまたはURLを入力してください',
+                },
+                /*Object.values(Locale).reduce((data, key) => {
                     if (Locale.Japanese === key) {
                         data[key] = 'タイトルまたはURLを入力してください';
                     } else {
                         data[key] = 'Please enter a title or URL';
                     }
                     return data;
-                }, {} as Record<Locale, string>),
-                type: ApplicationCommandOptionType.String,
+                }, {} as Record<Locale, string>),*/
+
                 required: true,
             },
             {
-                name: 'focus_on_illegal',
-                description:
-                    'Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels',
-                description_localizations: Object.values(Locale).reduce((data, key) => {
-                    if (Locale.Japanese === key) {
-                        data[key] =
-                            '違法アップロードが出やすくなる検索ワードに書き換えます。数字は書き換えレベルです';
-                    } else {
-                        data[key] =
-                            'Rewrite the search query to make it more likely that illegal uploads will come up. The numbers are rewrite levels';
-                    }
-                    return data;
-                }, {} as Record<Locale, string>),
-                type: ApplicationCommandOptionType.Number,
-                min_value: 1,
-                max_value: 2,
-                required: false,
-            },
-            {
                 name: 'to_magazine',
-                description: 'Find the magazine in which this work appears',
-                description_localizations: Object.values(Locale).reduce((data, key) => {
-                    if (Locale.Japanese === key) {
-                        data[key] = 'この作品が掲載されている雑誌を探します';
-                    } else {
-                        data[key] = 'Find the magazine in which this work appears';
-                    }
-                    return data;
-                }, {} as Record<Locale, string>),
                 type: ApplicationCommandOptionType.Boolean,
+                description: 'Find the magazine in which this work appears',
+                description_localizations: {
+                    [Locale.Japanese]: 'この作品が掲載されている雑誌を探します',
+                },
                 required: false,
             },
-        ],
+        ]),
+    async register(bot: DiscordHono) {
+        bot.command('search', this.handler);
     },
-    handler: async (ctx: Context): Promise<APIInteractionResponse> => {
+    async handler(ctx: CommandContext): Promise<Response> {
         const source: APIChatInputApplicationCommandInteraction = ctx.interaction.structure as any;
         const options:
             | [

@@ -3,6 +3,4 @@ import { drizzle } from 'drizzle-orm/d1';
 
 import { env } from '../env.js';
 
-export function getDB(): DrizzleD1Database {
-    return drizzle(env.DB);
-}
+export const db: DrizzleD1Database = drizzle(env.DB);

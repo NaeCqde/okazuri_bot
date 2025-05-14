@@ -1,13 +1,28 @@
-import { createApplicationCommandHandler, Permissions } from '@discordcf/framework';
+import { DiscordHono, register } from 'discord-hono';
+import { Hono } from 'hono';
 
-import { fromWorkCommand } from './cmd/magazine/from_work.js';
-import { worksCommand } from './cmd/magazine/works.js';
-import { searchCommand } from './cmd/search.js';
-import { searchThisCommand } from './cmd/search_this.js';
-
-import { setEnv } from './env.js';
 import { Fetcher } from './magazines.js';
 
+const bot = new DiscordHono();
+bot.cron('0 0 * * *', async () => {
+    await new Fetcher().run(['LBL00611']);
+});
+
+const hono = new Hono();
+hono.mount('/interaction', bot.fetch);
+
+hono.get('/setup', async (ctx) => {
+    await register();
+
+    return ctx.text('setup');
+});
+
+export default {
+    fetch: hono.fetch,
+    scheduled: bot.scheduled,
+};
+
+/*
 export default {
     async fetch(request: Request, env: Env, context: ExecutionContext): Promise<Response> {
         setEnv(env);
@@ -30,6 +45,15 @@ export default {
             context
         );
 
+        
+
+const commands = [
+  new Command('hello', 'response world'),
+  new Command('help', 'response help').options(new Option('text', 'with text')),
+]
+
+register(
+
         if (new URL(request.url).pathname === '/setup') {
             console.log('setup');
         }
@@ -42,3 +66,4 @@ export default {
         await new Fetcher().run(['LBL00611']);
     },
 };
+*/
