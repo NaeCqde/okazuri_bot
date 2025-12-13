@@ -1,110 +1,186 @@
-// TODO
 import {
-    APIInteractionResponse,
     APIMessage,
-    APIMessageApplicationCommandInteraction,
+    APIMessageApplicationCommandInteractionData,
     ApplicationCommandType,
     ApplicationIntegrationType,
-    Command,
-    Context,
-    InteractionResponseType,
+    ButtonStyle,
     Locale,
-    MessageFlags,
-    Permissions,
-} from '@discordcf/framework';
+    PermissionFlagsBits,
+} from 'discord-api-types/v10';
+import { Button, Command, CommandContext, Components, Select } from 'discord-hono';
 
-import { ERROR_MESSAGE } from '../consts.js';
-import { createErrorLog, getUrls, resultToText, splitText } from '../formatter.js';
-import { searchMultiple, titleByUrl } from '../search.js';
+import { getUrls } from '../formatter.js';
+import { factory } from '../init.js';
+import { titleByUrl } from '../search/search.js';
+import type { CommandSet } from '../types.js';
+import { searchCallback } from './search.js';
 
-export const searchThisOptionCommand: Command = {
-    command: {
-        name: 'Search this with option',
-        name_localizations: Object.values(Locale).reduce((data, key) => {
-            if (key === Locale.Japanese) {
-                data[key] = 'これらを設定付きで検索';
-            } else {
-                data[key] = 'Search this with option';
+const components = new Components()
+    .row(
+        new Select('rewrite-level', 'String')
+            .options(
+                {
+                    label: 'Off:Default',
+                    value: '0',
+                    default: true,
+                },
+                {
+                    label: 'Weak',
+                    value: '1',
+                },
+                {
+                    label: 'Strong',
+                    value: '2',
+                }
+            )
+            .placeholder('Rewrite Level')
+    )
+    .row(new Button('to-magazine', ['📖', 'Magazine'], 'Danger'))
+    .row(new Button('search', ['🔍', 'Search'], 'Success'));
+
+export const toMagazineComponent = factory.component(
+    new Button('to-magazine', ['📖', 'Magazine'], 'Danger'),
+    (c) => {
+        const json = components.toJSON();
+        console.log(c.var);
+        console.log(json);
+
+        const state = parseState(c.interaction.message.content);
+        if (state.toMagazine) {
+            json[1].components[0].style = ButtonStyle.Primary;
+        }
+
+        return c.update().resDefer((c) =>
+            c.followup({
+                content: formatState(state.urls, state.rewriteLevel, state.toMagazine),
+                components: json,
+            })
+        );
+    }
+);
+
+export const rewriteLevelComponent = factory.component(
+    new Select('rewrite-level', 'String')
+        .options(
+            {
+                label: 'Off:Default',
+                value: '0',
+                default: true,
+            },
+            {
+                label: 'Weak',
+                value: '1',
+            },
+            {
+                label: 'Strong',
+                value: '2',
             }
+        )
+        .placeholder('Rewrite Level'),
+    (c) => {
+        const json = components.toJSON();
+        console.log(c.var);
+        console.log(json);
 
-            return data;
-        }, {} as Record<Locale, string>),
-        default_member_permissions: new Permissions(['ViewChannel']).compute(),
-        type: ApplicationCommandType.Message,
-        nsfw: false,
-        integration_types: [
+        const state = parseState(c.interaction.message.content);
+        if (state.toMagazine) {
+            json[1].components[0].style = ButtonStyle.Primary;
+        }
+
+        return c.update().res({
+            content: formatState(state.urls, c.var['rewrite-level'], state.toMagazine),
+            components: json,
+        });
+    }
+);
+
+export const searchComponent = factory.component(
+    new Button('search', ['🔍', 'Search'], 'Success'),
+    async (c) => {
+        console.log(c.interaction.message.content);
+        const state = parseState(c.interaction.message.content);
+        await c.update().followup({ components: [] });
+
+        const queries: string[] = [];
+        for (const url of state.urls) {
+            queries.push(await titleByUrl(url));
+        }
+
+        return searchCallback(
+            c,
+            queries,
+            state.rewriteLevel,
+            state.toMagazine,
+            'search_this_option'
+        );
+    }
+);
+
+export const searchThisOptionCommand: CommandSet = factory.command(
+    new Command('Search this with option', 'Search this with option')
+        .name_localizations({ [Locale.Japanese]: 'これらを設定付きで検索' })
+        .default_member_permissions(PermissionFlagsBits.ViewChannel.toString())
+        .type(ApplicationCommandType.Message)
+        .integration_types(
             ApplicationIntegrationType.GuildInstall,
-            ApplicationIntegrationType.UserInstall,
-        ],
-    },
-    handler: async (ctx: Context): Promise<APIInteractionResponse> => {
-        const source: APIMessageApplicationCommandInteraction = ctx.interaction
-            .structure as APIMessageApplicationCommandInteraction;
-        const messages = Object.values(source.data.resolved.messages);
+            ApplicationIntegrationType.UserInstall
+        ),
+    async (ctx: CommandContext): Promise<Response> => {
+        const source: APIMessageApplicationCommandInteractionData = ctx.interaction.data as any;
+        const messages = Object.values(source.resolved.messages);
 
         if (messages.length) {
             const msg: APIMessage = messages[0];
 
             const urls: string[] = getUrls(msg.content);
-
             if (urls.length) {
-                ctx.defer(async (ctx: Context): Promise<void> => {
-                    const queries: string[] = [];
-                    let result: SearchResultMap;
-
-                    try {
-                        for (const url of urls) {
-                            queries.push(await titleByUrl(url));
-                        }
-
-                        result = await searchMultiple(queries);
-                    } catch (e: any) {
-                        await ctx.followup.reply({
-                            content: ERROR_MESSAGE,
-                            allowed_mentions: {
-                                parse: [],
-                            },
-                        });
-
-                        await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                content: createErrorLog(urls, 'search_this', false, e as Error),
-                            }),
-                        });
-
-                        return;
-                    }
-
-                    const contents = splitText(resultToText(result));
-
-                    for (const content of contents) {
-                        await ctx.followup.reply({
-                            content,
-                            flags: MessageFlags.SuppressEmbeds,
-                            allowed_mentions: {
-                                parse: [],
-                            },
-                        });
-                    }
+                return ctx.res({
+                    content: formatState(urls),
+                    components,
                 });
-
-                return {
-                    type: InteractionResponseType.DeferredChannelMessageWithSource,
-                    data: {},
-                };
             }
         }
 
-        return {
-            type: InteractionResponseType.ChannelMessageWithSource,
-            data: {
-                flags: MessageFlags.SuppressEmbeds | MessageFlags.Ephemeral,
-                content: '# 検索結果\n## 無し',
-            },
-        };
-    },
-};
+        return ctx.flags('EPHEMERAL', 'SUPPRESS_EMBEDS').res('# 検索結果\n## 無し');
+    }
+);
+
+function parseState(content: string) {
+    const lines = content.split('\n');
+    const urls: string[] = lines[0].split('(')[1].slice(0, -3).split('|');
+
+    let rewriteLevel: 0 | 1 | 2 = 0;
+    switch (true) {
+        case urls.includes('弱'):
+            rewriteLevel = 1;
+            break;
+        case urls.includes('強'):
+            rewriteLevel = 2;
+            break;
+    }
+
+    const toMagazine: boolean = lines[3].includes('はい');
+    return { urls, rewriteLevel, toMagazine };
+}
+
+function formatState(
+    urls: string[],
+    newRewriteLevel: 0 | 1 | 2 = 0,
+    newToMagazine: boolean = false
+): string {
+    let rewriteLevel: string = 'オフ';
+    switch (newRewriteLevel) {
+        case 1:
+            rewriteLevel = '弱';
+            break;
+        case 2:
+            rewriteLevel = '強';
+            break;
+    }
+
+    const toMagazine: string = newToMagazine ? 'はい' : 'いいえ';
+    return `||[urls](${urls.join('|')})||
+
+クエリ書き換えレベル：${rewriteLevel}
+違法コンテンツを出しやすくする：${toMagazine}`;
+}

@@ -6,6 +6,7 @@ import {
     strip,
     viewToGallery,
 } from './cleaners.js';
+import type { HitomiLaGalleryInfo, StringToPromiseString, Website } from './types.js';
 
 export const HITOMI_LA_ID_PATTERN = /https:\/\/hitomi\.la\/[a-z]+.*(?:\/|-)(\d+)\.html.*/;
 

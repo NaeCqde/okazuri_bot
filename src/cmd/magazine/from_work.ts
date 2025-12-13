@@ -1,73 +1,39 @@
 // 作品名からレーベル名 and No.を表示する
-import {
-    APIApplicationCommandInteractionDataStringOption,
-    APIChatInputApplicationCommandInteraction,
-    APIInteractionResponse,
-    ApplicationCommandOptionType,
-    ApplicationCommandType,
-    ApplicationIntegrationType,
-    Command,
-    Context,
-    InteractionResponseType,
-    Locale,
-    MessageFlags,
-} from '@discordcf/framework';
+import { ApplicationCommandType, ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
+import { Command, CommandContext, Option } from 'discord-hono';
 
 import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts.js';
 import type { Number } from '../../db/schema.js';
 import { createErrorLog } from '../../formatter.js';
+import { factory } from '../../init.js';
 import { toNumber } from '../../magazines.js';
+import type { CommandSet } from '../../types.js';
 
-export const fromWorkCommand: Command = {
-    command: {
-        name: 'from_work',
-        description: 'Search for magazine by title',
-        description_localizations: Object.values(Locale).reduce((data, key) => {
-            if (Locale.Japanese === key) {
-                data[key] = 'タイトルから雑誌を検索します';
-            } else {
-                data[key] = 'Search for magazine by title';
-            }
-
-            return data;
-        }, {} as Record<Locale, string>),
-        type: ApplicationCommandType.ChatInput,
-        nsfw: false,
-        integration_types: [
+export const fromWorkCommand: CommandSet = factory.command(
+    new Command('from_work', 'Search for magazine by title')
+        .description_localizations({
+            [Locale.Japanese]: 'タイトルから雑誌を検索します',
+        })
+        .type(ApplicationCommandType.ChatInput)
+        .integration_types(
             ApplicationIntegrationType.GuildInstall,
-            ApplicationIntegrationType.UserInstall,
-        ],
-        options: [
-            {
-                name: 'title',
-                description: 'Please enter a title',
-                description_localizations: Object.values(Locale).reduce((data, key) => {
-                    if (Locale.Japanese === key) {
-                        data[key] = 'タイトルを入力してください';
-                    } else {
-                        data[key] = 'Please enter a title';
-                    }
-                    return data;
-                }, {} as Record<Locale, string>),
-                type: ApplicationCommandOptionType.String,
-                required: true,
-            },
-        ],
-    },
-    handler: async (ctx: Context): Promise<APIInteractionResponse> => {
-        const source: APIChatInputApplicationCommandInteraction = ctx.interaction.structure as any;
-        const options: [APIApplicationCommandInteractionDataStringOption] | undefined = source.data
-            .options as any;
-
-        if (options && options.length && options[0].value.length) {
-            ctx.defer(async (ctx: Context): Promise<void> => {
-                const title: string = options[0].value;
+            ApplicationIntegrationType.UserInstall
+        )
+        .options(
+            new Option('title', 'Please enter a title', 'String')
+                .name_localizations({ [Locale.Japanese]: 'タイトルを入力してください' })
+                .required(true)
+        ),
+    async (ctx: CommandContext): Promise<Response> => {
+        if (ctx.var['title']) {
+            return ctx.resDefer(async (ctx: CommandContext): Promise<void> => {
+                const title: string = ctx.var['title'];
                 let number: Number;
 
                 try {
                     number = await toNumber(title);
                 } catch (e: any) {
-                    await ctx.followup.reply({
+                    await ctx.followup({
                         content: ERROR_MESSAGE,
                         allowed_mentions: {
                             parse: [],
@@ -87,21 +53,15 @@ export const fromWorkCommand: Command = {
                     return;
                 }
 
-                await ctx.followup.reply({
+                await ctx.flags('SUPPRESS_EMBEDS').followup({
                     content: number.name,
-                    flags: MessageFlags.SuppressEmbeds,
                     allowed_mentions: {
                         parse: [],
                     },
                 });
             });
-
-            return {
-                type: InteractionResponseType.DeferredChannelMessageWithSource,
-                data: {},
-            };
         }
 
-        return ERROR_RESPONSE;
-    },
-};
+        return ctx.res(ERROR_RESPONSE);
+    }
+);

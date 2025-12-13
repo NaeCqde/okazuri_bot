@@ -1,5 +1,6 @@
-import { googleN } from './google.js';
-import { WEBSITES } from './websites.js';
+import { searchN } from '../search/bing/images.js';
+import type { SearchResult, SearchResultMap } from '../types.js';
+import { WEBSITES } from '../websites.js';
 
 export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
     const resultMap: SearchResultMap = {};
@@ -41,7 +42,7 @@ export async function search(query: string): Promise<SearchResult[]> {
     console.log(query);
 
     if (query) {
-        const results = await googleN(query, 8, 3);
+        const results = await searchN(query, 1);
 
         const filteredResults: Map<string, SearchResult> = new Map();
 

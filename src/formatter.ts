@@ -1,4 +1,5 @@
 import { URL_PATTERN } from './consts.js';
+import type { SearchResultMap } from './types.js';
 
 export function getUrls(content: string): string[] {
     return [...content.matchAll(URL_PATTERN)].map((el) => el[0]);
@@ -6,7 +7,7 @@ export function getUrls(content: string): string[] {
 
 export function resultToText(
     resultMap: SearchResultMap,
-    originalQuery: string[] | undefined = undefined
+    originalQuery: string[] | null = null
 ): string[] {
     let lines: string[] = [];
     const results = Object.entries(resultMap);

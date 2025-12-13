@@ -1,3 +1,4 @@
+import type { StringToPromiseString } from './types.js';
 import { getHitomiLaGalleryInfo } from './websites.js';
 
 export const PARENTHE_PATTERN = /`[（）「」\(\)\[\]]+`/g;
