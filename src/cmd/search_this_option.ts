@@ -117,7 +117,7 @@ export const searchComponent = factory.component(
 );
 
 export const searchThisOptionCommand: CommandSet = factory.command(
-    new Command('Search this with option', 'Search this with option')
+    new Command('Search this with option')
         .name_localizations({ [Locale.Japanese]: 'これらを設定付きで検索' })
         .default_member_permissions(PermissionFlagsBits.ViewChannel.toString())
         .type(ApplicationCommandType.Message)

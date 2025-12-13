@@ -16,7 +16,7 @@ import { titleByUrl } from '../search/search';
 import type { CommandSet } from '../types';
 
 export const searchThisCommand: CommandSet = factory.command(
-    new Command('Search this', 'Search this')
+    new Command('Search this')
         .name_localizations({ [Locale.Japanese]: 'これらを検索' })
         .default_member_permissions(PermissionFlagsBits.ViewChannel.toString())
         .type(ApplicationCommandType.Message)
