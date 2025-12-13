@@ -1,13 +1,14 @@
 // レーベル名 and No.**を入力して作品一覧を表示する
 import { ApplicationCommandType, ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
 import { Command, CommandContext, Option } from 'discord-hono';
+import { drizzle } from 'drizzle-orm/d1';
 
-import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts.js';
-import { Work } from '../../db/schema.js';
-import { createErrorLog, splitText } from '../../formatter.js';
-import { factory } from '../../init.js';
-import { listWorks } from '../../magazines.js';
-import type { CommandSet } from '../../types.js';
+import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts';
+import { createErrorLog, splitText } from '../../formatter';
+import { factory } from '../../init';
+import { listWorks } from '../../magazines';
+import { Work } from '../../schema';
+import type { CommandSet } from '../../types';
 
 export const worksCommand: CommandSet = factory.command(
     new Command('works', 'Show a list of works published in the magazine')
@@ -35,7 +36,7 @@ export const worksCommand: CommandSet = factory.command(
                 let works: Work[];
 
                 try {
-                    works = await listWorks(magazine);
+                    works = await listWorks(drizzle(ctx.env.DB), magazine);
                 } catch (e: any) {
                     await ctx.followup({
                         content: ERROR_MESSAGE,

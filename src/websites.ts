@@ -5,8 +5,8 @@ import {
     noClean,
     strip,
     viewToGallery,
-} from './cleaners.js';
-import type { HitomiLaGalleryInfo, StringToPromiseString, Website } from './types.js';
+} from './cleaners';
+import type { HitomiLaGalleryInfo, StringToPromiseString, Website } from './types';
 
 export const HITOMI_LA_ID_PATTERN = /https:\/\/hitomi\.la\/[a-z]+.*(?:\/|-)(\d+)\.html.*/;
 
@@ -288,7 +288,7 @@ export async function getHitomiLaGalleryInfo(s: string): Promise<HitomiLaGallery
     const match = HITOMI_LA_ID_PATTERN.exec(s);
 
     if (match && match.length === 2) {
-        const resp = await fetch('https://ltn.hitomi.la/galleries/' + match[1] + '.js');
+        const resp = await fetch('https://ltn.hitomi.la/galleries/' + match[1] + '');
 
         if (resp.status === 200) {
             const text = (await resp.text()).replace('var galleryinfo = ', '');

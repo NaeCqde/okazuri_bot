@@ -1,13 +1,10 @@
 import { ApplicationCommandType, ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
 import { Command, CommandContext, Option } from 'discord-hono';
 
-import { ERROR_MESSAGE, ERROR_RESPONSE } from '../consts.js';
-import { createErrorLog, resultToText, splitText } from '../formatter.js';
-import { factory } from '../init.js';
-import { toNumber } from '../magazines.js';
-import { rewrite } from '../rewriter.js';
-import { searchMultiple } from '../search/search.js';
-import type { CommandSet, SearchResultMap } from '../types.js';
+import { searchHandler } from '../cmd_handler';
+import { ERROR_RESPONSE } from '../consts';
+import { factory } from '../init';
+import type { CommandSet } from '../types';
 
 export const searchCommand: CommandSet = factory.command(
     new Command('search', 'Search')
@@ -66,64 +63,10 @@ export const searchCommand: CommandSet = factory.command(
 
             return ctx.resDefer(
                 (ctx: CommandContext): Promise<void> =>
-                    searchCallback(ctx, [originalQuery], rewriteLevel, toMagazine)
+                    searchHandler(ctx, [originalQuery], rewriteLevel, toMagazine)
             );
         }
 
         return ctx.res(ERROR_RESPONSE);
     }
 );
-
-export async function searchCallback(
-    ctx: CommandContext,
-    queries: string[],
-    rewriteLevel: 0 | 1 | 2 = 0,
-    toMagazine: boolean = false,
-    cmd: string = 'search'
-): Promise<void> {
-    let result: SearchResultMap;
-
-    try {
-        for (const [i, q] of Object.entries(queries)) {
-            if (rewriteLevel && !toMagazine) {
-                queries[Number(i)] = await rewrite(q, rewriteLevel);
-            }
-
-            if (toMagazine) queries[Number(i)] = (await toNumber(q)).name;
-            if (rewriteLevel && toMagazine) {
-                queries[Number(i)] = await rewrite(q, rewriteLevel);
-            }
-        }
-
-        result = await searchMultiple(queries);
-    } catch (e: any) {
-        await ctx.followup({
-            content: ERROR_MESSAGE,
-            allowed_mentions: {
-                parse: [],
-            },
-        });
-
-        await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                content: createErrorLog(queries, cmd, toMagazine, e as Error),
-            }),
-        });
-        return;
-    }
-
-    const contents = splitText(resultToText(result, rewriteLevel ? queries : null));
-
-    for (const content of contents) {
-        await ctx.flags('SUPPRESS_EMBEDS').followup({
-            content,
-            allowed_mentions: {
-                parse: [],
-            },
-        });
-    }
-}

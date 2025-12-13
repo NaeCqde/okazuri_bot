@@ -1,12 +1,12 @@
-import { pronounce } from './pronounce.js';
+import { pronounce } from './pronounce';
 
-export async function rewrite(text: string, level: 1 | 2) {
+export async function rewrite(api: string, text: string, level: 1 | 2) {
     text = text.trim();
     switch (level) {
         case 1:
             if (!text.match(/hentai/)) text += ' hentai';
         case 2:
-            if (hasJapanese(text)) text = await pronounce(text);
+            if (hasJapanese(text)) text = await pronounce(api, text);
     }
 
     return text;

@@ -1,9 +1,8 @@
 import { eq, type InferSelectModel } from 'drizzle-orm';
+import { DrizzleD1Database } from 'drizzle-orm/d1';
+import { numbers, works, type Work } from './schema';
 
-import { db } from './db/db.js';
-import { numbers, works, type Work } from './db/schema.js';
-
-export async function listWorks(number: string): Promise<Work[]> {
+export async function listWorks(db: DrizzleD1Database, number: string): Promise<Work[]> {
     const result = await db.select().from(numbers).where(eq(numbers.name, number));
 
     if (result.length) {
@@ -15,7 +14,10 @@ export async function listWorks(number: string): Promise<Work[]> {
     }
 }
 
-export async function toNumber(work: string): Promise<InferSelectModel<typeof numbers>> {
+export async function toNumber(
+    db: DrizzleD1Database,
+    work: string
+): Promise<InferSelectModel<typeof numbers>> {
     const result = await db.select().from(works).where(eq(works.name, work));
 
     if (result.length) {

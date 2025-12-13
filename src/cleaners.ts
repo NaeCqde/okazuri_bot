@@ -1,5 +1,5 @@
-import type { StringToPromiseString } from './types.js';
-import { getHitomiLaGalleryInfo } from './websites.js';
+import type { StringToPromiseString } from './types';
+import { getHitomiLaGalleryInfo } from './websites';
 
 export const PARENTHE_PATTERN = /`[（）「」\(\)\[\]]+`/g;
 export const DOUBLE_SPACE_PATTERN = /` {2,}`/g;

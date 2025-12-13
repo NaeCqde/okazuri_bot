@@ -1,4 +1,4 @@
-import { createFactory } from 'discord-hono'
-import type { EnvTypes } from './types.js'
+import { createFactory } from 'discord-hono';
+import type { EnvTypes } from './types';
 
-export const factory = createFactory<EnvTypes>()
+export const factory = createFactory<EnvTypes>();

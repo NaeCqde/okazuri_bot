@@ -1,13 +1,14 @@
 // 作品名からレーベル名 and No.を表示する
 import { ApplicationCommandType, ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
 import { Command, CommandContext, Option } from 'discord-hono';
+import { drizzle } from 'drizzle-orm/d1';
 
-import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts.js';
-import type { Number } from '../../db/schema.js';
-import { createErrorLog } from '../../formatter.js';
-import { factory } from '../../init.js';
-import { toNumber } from '../../magazines.js';
-import type { CommandSet } from '../../types.js';
+import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts';
+import { createErrorLog } from '../../formatter';
+import { factory } from '../../init';
+import { toNumber } from '../../magazines';
+import type { Number } from '../../schema';
+import type { CommandSet } from '../../types';
 
 export const fromWorkCommand: CommandSet = factory.command(
     new Command('from_work', 'Search for magazine by title')
@@ -31,7 +32,7 @@ export const fromWorkCommand: CommandSet = factory.command(
                 let number: Number;
 
                 try {
-                    number = await toNumber(title);
+                    number = await toNumber(drizzle(ctx.env.DB), title);
                 } catch (e: any) {
                     await ctx.followup({
                         content: ERROR_MESSAGE,

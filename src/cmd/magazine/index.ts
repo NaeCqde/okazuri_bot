@@ -1,2 +1,2 @@
-export * from './from_work.js';
-export * from './works.js';
+export * from './from_work';
+export * from './works';

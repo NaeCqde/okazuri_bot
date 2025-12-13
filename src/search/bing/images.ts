@@ -1,6 +1,6 @@
 import { load } from 'cheerio';
-import type { GoogleSearchResult } from '../../types.js';
-import { genSearchN } from '../base.js';
+import type { GoogleSearchResult } from '../../types';
+import { genSearchN } from '../base';
 
 export const searchN = genSearchN(search, 1);
 

@@ -2,13 +2,13 @@ import { sValidator } from '@hono/standard-validator';
 import { type } from 'arktype';
 import { Hono } from 'hono/tiny';
 import * as handlers from './cmd';
-import { factory } from './init.js';
-import { Fetcher } from './magazines.js';
-import * as bingImages from './search/bing/images.js';
-import * as bing from './search/bing/search.js';
-import * as googleImages from './search/google/images.js';
-import * as google from './search/google/search.js';
-import type { EnvTypes } from './types.js';
+import { factory } from './init';
+import { Fetcher } from './magazines';
+import * as bingImages from './search/bing/images';
+import * as bing from './search/bing/search';
+import * as googleImages from './search/google/images';
+import * as google from './search/google/search';
+import type { EnvTypes } from './types';
 
 const bot = factory
     // @ts-ignore

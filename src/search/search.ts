@@ -1,6 +1,6 @@
-import { searchN } from '../search/bing/images.js';
-import type { SearchResult, SearchResultMap } from '../types.js';
-import { WEBSITES } from '../websites.js';
+import { searchN } from '../search/bing/images';
+import type { SearchResult, SearchResultMap } from '../types';
+import { WEBSITES } from '../websites';
 
 export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
     const resultMap: SearchResultMap = {};

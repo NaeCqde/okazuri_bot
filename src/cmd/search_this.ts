@@ -9,11 +9,11 @@ import {
 } from 'discord-api-types/v10';
 import { Command, CommandContext } from 'discord-hono';
 
-import { getUrls } from '../formatter.js';
-import { factory } from '../init.js';
-import { titleByUrl } from '../search/search.js';
-import type { CommandSet } from '../types.js';
-import { searchCallback } from './search.js';
+import { searchHandler } from '../cmd_handler';
+import { getUrls } from '../formatter';
+import { factory } from '../init';
+import { titleByUrl } from '../search/search';
+import type { CommandSet } from '../types';
 
 export const searchThisCommand: CommandSet = factory.command(
     new Command('Search this', 'Search this')
@@ -39,7 +39,7 @@ export const searchThisCommand: CommandSet = factory.command(
                         queries.push(await titleByUrl(url));
                     }
 
-                    return searchCallback(ctx, queries, 0, false, 'search_this');
+                    return searchHandler(ctx, queries, 0, false, 'search_this');
                 });
             }
         }

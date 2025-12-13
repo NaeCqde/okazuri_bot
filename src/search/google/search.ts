@@ -1,6 +1,6 @@
-import { env } from '../../env.js';
-import type { GoogleSearchResult } from '../../types.js';
-import { genSearchN } from '../base.js';
+import { env } from 'node:process';
+import type { GoogleSearchResult } from '../../types';
+import { genSearchN } from '../base';
 
 export const searchN = genSearchN(search, 8);
 

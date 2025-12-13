@@ -9,11 +9,11 @@ import {
 } from 'discord-api-types/v10';
 import { Button, Command, CommandContext, Components, Select } from 'discord-hono';
 
-import { getUrls } from '../formatter.js';
-import { factory } from '../init.js';
-import { titleByUrl } from '../search/search.js';
-import type { CommandSet } from '../types.js';
-import { searchCallback } from './search.js';
+import { searchHandler } from '../cmd_handler';
+import { getUrls } from '../formatter';
+import { factory } from '../init';
+import { titleByUrl } from '../search/search';
+import type { CommandSet } from '../types';
 
 const components = new Components()
     .row(
@@ -106,7 +106,7 @@ export const searchComponent = factory.component(
             queries.push(await titleByUrl(url));
         }
 
-        return searchCallback(
+        return searchHandler(
             c,
             queries,
             state.rewriteLevel,

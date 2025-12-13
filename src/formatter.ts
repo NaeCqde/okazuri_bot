@@ -1,5 +1,5 @@
-import { URL_PATTERN } from './consts.js';
-import type { SearchResultMap } from './types.js';
+import { URL_PATTERN } from './consts';
+import type { SearchResultMap } from './types';
 
 export function getUrls(content: string): string[] {
     return [...content.matchAll(URL_PATTERN)].map((el) => el[0]);
