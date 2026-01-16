@@ -57,6 +57,7 @@ export const searchCommand: CommandSet = factory.command(
         ),
     async (ctx: CommandContext): Promise<Response> => {
         if (ctx.var['query']) {
+            console.log(ctx.var);
             const rewriteLevel: 0 | 1 | 2 = ctx.var['focus_on_illegal'];
             const toMagazine: boolean = ctx.var['to_magazine'];
             const originalQuery: string = ctx.var['query'];

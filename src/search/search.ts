@@ -48,7 +48,7 @@ export async function search(query: string): Promise<SearchResult[]> {
 
         for (const result of results) {
             for (const website of WEBSITES) {
-                console.log(`${website.name}: ${website.pattern.exec(result.url)}`);
+                //console.log(`${website.name}: ${website.pattern.exec(result.url)}`);
                 if (website.pattern.exec(result.url)) {
                     const url = await website.clean(result.url);
 

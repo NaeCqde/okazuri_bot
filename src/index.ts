@@ -20,7 +20,7 @@ bot.cron('0 0 * * *', async () => {
 });
 
 const hono = new Hono<EnvTypes>();
-hono.mount('/interaction', bot.fetch);
+hono.mount('/interaction', bot.fetch.bind(bot));
 
 const param = type({
     engine: '"google" | "bing"',

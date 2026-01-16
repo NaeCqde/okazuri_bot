@@ -2,14 +2,14 @@ import { URL_PATTERN } from './consts';
 import type { SearchResultMap } from './types';
 
 export function getUrls(content: string): string[] {
-    return [...content.matchAll(URL_PATTERN)].map((el) => el[0]);
+    return Array.from(content.matchAll(URL_PATTERN)).map((el) => el[0]);
 }
 
 export function resultToText(
     resultMap: SearchResultMap,
     originalQuery: string[] | null = null
 ): string[] {
-    let lines: string[] = [];
+    let lines: string[] = ['# 検索結果'];
     const results = Object.entries(resultMap);
 
     for (let i: number = 0; results.length > i; i++) {
@@ -40,10 +40,8 @@ export function resultToText(
         }
     }
 
-    if (lines.length) {
-        lines.unshift('# 検索結果');
-    } else {
-        lines = ['# 検索結果', '## 無し'];
+    if (lines.length === 1) {
+        lines.push('## 無し');
     }
 
     return lines;

@@ -22,7 +22,8 @@ export const fromWorkCommand: CommandSet = factory.command(
         )
         .options(
             new Option('title', 'Please enter a title', 'String')
-                .name_localizations({ [Locale.Japanese]: 'タイトルを入力してください' })
+                .name_localizations({ [Locale.Japanese]: 'タイトル' })
+                .description_localizations({ [Locale.Japanese]: 'タイトルを入力してください' })
                 .required(true)
         ),
     async (ctx: CommandContext): Promise<Response> => {

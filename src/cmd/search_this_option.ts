@@ -84,7 +84,7 @@ export const rewriteLevelComponent = factory.component(
 
         const state = parseState(c.interaction.message.content);
         if (state.toMagazine) {
-            json[1].components[0].style = ButtonStyle.Primary;
+            json[1].components[1].style = ButtonStyle.Primary;
         }
 
         return c.update().res({
@@ -97,22 +97,26 @@ export const rewriteLevelComponent = factory.component(
 export const searchComponent = factory.component(
     new Button('search', ['🔍', 'Search'], 'Success'),
     async (c) => {
-        console.log(c.interaction.message.content);
         const state = parseState(c.interaction.message.content);
-        await c.update().followup({ components: [] });
+        await c.update().followup({
+            content: formatState(state.urls, state.rewriteLevel, state.toMagazine),
+            components: [],
+        });
 
-        const queries: string[] = [];
-        for (const url of state.urls) {
-            queries.push(await titleByUrl(url));
-        }
+        return c.resDefer(async (c) => {
+            const queries: string[] = [];
+            for (const url of state.urls) {
+                queries.push(await titleByUrl(url));
+            }
 
-        return searchHandler(
-            c,
-            queries,
-            state.rewriteLevel,
-            state.toMagazine,
-            'search_this_option'
-        );
+            return await searchHandler(
+                c,
+                queries,
+                state.rewriteLevel,
+                state.toMagazine,
+                'search_this_option'
+            );
+        });
     }
 );
 

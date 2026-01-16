@@ -1,10 +1,8 @@
 import {
-    APIMessage,
     APIMessageApplicationCommandInteractionData,
     ApplicationCommandType,
     ApplicationIntegrationType,
     Locale,
-    MessageFlags,
     PermissionFlagsBits,
 } from 'discord-api-types/v10';
 import { Command, CommandContext } from 'discord-hono';
@@ -26,26 +24,17 @@ export const searchThisCommand: CommandSet = factory.command(
         ),
     async (ctx: CommandContext): Promise<Response> => {
         const source: APIMessageApplicationCommandInteractionData = ctx.interaction.data as any;
-        const messages = Object.values(source.resolved.messages);
+        const urls: string[] = getUrls(source.resolved.messages[source.target_id].content);
 
-        if (messages.length) {
-            const msg: APIMessage = messages[0];
-            const urls: string[] = getUrls(msg.content);
+        if (urls.length) {
+            return ctx.resDefer(async (ctx: CommandContext): Promise<void> => {
+                const queries: string[] = await Promise.all(urls.map((url) => titleByUrl(url)));
 
-            if (urls.length) {
-                return ctx.resDefer(async (ctx: CommandContext): Promise<void> => {
-                    const queries: string[] = [];
-                    for (const url of urls) {
-                        queries.push(await titleByUrl(url));
-                    }
-
-                    return searchHandler(ctx, queries, 0, false, 'search_this');
-                });
-            }
+                return searchHandler(ctx, queries, 0, false, 'search_this');
+            });
         }
 
-        return ctx.res({
-            flags: MessageFlags.SuppressEmbeds | MessageFlags.Ephemeral,
+        return ctx.flags('EPHEMERAL', 'SUPPRESS_EMBEDS').res({
             content: '# 検索結果\n## 無し',
         });
     }
