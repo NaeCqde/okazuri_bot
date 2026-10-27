@@ -1,6 +1,14 @@
 import { URL_PATTERN } from './consts';
 import type { SearchResultMap } from './types';
 
+// 号・作品の日付は、日本の日付を UTC の0時で保存している
+export function formatDate(date: Date): string {
+    const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+    const dd = String(date.getUTCDate()).padStart(2, '0');
+
+    return `${date.getUTCFullYear()}/${mm}/${dd}`;
+}
+
 export function getUrls(content: string): string[] {
     return Array.from(content.matchAll(URL_PATTERN)).map((el) => el[0]);
 }
@@ -36,12 +44,12 @@ export function resultToText(
                 lines.push('### 違法：', ...leak);
             }
         } else {
-            lines.push('### 無し');
+            lines.push('### なし');
         }
     }
 
     if (lines.length === 1) {
-        lines.push('## 無し');
+        lines.push('## なし');
     }
 
     return lines;

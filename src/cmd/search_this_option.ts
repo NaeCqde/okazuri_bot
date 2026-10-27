@@ -1,190 +1,148 @@
+// メッセージ内のURLを、設定(クエリ書き換えレベル・雑誌を探す)を選んでから検索する。
+// 設定はメッセージの本文に持ち、ボタン・セレクトを操作するたびに本文とコンポーネントを更新する。
+import { ApplicationIntegrationType, Locale, PermissionFlagsBits } from 'discord-api-types/v10';
 import {
-    APIMessage,
-    APIMessageApplicationCommandInteractionData,
-    ApplicationCommandType,
-    ApplicationIntegrationType,
-    ButtonStyle,
-    Locale,
-    PermissionFlagsBits,
-} from 'discord-api-types/v10';
-import { Button, Command, CommandContext, Components, Select } from 'discord-hono';
+    buttonStyle,
+    makeActionRow,
+    makeButton,
+    makeMessageCommand,
+    makeStringSelect,
+    makeStringSelectOption,
+} from 'discord-hono';
 
-import { searchHandler } from '../cmd_handler';
+import { searchHandler, titlesFromUrls } from '../cmd_handler';
 import { getUrls } from '../formatter';
 import { factory } from '../init';
-import { titleByUrl } from '../search/search';
-import type { CommandSet } from '../types';
+import { reply } from '../reply';
 
-const components = new Components()
-    .row(
-        new Select('rewrite-level', 'String')
-            .options(
-                {
-                    label: 'Off:Default',
-                    value: '0',
-                    default: true,
-                },
-                {
-                    label: 'Weak',
-                    value: '1',
-                },
-                {
-                    label: 'Strong',
-                    value: '2',
-                }
-            )
-            .placeholder('Rewrite Level')
-    )
-    .row(new Button('to-magazine', ['📖', 'Magazine'], 'Danger'))
-    .row(new Button('search', ['🔍', 'Search'], 'Success'));
+type RewriteLevel = 0 | 1 | 2;
 
-export const toMagazineComponent = factory.component(
-    new Button('to-magazine', ['📖', 'Magazine'], 'Danger'),
-    (c) => {
-        const json = components.toJSON();
-        console.log(c.var);
-        console.log(json);
+const LEVEL_LABELS = ['オフ', '弱', '強'] as const;
 
-        const state = parseState(c.interaction.message.content);
-        if (state.toMagazine) {
-            json[1].components[0].style = ButtonStyle.Primary;
-        }
+// 本文(2000文字)に収める
+const MAX_URLS = 10;
 
-        return c.update().resDefer((c) =>
-            c.followup({
-                content: formatState(state.urls, state.rewriteLevel, state.toMagazine),
-                components: json,
-            })
-        );
-    }
-);
+const URLS_PATTERN = /^\|\|\[urls\]\((.*)\)\|\|$/;
+const LEVEL_PREFIX = 'クエリ書き換えレベル：';
+const MAGAZINE_PREFIX = '雑誌を探す：';
 
-export const rewriteLevelComponent = factory.component(
-    new Select('rewrite-level', 'String')
-        .options(
-            {
-                label: 'Off:Default',
-                value: '0',
-                default: true,
-            },
-            {
-                label: 'Weak',
-                value: '1',
-            },
-            {
-                label: 'Strong',
-                value: '2',
-            }
-        )
-        .placeholder('Rewrite Level'),
-    (c) => {
-        const json = components.toJSON();
-        console.log(c.var);
-        console.log(json);
+const TO_MAGAZINE_BUTTON = makeButton('to-magazine', ['📖', 'Magazine'], buttonStyle.Danger);
+const REWRITE_LEVEL_SELECT = makeStringSelect('rewrite-level', [
+    ['0', 'Off:Default'],
+    ['1', 'Weak'],
+    ['2', 'Strong'],
+]).placeholder('Rewrite Level');
+const SEARCH_BUTTON = makeButton('search', ['🔍', 'Search'], buttonStyle.Success);
 
-        const state = parseState(c.interaction.message.content);
-        if (state.toMagazine) {
-            json[1].components[1].style = ButtonStyle.Primary;
-        }
+function buildComponents(level: RewriteLevel, toMagazine: boolean) {
+    return [
+        makeActionRow([
+            // 選ばれているレベルを default にして、選び直したあとも表示が変わらないようにする
+            REWRITE_LEVEL_SELECT.options([
+                makeStringSelectOption('0', 'Off:Default').default(level === 0),
+                makeStringSelectOption('1', 'Weak').default(level === 1),
+                makeStringSelectOption('2', 'Strong').default(level === 2),
+            ]),
+        ]),
+        makeActionRow([
+            TO_MAGAZINE_BUTTON.style(toMagazine ? buttonStyle.Primary : buttonStyle.Secondary),
+        ]),
+        makeActionRow([SEARCH_BUTTON]),
+    ];
+}
 
-        return c.update().res({
-            content: formatState(state.urls, c.var['rewrite-level'], state.toMagazine),
-            components: json,
-        });
-    }
-);
+function formatState(urls: string[], level: RewriteLevel = 0, toMagazine: boolean = false): string {
+    return `||[urls](${urls.join('|')})||
 
-export const searchComponent = factory.component(
-    new Button('search', ['🔍', 'Search'], 'Success'),
-    async (c) => {
-        const state = parseState(c.interaction.message.content);
-        await c.update().followup({
-            content: formatState(state.urls, state.rewriteLevel, state.toMagazine),
-            components: [],
-        });
-
-        return c.resDefer(async (c) => {
-            const queries: string[] = [];
-            for (const url of state.urls) {
-                queries.push(await titleByUrl(url));
-            }
-
-            return await searchHandler(
-                c,
-                queries,
-                state.rewriteLevel,
-                state.toMagazine,
-                'search_this_option'
-            );
-        });
-    }
-);
-
-export const searchThisOptionCommand: CommandSet = factory.command(
-    new Command('Search this with option')
-        .name_localizations({ [Locale.Japanese]: 'これらを設定付きで検索' })
-        .default_member_permissions(PermissionFlagsBits.ViewChannel.toString())
-        .type(ApplicationCommandType.Message)
-        .integration_types(
-            ApplicationIntegrationType.GuildInstall,
-            ApplicationIntegrationType.UserInstall
-        ),
-    async (ctx: CommandContext): Promise<Response> => {
-        const source: APIMessageApplicationCommandInteractionData = ctx.interaction.data as any;
-        const messages = Object.values(source.resolved.messages);
-
-        if (messages.length) {
-            const msg: APIMessage = messages[0];
-
-            const urls: string[] = getUrls(msg.content);
-            if (urls.length) {
-                return ctx.res({
-                    content: formatState(urls),
-                    components,
-                });
-            }
-        }
-
-        return ctx.flags('EPHEMERAL', 'SUPPRESS_EMBEDS').res('# 検索結果\n## 無し');
-    }
-);
+${LEVEL_PREFIX}${LEVEL_LABELS[level]}
+${MAGAZINE_PREFIX}${toMagazine ? 'はい' : 'いいえ'}`;
+}
 
 function parseState(content: string) {
     const lines = content.split('\n');
-    const urls: string[] = lines[0].split('(')[1].slice(0, -3).split('|');
 
-    let rewriteLevel: 0 | 1 | 2 = 0;
-    switch (true) {
-        case urls.includes('弱'):
-            rewriteLevel = 1;
-            break;
-        case urls.includes('強'):
-            rewriteLevel = 2;
-            break;
-    }
+    const urls: string[] = lines[0]?.match(URLS_PATTERN)?.[1].split('|') ?? [];
 
-    const toMagazine: boolean = lines[3].includes('はい');
-    return { urls, rewriteLevel, toMagazine };
+    const label = lines.find((l) => l.startsWith(LEVEL_PREFIX))?.slice(LEVEL_PREFIX.length).trim();
+    const level = Math.max(0, LEVEL_LABELS.indexOf(label as (typeof LEVEL_LABELS)[number])) as RewriteLevel;
+
+    const toMagazine: boolean =
+        lines.find((l) => l.startsWith(MAGAZINE_PREFIX))?.includes('はい') ?? false;
+
+    return { urls, level, toMagazine };
 }
 
-function formatState(
-    urls: string[],
-    newRewriteLevel: 0 | 1 | 2 = 0,
-    newToMagazine: boolean = false
-): string {
-    let rewriteLevel: string = 'オフ';
-    switch (newRewriteLevel) {
-        case 1:
-            rewriteLevel = '弱';
-            break;
-        case 2:
-            rewriteLevel = '強';
-            break;
+export const toMagazineComponent = factory.component(TO_MAGAZINE_BUTTON, (c) => {
+    const state = parseState(c.interaction.message.content);
+    const toMagazine = !state.toMagazine;
+
+    return c.update().res({
+        content: formatState(state.urls, state.level, toMagazine),
+        components: buildComponents(state.level, toMagazine),
+    });
+});
+
+export const rewriteLevelComponent = factory.component(REWRITE_LEVEL_SELECT, (c) => {
+    const state = parseState(c.interaction.message.content);
+
+    const selected = Number(c.ref.values?.[0] ?? 0);
+    const level = (selected === 1 || selected === 2 ? selected : 0) as RewriteLevel;
+
+    return c.update().res({
+        content: formatState(state.urls, level, state.toMagazine),
+        components: buildComponents(level, state.toMagazine),
+    });
+});
+
+export const searchComponent = factory.component(SEARCH_BUTTON, (c) => {
+    const state = parseState(c.interaction.message.content);
+
+    if (!state.urls.length) {
+        return c.update().res({
+            content: '設定を読み取れませんでした。もう一度、コマンドを実行してください。',
+            components: [],
+        });
     }
 
-    const toMagazine: string = newToMagazine ? 'はい' : 'いいえ';
-    return `||[urls](${urls.join('|')})||
+    return c.update().resDefer(async (c) => {
+        // 最初の followup は元のメッセージを編集する(設定を確定して、操作できなくする)
+        await c.followup({
+            content: formatState(state.urls, state.level, state.toMagazine),
+            components: [],
+        });
 
-クエリ書き換えレベル：${rewriteLevel}
-違法コンテンツを出しやすくする：${toMagazine}`;
-}
+        const queries: string[] = await titlesFromUrls(state.urls);
+
+        if (!queries.length) {
+            await reply(c, ['# 検索結果\n## なし'], false);
+
+            return;
+        }
+
+        // 結果は新しいメッセージで送る(確定した設定のメッセージを残す)
+        await searchHandler(c, queries, state.level, state.toMagazine, 'search_this_option', false);
+    });
+});
+
+export const searchThisOptionCommand = factory.command(
+    makeMessageCommand('Search this with option')
+        .name_localizations({ [Locale.Japanese]: 'これらを設定付きで検索' })
+        .default_member_permissions(PermissionFlagsBits.ViewChannel.toString())
+        .integration_types([
+            ApplicationIntegrationType.GuildInstall,
+            ApplicationIntegrationType.UserInstall,
+        ]),
+    (c) => {
+        const message = c.ref.messages?.[c.ref.target_id];
+        const urls: string[] = getUrls(message?.content ?? '').slice(0, MAX_URLS);
+
+        if (urls.length) {
+            return c.res({
+                content: formatState(urls),
+                components: buildComponents(0, false),
+            });
+        }
+
+        return c.flags('EPHEMERAL', 'SUPPRESS_EMBEDS').res('# 検索結果\n## なし');
+    }
+);

@@ -1,0 +1,16 @@
+[project]
+name = "okazuri-api"
+version = "0.1.0"
+description = "okazuri-bot の読み(ローマ字)変換 API"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "pykakasi>=2.3",
+    "cutlet>=0.5.2",
+    "unidic-lite>=1.0.8",
+]
+
+# パッケージとしては配布しない(main.py を uvicorn で動かすだけ)
+[tool.uv]
+package = false

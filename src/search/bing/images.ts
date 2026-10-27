@@ -1,50 +1,48 @@
 import { load } from 'cheerio';
 import type { GoogleSearchResult } from '../../types';
 import { genSearchN } from '../base';
+import { fetchBing } from './common';
 
-export const searchN = genSearchN(search, 1);
+// 1ページ35件ほど。start は件数のオフセット
+export const searchN = genSearchN(search, 35);
 
 export async function search(query: string, start: number): Promise<GoogleSearchResult[]> {
-    query = encodeURIComponent(query);
-    start++;
-
     /* safeSearch
     - Strict
     - Moderate
     - Off
     */
+    // q は URLSearchParams がエンコードするので、ここではエンコードしない(二重になって別の語を検索してしまう)
     const params = new URLSearchParams({
         q: query,
-        first: start.toString(),
+        first: String(start + 1),
         FORM: '',
         safeSearch: 'Off',
         mkt: 'ja-jp',
         setLang: 'ja-jp',
     });
-    const resp = await fetch('https://www.bing.com/images/async?' + params.toString());
 
-    if (!resp.ok) {
-        throw Error('okazuri: Status code error from bing');
-    }
-
-    return parse(await resp.text());
+    return parse(await fetchBing('https://www.bing.com/images/async?' + params.toString()));
 }
 
-function parse(html: string): GoogleSearchResult[] {
-    const results: Set<GoogleSearchResult> = new Set();
+export function parse(html: string): GoogleSearchResult[] {
+    const results: Map<string, GoogleSearchResult> = new Map();
 
     const $ = load(html);
     for (const el of $('.iusc').toArray()) {
         const raw: string | undefined = $(el).attr('m');
 
-        if (raw) {
+        if (!raw) continue;
+
+        try {
             const data = JSON.parse(raw);
-            results.add({
-                title: data.t,
-                url: data.purl,
-            });
+
+            // purl は画像が載っているページのURL
+            if (data.purl) results.set(data.purl, { title: data.t, url: data.purl });
+        } catch {
+            // 壊れた1件で全体を落とさない
         }
     }
 
-    return Array.from(results);
+    return Array.from(results.values());
 }

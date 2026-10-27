@@ -6,16 +6,25 @@
     "compatibility_flags": ["nodejs_compat"],
     "workers_dev": true,
     "preview_urls": true,
+    "keep_vars": true,
+    "observability": { "enabled": true },
     "placement": {
-        "mode": "smart"
+        "region": "aws:ap-northeast-1",
     },
     "triggers": { "crons": ["0 0 * * *"] },
+    // cron から自分自身を HTTP で呼ぶための URL(index.ts の fetchMagazinesViaHttp)
+    "vars": { "SELF_URL": "https://okazuri-api.nae.quest" },
+    "routes": [
+        { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
+        { "pattern": "okazuri-api.nae.quest/bing/*", "zone_name": "nae.quest" },
+        { "pattern": "okazuri-api.nae.quest/google/*", "zone_name": "nae.quest" },
+    ],
     "d1_databases": [
         {
             "binding": "DB",
             "database_name": "okazuri",
             "database_id": "f9dc2cfe-17c9-4b58-baf8-692971f19304",
-            "migrations_dir": "drizzle/migrations"
-        }
-    ]
+            "migrations_dir": "drizzle/migrations",
+        },
+    ],
 }

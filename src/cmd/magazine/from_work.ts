@@ -1,69 +1,89 @@
-// 作品名からレーベル名 and No.を表示する
-import { ApplicationCommandType, ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
-import { Command, CommandContext, Option } from 'discord-hono';
+// 作品名から、掲載されている雑誌(レーベル名 and No.)を表示する
+import { ApplicationIntegrationType, Locale } from 'discord-api-types/v10';
+import { makeSlashCommand, makeStringOption } from 'discord-hono';
 import { drizzle } from 'drizzle-orm/d1';
 
 import { ERROR_MESSAGE, ERROR_RESPONSE } from '../../consts';
-import { createErrorLog } from '../../formatter';
+import { productUrl } from '../../dlsite';
+import { createErrorLog, formatDate, splitText } from '../../formatter';
 import { factory } from '../../init';
-import { toNumber } from '../../magazines';
-import type { Number } from '../../schema';
-import type { CommandSet } from '../../types';
+import { reply } from '../../reply';
+import { findWorks, NotFoundError, searchWorkNames } from '../../magazines';
 
-export const fromWorkCommand: CommandSet = factory.command(
-    new Command('from_work', 'Search for magazine by title')
+export const fromWorkCommand = factory.autocomplete(
+    makeSlashCommand('from_work', 'Search for magazine by title')
         .description_localizations({
             [Locale.Japanese]: 'タイトルから雑誌を検索します',
         })
-        .type(ApplicationCommandType.ChatInput)
-        .integration_types(
+        .integration_types([
             ApplicationIntegrationType.GuildInstall,
-            ApplicationIntegrationType.UserInstall
-        )
-        .options(
-            new Option('title', 'Please enter a title', 'String')
+            ApplicationIntegrationType.UserInstall,
+        ])
+        .options([
+            makeStringOption('title', 'Please enter a title')
                 .name_localizations({ [Locale.Japanese]: 'タイトル' })
                 .description_localizations({ [Locale.Japanese]: 'タイトルを入力してください' })
-                .required(true)
-        ),
-    async (ctx: CommandContext): Promise<Response> => {
-        if (ctx.var['title']) {
-            return ctx.resDefer(async (ctx: CommandContext): Promise<void> => {
-                const title: string = ctx.var['title'];
-                let number: Number;
+                .autocomplete(true)
+                .required(true),
+        ]),
+    // 入力中の作品名の候補
+    async (c) => {
+        let names: string[] = [];
 
-                try {
-                    number = await toNumber(drizzle(ctx.env.DB), title);
-                } catch (e: any) {
-                    await ctx.followup({
-                        content: ERROR_MESSAGE,
-                        allowed_mentions: {
-                            parse: [],
-                        },
-                    });
+        try {
+            names = await searchWorkNames(drizzle(c.env.DB), String(c.focused?.value ?? ''));
+        } catch (e) {
+            console.error('okazuri: from_work autocomplete failed', e);
+        }
 
-                    await fetch(ctx.env.ERROR_LOG_WEBHOOK, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            content: createErrorLog([title], 'from_work', true, e as Error),
-                        }),
+        return c.resAutocomplete(
+            names.filter((n) => n.length <= 100).map((n) => ({ name: n, value: n }))
+        );
+    },
+    (c) => {
+        const title = c.var.title;
+
+        if (!title) return c.res(ERROR_RESPONSE);
+
+        return c.resDefer(async (c) => {
+            let found: Awaited<ReturnType<typeof findWorks>>;
+
+            try {
+                found = await findWorks(drizzle(c.env.DB), title);
+            } catch (e: any) {
+                // 入力違いはユーザーに案内するだけで、開発者には通知しない
+                if (e instanceof NotFoundError) {
+                    await c.followup({
+                        content: `「${title}」という作品は見つかりませんでした。タイトルを確認してください。`,
+                        allowed_mentions: { parse: [] },
                     });
 
                     return;
                 }
 
-                await ctx.flags('SUPPRESS_EMBEDS').followup({
-                    content: number.name,
-                    allowed_mentions: {
-                        parse: [],
-                    },
+                await c.followup({
+                    content: ERROR_MESSAGE,
+                    allowed_mentions: { parse: [] },
                 });
-            });
-        }
 
-        return ctx.res(ERROR_RESPONSE);
+                await fetch(c.env.ERROR_LOG_WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: createErrorLog([title], 'from_work', true, e as Error),
+                    }),
+                });
+
+                return;
+            }
+
+            // 同名の作品があるときは、新しい号から並べて全部出す
+            const lines: string[] = found.flatMap(({ work, number, authorName }) => [
+                `## [${work.name}](${productUrl(work.id)}) / ${authorName}`,
+                `[${number.name}](${productUrl(number.id)}) の ${work.position} 番目 (発売日 ${formatDate(number.date)})`,
+            ]);
+
+            await reply(c, splitText(lines));
+        });
     }
 );

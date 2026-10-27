@@ -1,5 +1,6 @@
-import { searchN } from '../search/bing/images';
-import type { SearchResult, SearchResultMap } from '../types';
+import type { GoogleSearchResult, SearchResult, SearchResultMap } from '../types';
+import { searchN as searchImagesN } from './bing/images';
+import { searchN as searchWebN } from './bing/search';
 import { WEBSITES } from '../websites';
 
 export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
@@ -38,11 +39,33 @@ export async function titleByUrl(url: string): Promise<string> {
     throw Error('okazuri: Unsupported website');
 }
 
+/**
+ * Bing の画像検索(画像が載っているページ)と Web 検索を併用する。
+ * どちらも Workers の fetch だけで動く。片方が失敗しても、もう片方の結果で続ける
+ */
+export async function searchBing(query: string): Promise<GoogleSearchResult[]> {
+    const settled = await Promise.allSettled([searchImagesN(query, 1), searchWebN(query, 1)]);
+
+    const merged: Map<string, GoogleSearchResult> = new Map();
+
+    for (const result of settled) {
+        if (result.status === 'fulfilled') {
+            for (const r of result.value) merged.set(r.url, r);
+        }
+    }
+
+    // 両方失敗したときだけエラーにする
+    const failed = settled.filter((r) => r.status === 'rejected');
+    if (failed.length === settled.length) throw (failed[0] as PromiseRejectedResult).reason;
+
+    return [...merged.values()];
+}
+
 export async function search(query: string): Promise<SearchResult[]> {
     console.log(query);
 
     if (query) {
-        const results = await searchN(query, 1);
+        const results = await searchBing(query);
 
         const filteredResults: Map<string, SearchResult> = new Map();
 

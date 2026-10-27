@@ -12,7 +12,9 @@
         "typegen": "wrangler types",
         "generate": "drizzle-kit generate",
         "migrate": "wrangler d1 migrations apply okazuri",
-        "register": "tsx --env-file=.dev.vars src/register.ts"
+        "register": "tsx --env-file=.dev.vars src/register.ts",
+        "import": "tsx scripts/import.ts",
+        "export": "tsx scripts/export.ts"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20251202.0",
@@ -21,14 +23,14 @@
         "drizzle-kit": "^0.31.7",
         "tsx": "^4.21.0",
         "typescript": "^5.7.3",
-        "wrangler": "^4.51.0"
+        "wrangler": "^4.153.0"
     },
     "dependencies": {
         "@hono/standard-validator": "^0.2.0",
         "arktype": "^2.1.28",
         "cheerio": "^1.1.2",
         "discord-api-types": "^0.38.36",
-        "discord-hono": "^0.20.1",
+        "discord-hono": "^0.22.2",
         "drizzle-orm": "^0.44.7",
         "hono": "^4.10.7"
     }

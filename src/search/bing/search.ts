@@ -1,52 +1,44 @@
+import { load } from 'cheerio';
 import type { GoogleSearchResult } from '../../types';
 import { genSearchN } from '../base';
+import { decodeBingUrl, fetchBing } from './common';
 
-export const searchN = genSearchN(search, 1);
+// 1ページ10件。start は件数のオフセット
+export const searchN = genSearchN(search, 10);
 
 export async function search(query: string, start: number): Promise<GoogleSearchResult[]> {
-    query = encodeURIComponent(query);
-    start++;
-
-    /* safeSearch
-- Strict
-- Moderate
-- Off
-*/
+    // q は URLSearchParams がエンコードするので、ここではエンコードしない
     const params = new URLSearchParams({
         q: query,
-        first: start.toString(),
-        FORM: '',
-        safeSearch: 'Off',
-        mkt: 'ja-jp',
-        setLang: 'ja-jp',
+        first: String(start + 1),
+        mkt: 'ja-JP',
+        setlang: 'ja',
+        adlt: 'off',
     });
-    const resp = await fetch('https://www.bing.com/search?' + params.toString());
 
-    if (!resp.ok) {
-        throw Error('okazuri: Status code error from bing');
-    }
-
-    return parse(await resp.text());
+    return parse(await fetchBing('https://www.bing.com/search?' + params.toString()));
 }
 
-function parse(html: string): GoogleSearchResult[] {
-    return [];
-}
+export function parse(html: string): GoogleSearchResult[] {
+    const $ = load(html);
 
-/* POST /bing/redirect
-content-type: application/json
-json: string[]
-response:
-200 OK: string[]
-400 Bad Request: { message: string }
-*/
-export async function getLocation(url: string): Promise<string> {
-    const resp = await fetch(url, { redirect: 'manual' });
-
-    // 307 = Internal Redirect
-    if (resp.status === 307) {
-        return resp.headers.get('Location') as string;
+    // 結果の一覧そのものがないときは、検索結果ではないページ(確認画面など)
+    if (!$('#b_results').length) {
+        throw Error('okazuri: Unexpected response from bing');
     }
 
-    throw Error('okazuri: Failed to get redirect location');
+    const results: Map<string, GoogleSearchResult> = new Map();
+
+    for (const el of $('li.b_algo').toArray()) {
+        const link = $(el).find('h2 a').first();
+        const href = link.attr('href');
+
+        if (!href) continue;
+
+        const url = decodeBingUrl(href);
+
+        results.set(url, { title: link.text().trim(), url });
+    }
+
+    return Array.from(results.values());
 }

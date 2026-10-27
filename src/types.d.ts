@@ -1,4 +1,3 @@
-import type { Command, DiscordHono } from 'discord-hono';
 export interface SearchResult {
     title: string;
     website: string;
@@ -30,20 +29,6 @@ export interface HitomiLaGalleryInfo {
     japaneseTitle: string;
 }
 
-export type DiscordHonoBot = DiscordHono<
-    {
-        Bindings: Pick<Env, 'DB'>;
-        Variables: Omit<Env, 'DB'>;
-    },
-    string
->;
-
-export interface CommandSet {
-    command: Command<{}>;
-    handler: CommandHandler<EnvTypes>;
-}
-
 export interface EnvTypes {
-    Bindings: Pick<Env, 'DB'>;
-    Variables: Omit<Env, 'DB'>;
+    Bindings: Env;
 }

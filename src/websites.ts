@@ -15,7 +15,7 @@ export const WEBSITES: Website[] = [
         name: 'DLsite',
         isLegal: true,
         pattern:
-            /^https:\/\/(?:[A-Za-z]+\.)?dlsite\.com\/[a-z\-]+\/work\/=\/product_id\/RJ\d+\.html.*/,
+            /^https:\/\/(?:[A-Za-z]+\.)?dlsite\.com\/[a-z\-]+\/work\/=\/product_id\/(?:RJ|BJ)\d+\.html.*/,
         title: regexpTitleGetter(
             /<meta property="og:title" content="(?<title>.+) \| DLsite/,
             deleteLocale

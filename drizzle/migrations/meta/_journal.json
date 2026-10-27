@@ -8,6 +8,34 @@
       "when": 1765607385013,
       "tag": "0000_amused_emma_frost",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793114052898,
+      "tag": "0001_magazine_progress",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793114407936,
+      "tag": "0002_work_position",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793130265755,
+      "tag": "0003_read_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793131413942,
+      "tag": "0004_works_fts",
+      "breakpoints": true
     }
   ]
 }

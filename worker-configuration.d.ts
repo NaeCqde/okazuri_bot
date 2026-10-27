@@ -12,6 +12,8 @@ declare namespace Cloudflare {
 		OKAZURI_API_URL: string;
 		ERROR_LOG_WEBHOOK: string;
 		DB: D1Database;
+		CRON_SECRET: string;
+		SELF_URL: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
