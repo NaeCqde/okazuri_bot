@@ -4,7 +4,6 @@ import { ERROR_MESSAGE } from './consts';
 import { createErrorLog, resultToText, splitText } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
-import { rewrite } from './rewriter';
 import { searchMultiple, titleByUrl } from './search/search';
 import type { SearchResultMap } from './types';
 
@@ -22,7 +21,6 @@ export async function titlesFromUrls(urls: string[]): Promise<string[]> {
 export async function searchHandler(
     ctx: CommandContext | ComponentContext,
     originalQueries: string[],
-    rewriteLevel: 0 | 1 | 2 = 0,
     toMagazine: boolean = false,
     cmd: string = 'search',
     editOriginal: boolean = true
@@ -35,13 +33,12 @@ export async function searchHandler(
         for (const [i, original] of originalQueries.entries()) {
             let query = original;
 
-            if (toMagazine) query = (await toNumber(db, query)).name;
-            if (rewriteLevel) query = await rewrite(ctx.env.OKAZURI_API_URL, query, rewriteLevel);
+            if (toMagazine) query = (await toNumber(db, query)).name.replaceAll(/年|月号?/g, " ");
 
             queries[i] = query;
         }
 
-        result = await searchMultiple(queries);
+        result = await searchMultiple(ctx.env.OKAZURI_API_URL, queries);
     } catch (e: any) {
         // 掲載されている雑誌がないのは入力の問題なので、開発者には通知しない
         if (e instanceof NotFoundError) {
@@ -68,12 +65,6 @@ export async function searchHandler(
         return;
     }
 
-    // 検索語を変えたときは、元のクエリも示す
-    const changed = rewriteLevel > 0 || toMagazine;
-
-    await reply(
-        ctx,
-        splitText(resultToText(result, changed ? originalQueries : null)),
-        editOriginal
-    );
+    // 雑誌の号は名前にして検索するので、元のクエリも示す
+    await reply(ctx, splitText(resultToText(result, originalQueries)), editOriginal);
 }

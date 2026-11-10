@@ -1,16 +1,23 @@
 import type { GoogleSearchResult, SearchResult, SearchResultMap } from '../types';
+import { searchOkazuri } from './okazuri';
+import { rewrite } from '../rewriter';
 import { searchN as searchImagesN } from './bing/images';
 import { searchN as searchWebN } from './bing/search';
 import { WEBSITES } from '../websites';
 
-export async function searchMultiple(queries: string[]): Promise<SearchResultMap> {
+/**
+ * 検索語ごとに、okazuri-search-api で検索する。
+ * 結果の見出し(キー)は、API が検索に使った検索語(ローマ字にしたもの)。検索できなかった語は、そのままの語。
+ */
+export async function searchMultiple(api: string, queries: string[]): Promise<SearchResultMap> {
     const resultMap: SearchResultMap = {};
 
     for (const q of new Set(queries)) {
+        let key = q;
         let results: SearchResult[] = [];
 
         try {
-            results = await search(q);
+            ({ query: key, results } = await searchOkazuri(api, q));
         } catch (e: any) {
             if (
                 !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
@@ -21,7 +28,7 @@ export async function searchMultiple(queries: string[]): Promise<SearchResultMap
             }
         }
 
-        resultMap[q] = results;
+        resultMap[key] = results;
     }
 
     return resultMap;
@@ -40,32 +47,36 @@ export async function titleByUrl(url: string): Promise<string> {
 }
 
 /**
- * Bing の画像検索(画像が載っているページ)と Web 検索を併用する。
- * どちらも Workers の fetch だけで動く。片方が失敗しても、もう片方の結果で続ける
+ * Bing で検索する。画像検索(画像が載っているページ)が結果を返すなら、それだけを使う。
+ * 画像検索が使えない(失敗した、結果がない)ときだけ、Web 検索にする。
+ *
+ * 画像検索はセーフサーチを切った結果を返すので、成人向けのサイトのページが出る。
+ * Web 検索は、セーフサーチの設定にかかわらず、一般向けのサイトしか返さない(2026-10 に確認)。
+ * どちらも Workers の fetch だけで動く。
  */
 export async function searchBing(query: string): Promise<GoogleSearchResult[]> {
-    const settled = await Promise.allSettled([searchImagesN(query, 1), searchWebN(query, 1)]);
+    try {
+        const images = await searchImagesN(query, 1);
 
-    const merged: Map<string, GoogleSearchResult> = new Map();
+        if (images.length) return images;
 
-    for (const result of settled) {
-        if (result.status === 'fulfilled') {
-            for (const r of result.value) merged.set(r.url, r);
-        }
+        console.warn(`okazuri: bing image search returned nothing, falling back to web search: ${query}`);
+    } catch (e) {
+        console.warn('okazuri: bing image search failed, falling back to web search', e);
     }
 
-    // 両方失敗したときだけエラーにする
-    const failed = settled.filter((r) => r.status === 'rejected');
-    if (failed.length === settled.length) throw (failed[0] as PromiseRejectedResult).reason;
-
-    return [...merged.values()];
+    return await searchWebN(query, 1);
 }
 
-export async function search(query: string): Promise<SearchResult[]> {
+/**
+ * Bing で検索して、対応しているサイトのページだけを返す(okazuri-search-api を使わない検索)。
+ * 検索語の書き換え(rewrite)は、Bing や Google のような一般の検索エンジンに渡すときだけ行う。
+ */
+export async function searchByBing(api: string, query: string): Promise<SearchResult[]> {
     console.log(query);
 
     if (query) {
-        const results = await searchBing(query);
+        const results = await searchBing(await rewrite(api, query));
 
         const filteredResults: Map<string, SearchResult> = new Map();
 

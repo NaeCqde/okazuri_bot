@@ -1,6 +1,6 @@
 """okazuri-bot の読み(ローマ字)変換 API。
 
-src/pronounce.ts が GET /pronounce?q=<日本語> で呼ぶ。
+src/romaji.ts が GET /romaji?q=<日本語> で呼ぶ。
 日本語を、基本はヘボン式ローマ字に、カタカナの外来語は英単語にして返す。
 海賊版サイトはタイトルをローマ字や英語で載せていることが多いので、検索語の書き換え
 (src/rewriter.ts)で使う。
@@ -196,8 +196,8 @@ def romanize(text: str, engine: str, loanwords: str = "romaji") -> str:
     return " ".join(romaji.lower().split())
 
 
-@app.get("/pronounce", response_class=PlainTextResponse)
-def pronounce(
+@app.get("/romaji", response_class=PlainTextResponse)
+def romaji_endpoint(
     q: str = Query(..., min_length=1, max_length=300),
     engine: Literal["cutlet", "pykakasi"] = "cutlet",
     loanwords: Literal["romaji", "english"] = "romaji",

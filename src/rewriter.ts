@@ -1,12 +1,14 @@
-import { pronounce } from './pronounce';
+import { romaji } from './romaji';
 
-export async function rewrite(api: string, text: string, level: 1 | 2) {
+/**
+ * 検索語を、Bing や Google のような一般の検索エンジンに渡しやすい形に書き換える。
+ * 掛け算記号は x にして、日本語が含まれていればローマ字にする。
+ * okazuri-search-api には、検索語をそのまま渡す(API がローマ字にする)。
+ */
+export async function rewrite(api: string, text: string) {
     text = text.trim().replaceAll('×', 'x');
-    if (!text.match(/hentai/)) text += ' hentai';
 
-    if (level === 2) {
-        if (hasJapanese(text)) text = await pronounce(api, text);
-    }
+    if (hasJapanese(text)) text = await romaji(api, text);
 
     return text;
 }

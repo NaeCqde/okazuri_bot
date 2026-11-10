@@ -1,49 +1,24 @@
-// メッセージ内のURLを、設定(クエリ書き換えレベル・雑誌を探す)を選んでから検索する。
-// 設定はメッセージの本文に持ち、ボタン・セレクトを操作するたびに本文とコンポーネントを更新する。
+// メッセージ内のURLを、設定(雑誌を探す)を選んでから検索する。
+// 設定はメッセージの本文に持ち、ボタンを操作するたびに本文とコンポーネントを更新する。
 import { ApplicationIntegrationType, Locale, PermissionFlagsBits } from 'discord-api-types/v10';
-import {
-    buttonStyle,
-    makeActionRow,
-    makeButton,
-    makeMessageCommand,
-    makeStringSelect,
-    makeStringSelectOption,
-} from 'discord-hono';
+import { buttonStyle, makeActionRow, makeButton, makeMessageCommand } from 'discord-hono';
 
 import { searchHandler, titlesFromUrls } from '../cmd_handler';
 import { getUrls } from '../formatter';
 import { factory } from '../init';
 import { reply } from '../reply';
 
-type RewriteLevel = 0 | 1 | 2;
-
-const LEVEL_LABELS = ['オフ', '弱', '強'] as const;
-
 // 本文(2000文字)に収める
 const MAX_URLS = 10;
 
 const URLS_PATTERN = /^\|\|\[urls\]\((.*)\)\|\|$/;
-const LEVEL_PREFIX = 'クエリ書き換えレベル：';
 const MAGAZINE_PREFIX = '雑誌を探す：';
 
 const TO_MAGAZINE_BUTTON = makeButton('to-magazine', ['📖', 'Magazine'], buttonStyle.Danger);
-const REWRITE_LEVEL_SELECT = makeStringSelect('rewrite-level', [
-    ['0', 'Off:Default'],
-    ['1', 'Weak'],
-    ['2', 'Strong'],
-]).placeholder('Rewrite Level');
 const SEARCH_BUTTON = makeButton('search', ['🔍', 'Search'], buttonStyle.Success);
 
-function buildComponents(level: RewriteLevel, toMagazine: boolean) {
+function buildComponents(toMagazine: boolean) {
     return [
-        makeActionRow([
-            // 選ばれているレベルを default にして、選び直したあとも表示が変わらないようにする
-            REWRITE_LEVEL_SELECT.options([
-                makeStringSelectOption('0', 'Off:Default').default(level === 0),
-                makeStringSelectOption('1', 'Weak').default(level === 1),
-                makeStringSelectOption('2', 'Strong').default(level === 2),
-            ]),
-        ]),
         makeActionRow([
             TO_MAGAZINE_BUTTON.style(toMagazine ? buttonStyle.Primary : buttonStyle.Secondary),
         ]),
@@ -51,10 +26,9 @@ function buildComponents(level: RewriteLevel, toMagazine: boolean) {
     ];
 }
 
-function formatState(urls: string[], level: RewriteLevel = 0, toMagazine: boolean = false): string {
+function formatState(urls: string[], toMagazine: boolean = false): string {
     return `||[urls](${urls.join('|')})||
 
-${LEVEL_PREFIX}${LEVEL_LABELS[level]}
 ${MAGAZINE_PREFIX}${toMagazine ? 'はい' : 'いいえ'}`;
 }
 
@@ -63,13 +37,10 @@ function parseState(content: string) {
 
     const urls: string[] = lines[0]?.match(URLS_PATTERN)?.[1].split('|') ?? [];
 
-    const label = lines.find((l) => l.startsWith(LEVEL_PREFIX))?.slice(LEVEL_PREFIX.length).trim();
-    const level = Math.max(0, LEVEL_LABELS.indexOf(label as (typeof LEVEL_LABELS)[number])) as RewriteLevel;
-
     const toMagazine: boolean =
         lines.find((l) => l.startsWith(MAGAZINE_PREFIX))?.includes('はい') ?? false;
 
-    return { urls, level, toMagazine };
+    return { urls, toMagazine };
 }
 
 export const toMagazineComponent = factory.component(TO_MAGAZINE_BUTTON, (c) => {
@@ -77,20 +48,8 @@ export const toMagazineComponent = factory.component(TO_MAGAZINE_BUTTON, (c) => 
     const toMagazine = !state.toMagazine;
 
     return c.update().res({
-        content: formatState(state.urls, state.level, toMagazine),
-        components: buildComponents(state.level, toMagazine),
-    });
-});
-
-export const rewriteLevelComponent = factory.component(REWRITE_LEVEL_SELECT, (c) => {
-    const state = parseState(c.interaction.message.content);
-
-    const selected = Number(c.ref.values?.[0] ?? 0);
-    const level = (selected === 1 || selected === 2 ? selected : 0) as RewriteLevel;
-
-    return c.update().res({
-        content: formatState(state.urls, level, state.toMagazine),
-        components: buildComponents(level, state.toMagazine),
+        content: formatState(state.urls, toMagazine),
+        components: buildComponents(toMagazine),
     });
 });
 
@@ -107,7 +66,7 @@ export const searchComponent = factory.component(SEARCH_BUTTON, (c) => {
     return c.update().resDefer(async (c) => {
         // 最初の followup は元のメッセージを編集する(設定を確定して、操作できなくする)
         await c.followup({
-            content: formatState(state.urls, state.level, state.toMagazine),
+            content: formatState(state.urls, state.toMagazine),
             components: [],
         });
 
@@ -120,7 +79,7 @@ export const searchComponent = factory.component(SEARCH_BUTTON, (c) => {
         }
 
         // 結果は新しいメッセージで送る(確定した設定のメッセージを残す)
-        await searchHandler(c, queries, state.level, state.toMagazine, 'search_this_option', false);
+        await searchHandler(c, queries, state.toMagazine, 'search_this_option', false);
     });
 });
 
@@ -139,7 +98,7 @@ export const searchThisOptionCommand = factory.command(
         if (urls.length) {
             return c.res({
                 content: formatState(urls),
-                components: buildComponents(0, false),
+                components: buildComponents(false),
             });
         }
 

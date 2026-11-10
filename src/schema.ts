@@ -5,8 +5,10 @@ export const magazines = sqliteTable('magazines', {
     id: text().primaryKey().notNull(),
     name: text().notNull(),
 
-    // DLsite の並び(新しい順)で、先頭からここまでの号を保存済み
+    // DLsite の並び(古い順)で、ここまでの号を保存済み
     cursorNumberId: text('cursor_number_id'),
+    // cursorNumberId のある一覧のページ(続きから読むために持つ)
+    cursorPage: integer('cursor_page'),
     // 並びの末尾まで保存し終えたか
     completed: integer('completed', { mode: 'boolean' }).notNull().default(false),
 });
@@ -16,7 +18,10 @@ export const numbers = sqliteTable(
     'numbers',
     {
         id: text().primaryKey().notNull(),
+        // レーベルごとに同じ書式にそろえた名前(src/issue-name.ts)
         name: text().notNull(),
+        // DLsite の商品名そのまま
+        nameRaw: text('name_raw').notNull().default(''),
         num: integer().notNull(),
         date: integer('date', { mode: 'timestamp' }).notNull(), // 2024年12月08日
 

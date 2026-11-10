@@ -3,7 +3,7 @@
     "name": "okazuri-bot",
     "main": "src/index.ts",
     "compatibility_date": "2025-01-09",
-    "compatibility_flags": ["nodejs_compat"],
+    "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
     "workers_dev": true,
     "preview_urls": true,
     "keep_vars": true,
@@ -11,13 +11,31 @@
     "placement": {
         "region": "aws:ap-northeast-1",
     },
+    // 毎日 00:00 UTC(09:00 JST)に、自分の POST /internal/fetch-magazines を呼んで差分取得を起爆する。
+    // cron 自体は国外で動くが、自分宛ての fetch は global_fetch_strictly_public で外部からの扱いになり、
+    // placement で日本の拠点に回る。外部のサーバー(okazuri-search-api の cron)から同じ URL を呼んでもよい
     "triggers": { "crons": ["0 0 * * *"] },
-    // cron から自分自身を HTTP で呼ぶための URL(index.ts の fetchMagazinesViaHttp)
-    "vars": { "SELF_URL": "https://okazuri-api.nae.quest" },
+    // DLsite のレーベルID。新しいレーベルはここに足すだけでよい(名前・進捗は初回の取得で DB に作られる)
+    "vars": {
+        // 自分自身の URL(取得を子の呼び出しに分けるときに呼ぶ)
+        "WORKER_URL": "https://okazuri-bot.naecqde.workers.dev",
+        "MAGAZINE_IDS": [
+            "LBL02690", // COMIC快楽天
+            "LBL02558", // COMIC快楽天ビースト
+            "LBL02655", // COMIC失楽天
+            "LBL00611", // COMIC E×E
+            "LBL03007", // COMICペンギンクラブ
+            "LBL03712", // コミックグレープ
+            "LBL02544", // COMIC ゼロス(旧 COMIC X-EROS)
+            "LBL00255", // comicアンスリウム
+            "LBL02053", // comicクリベロン DUMA
+            "LBL01003", // コミックマグナム
+            "LBL00334", // COMICエウロパ
+        ],
+    },
     "routes": [
         { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri-api.nae.quest/bing/*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri-api.nae.quest/google/*", "zone_name": "nae.quest" },
+        { "pattern": "okazuri-api.nae.quest/internal/*", "zone_name": "nae.quest" },
     ],
     "d1_databases": [
         {

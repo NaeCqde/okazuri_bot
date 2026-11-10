@@ -1,4 +1,4 @@
-import { load } from 'cheerio';
+import { decode, stripTags } from './html';
 
 export const PER_PAGE = 100;
 
@@ -24,11 +24,11 @@ export interface Detail {
     labelName: string | null;
 }
 
-// レーベルの作品一覧(新しい順)。同じ販売日の中では、単話が先で雑誌が後に並ぶ
+// レーベルの作品一覧(古い順)。同じ販売日の中では、雑誌が先で単話が後に並ぶ
 export function labelListUrl(labelId: string, page: number): string {
     return (
         'https://www.dlsite.com/books/fsr/=/language/jp/sex_category[0]/male/ana_flg/all' +
-        `/order/release_d/options_and_or/and/label_id/${labelId}/per_page/${PER_PAGE}/page/${page}`
+        `/order/release/options_and_or/and/label_id/${labelId}/per_page/${PER_PAGE}/page/${page}`
     );
 }
 
@@ -36,55 +36,86 @@ export function productUrl(id: string): string {
     return `https://www.dlsite.com/books/work/=/product_id/${id}.html`;
 }
 
+export class HttpError extends Error {
+    constructor(
+        readonly status: number,
+        url: string
+    ) {
+        super(`okazuri: Status code error from dlsite: ${status} ${url}`);
+    }
+}
+
 export async function fetchHtml(url: string): Promise<string> {
     const resp = await fetch(url, { headers: HEADERS });
 
     if (!resp.ok) {
-        throw Error(`okazuri: Status code error from dlsite: ${resp.status} ${url}`);
+        throw new HttpError(resp.status, url);
     }
 
     return await resp.text();
 }
 
+const ITEM_START = 'data-list_item_product_id="';
+
 export function parseList(html: string): ListItem[] {
-    const $ = load(html);
+    const items: ListItem[] = [];
 
-    return $('#search_result_img_box li[data-list_item_product_id]')
-        .toArray()
-        .map((el) => {
-            const li = $(el);
-            const link = li.find('dd.work_name a').first();
-            const author = li.find('dd.maker_name .author a[href*="/author_id/"]').first();
+    // 検索結果の外(おすすめなど)にも商品が並ぶので、検索結果の中だけを読む
+    let pos = html.indexOf('id="search_result_img_box"');
+    if (pos < 0) return items;
 
-            return {
-                id: li.attr('data-list_item_product_id') as string,
-                type: productType(li.find('.work_category').first().attr('class') ?? ''),
-                name: (link.attr('title') ?? link.text()).trim(),
-                authorId: author.attr('href')?.match(/\/author_id\/(\w+)/)?.[1] ?? null,
-                authorName: author.text().trim() || null,
-            };
-        });
+    for (;;) {
+        pos = html.indexOf(ITEM_START, pos);
+        if (pos < 0) break;
+
+        const idStart = pos + ITEM_START.length;
+        const idEnd = html.indexOf('"', idStart);
+        // 1つの商品は <dl> の中に収まっている
+        const end = html.indexOf('</dl>', idEnd);
+        const block = html.slice(idEnd, end < 0 ? undefined : end);
+
+        pos = idEnd;
+        items.push(parseItem(html.slice(idStart, idEnd), block));
+    }
+
+    return items;
+}
+
+function parseItem(id: string, block: string): ListItem {
+    const name = block.match(/<dd class="work_name">[\s\S]*?(<a\s[^>]*>)([\s\S]*?)<\/a>/);
+    const title = name?.[1].match(/\stitle="([^"]*)"/)?.[1];
+
+    const maker = block.match(/<dd class="maker_name">([\s\S]*?)<\/dd>/)?.[1] ?? '';
+    const author = maker.match(/<a\s[^>]*href="[^"]*\/author_id\/(\w+)[^"]*"[^>]*>([\s\S]*?)<\/a>/);
+
+    return {
+        id,
+        type: productType(block.match(/class="((?:[^"]*\s)?work_category(?:\s[^"]*)?)"/)?.[1] ?? ''),
+        name: title !== undefined ? decode(title) : stripTags(name?.[2] ?? ''),
+        authorId: author?.[1] ?? null,
+        authorName: (author && stripTags(author[2])) || null,
+    };
 }
 
 export function parseDetail(html: string): Detail | null {
-    const $ = load(html);
+    // 販売日はページ上部の表にあるので、そこまでの文字列から探す
+    const date = cell(html, '販売日')?.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
 
-    const cell = (header: string) =>
-        $('th')
-            .filter((_, th) => $(th).text().trim() === header)
-            .first()
-            .next('td');
+    if (!date) return null;
 
-    const match = cell('販売日')
-        .text()
-        .match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
-
-    if (!match) return null;
+    const label = cell(html, 'レーベル')?.match(/<a\s[^>]*>([\s\S]*?)<\/a>/);
 
     return {
-        date: new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))),
-        labelName: cell('レーベル').find('a').first().text().trim() || null,
+        date: new Date(Date.UTC(Number(date[1]), Number(date[2]) - 1, Number(date[3]))),
+        labelName: (label && stripTags(label[1])) || null,
     };
+}
+
+// <th>header</th><td>…</td> の td の中身(HTML)
+function cell(html: string, header: string): string | null {
+    const m = html.match(new RegExp(`<th>\\s*${header}\\s*</th>\\s*<td[^>]*>([\\s\\S]*?)</td>`));
+
+    return m?.[1] ?? null;
 }
 
 function productType(className: string): ProductType {

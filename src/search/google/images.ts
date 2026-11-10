@@ -10,7 +10,7 @@ export async function search(query: string, start: number): Promise<GoogleSearch
     const resp = await fetch(env.OKAZURI_API_URL + `/search?q=${query}&start=${start}`);
 
     if (!resp.ok) {
-        throw Error('okazuri: Status code error from google');
+        throw Error(`okazuri: Status code error from google: ${resp.status} ${resp.headers.get('server') ?? ''}`);
     }
 
     return await resp.json();

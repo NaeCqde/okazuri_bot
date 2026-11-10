@@ -1,11 +1,10 @@
 // ローカル D1 のレーベルを、本番 D1 に流し込む SQL にする。
-//   pnpm run export                    KNOWN_MAGAZINE_IDS から MAGAZINE_IDS(cron で取るレーベル)を除いた分
+//   pnpm run export                    MAGAZINE_IDS(wrangler.jsonc の vars)すべて
 //   pnpm run export LBL02690 ...       指定したレーベルだけ
 // 出力: .wrangler/import/okazuri-import.sql
 //   wrangler d1 execute okazuri --remote --file .wrangler/import/okazuri-import.sql
 // すべて INSERT OR IGNORE なので、本番にある行は上書きしない。
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { KNOWN_MAGAZINE_IDS, MAGAZINE_IDS } from '../src/magazines';
 
 const OUT_DIR = '.wrangler/import';
 const OUT_FILE = `${OUT_DIR}/okazuri-import.sql`;
@@ -32,9 +31,8 @@ async function main() {
     const { getPlatformProxy } = await import('wrangler');
 
     const args = process.argv.slice(2);
-    const ids = args.length ? args : KNOWN_MAGAZINE_IDS.filter((id) => !MAGAZINE_IDS.includes(id));
-
-    const { env, dispose } = await getPlatformProxy<{ DB: D1Database }>();
+    const { env, dispose } = await getPlatformProxy<{ DB: D1Database; MAGAZINE_IDS: string[] }>();
+    const ids = args.length ? args : env.MAGAZINE_IDS;
     const all = async (sql: string, ...binds: unknown[]) =>
         (await env.DB.prepare(sql).bind(...binds).all()).results as Record<string, unknown>[];
 

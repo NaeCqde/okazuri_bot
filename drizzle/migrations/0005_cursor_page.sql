@@ -1,0 +1,1 @@
+ALTER TABLE `magazines` ADD `cursor_page` integer;

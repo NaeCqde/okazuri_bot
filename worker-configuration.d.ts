@@ -13,7 +13,8 @@ declare namespace Cloudflare {
 		ERROR_LOG_WEBHOOK: string;
 		DB: D1Database;
 		CRON_SECRET: string;
-		SELF_URL: string;
+		MAGAZINE_IDS: string[];
+		WORKER_URL: string;
 	}
 }
 interface Env extends Cloudflare.Env {}

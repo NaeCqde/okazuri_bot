@@ -36,6 +36,20 @@
       "when": 1793131413942,
       "tag": "0004_works_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793163073128,
+      "tag": "0005_cursor_page",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793172789026,
+      "tag": "0006_number_name_raw",
+      "breakpoints": true
     }
   ]
 }

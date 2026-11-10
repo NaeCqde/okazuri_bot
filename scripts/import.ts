@@ -1,8 +1,8 @@
 // 手元(ローカル D1)に、レーベルの全件を取り込む。
-//   pnpm run import                 KNOWN_MAGAZINE_IDS すべて
+//   pnpm run import                 MAGAZINE_IDS(wrangler.jsonc の vars)すべて
 //   pnpm run import LBL02690 ...    指定したレーベルだけ
 import { drizzle } from 'drizzle-orm/d1';
-import { Fetcher, KNOWN_MAGAZINE_IDS } from '../src/magazines';
+import { Fetcher } from '../src/magazines';
 
 // DLsite への負荷を抑えるため、リクエストの間隔を空ける
 const DELAY_MS = 250;
@@ -18,12 +18,12 @@ async function main() {
     };
 
     const ids = process.argv.slice(2);
-    const { env, dispose } = await getPlatformProxy<{ DB: D1Database }>();
+    const { env, dispose } = await getPlatformProxy<{ DB: D1Database; MAGAZINE_IDS: string[] }>();
 
     try {
         // Workers のリクエスト数の上限がないので、予算は実質無制限にする
         const result = await new Fetcher(drizzle(env.DB), Number.MAX_SAFE_INTEGER).run(
-            ids.length ? ids : KNOWN_MAGAZINE_IDS
+            ids.length ? ids : env.MAGAZINE_IDS
         );
 
         if (result.failed.length) throw Error(`failed to import: ${result.failed.join(', ')}`);

@@ -1,6 +1,6 @@
 # okazuri-api
 
-日本語をローマ字の読みに変換する API(FastAPI + cutlet + pykakasi)。`src/pronounce.ts` が呼びます。
+日本語をローマ字の読みに変換する API(FastAPI + cutlet + pykakasi)。`src/romaji.ts` が呼びます。
 
 - 基本はヘボン式ローマ字
 - カタカナの外来語は、辞書(UniDic)にある元の綴りの英単語になる(`チートアイテム` → `cheat item`)
@@ -23,7 +23,7 @@ Python は 3.12 に固定しています(`.python-version`)。cutlet が使う f
 
 ## エンドポイント
 
-- `GET /pronounce?q=<日本語>` ... 小文字のローマ字を語ごとに空白で区切った `text/plain`
+- `GET /romaji?q=<日本語>` ... 小文字のローマ字を語ごとに空白で区切った `text/plain`
   - `engine=pykakasi` ... 外来語も読みのままのヘボン式(`チート` → `chiito`)。省略は `cutlet`
   - `loanwords=english` ... ひらがなで書かれた外来語も、辞書にあれば英単語にする
     (`ふらすとれーしょん` → `frustration`)。省略は `romaji`(`furasutore-shon`)

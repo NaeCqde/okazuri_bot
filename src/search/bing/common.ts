@@ -20,6 +20,27 @@ export async function fetchBing(url: string): Promise<string> {
 }
 
 /**
+ * 検索結果が空だったときに、返ってきたページが何だったかをログに残すための要約。
+ * 結果が0件の検索ページと、検索ページではないページ(確認画面など)は、結果だけでは区別できない。
+ */
+export function describePage(html: string): string {
+    const text = html
+        .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g, ' ')
+        .replace(/<[^>]+>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    return JSON.stringify({
+        length: html.length,
+        title: html.match(/<title>([^<]*)/)?.[1] ?? null,
+        results: /id="b_results"/.test(html),
+        text: text.slice(0, 200),
+        // 本文が短いとき(HTMLの結果ではない応答)は、そのまま見えるように
+        head: html.length < 2000 ? html.slice(0, 600) : undefined,
+    });
+}
+
+/**
  * 検索結果のリンクは Bing の中継URL(https://www.bing.com/ck/a?...&u=a1<base64url>)になっている。
  * u の先頭の a1 を除いた残りが、遷移先のURLの base64url なので、通信せずに復元できる。
  * 中継URLでなければ、そのまま返す。

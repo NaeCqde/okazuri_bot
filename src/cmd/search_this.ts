@@ -28,7 +28,7 @@ export const searchThisCommand = factory.command(
                     return;
                 }
 
-                return searchHandler(c, queries, 0, false, 'search_this');
+                return searchHandler(c, queries, false, 'search_this');
             });
         }
 
