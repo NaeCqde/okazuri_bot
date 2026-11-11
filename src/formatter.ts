@@ -27,7 +27,34 @@ export function escapeTitle(title: string): string {
     const chars = Array.from(title.replace(INVISIBLE, ' ').replace(/\s+/g, ' ').trim());
     const clipped = chars.length > MAX_TITLE_LENGTH ? chars.slice(0, MAX_TITLE_LENGTH - 1).join('') + '…' : chars.join('');
 
-    return clipped.replace(/[\\*_~|`\[\]()<>#@:!\-]/g, '\\$&');
+    // ~ は1つなら普通の文字。取り消し線になる ~~ のときだけ打ち消す
+    return escapeUnpairedBrackets(
+        clipped
+            .replace(/[\\*_|`()<>#@:]/g, '\\$&')
+            .replace(/~{2,}/g, (m) => m.replace(/~/g, '\\~'))
+    );
+}
+
+/**
+ * [ ] は、対になっているもの([作者] など)はそのままにする。
+ * 対のない [ や ] は、リンクの文字を途中で終わらせるので、\ で打ち消す。
+ */
+function escapeUnpairedBrackets(text: string): string {
+    const chars = Array.from(text);
+    const open: number[] = [];
+    const unpaired = new Set<number>();
+
+    chars.forEach((c, i) => {
+        if (c === '[') open.push(i);
+        else if (c === ']') {
+            if (open.length) open.pop();
+            else unpaired.add(i);
+        }
+    });
+
+    for (const i of open) unpaired.add(i);
+
+    return chars.map((c, i) => (unpaired.has(i) ? '\\' + c : c)).join('');
 }
 
 /** リンク先の URL を (<…>) に入れても壊れないようにする。 */

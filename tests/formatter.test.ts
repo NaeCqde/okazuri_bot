@@ -5,11 +5,19 @@ import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, splitT
 const U = 'https://example.com/a';
 
 test('escapes every Discord markdown character', () => {
-    assert.equal(escapeTitle('*b* _i_ ~s~ ||sp|| `c`'), '\\*b\\* \\_i\\_ \\~s\\~ \\|\\|sp\\|\\| \\`c\\`');
+    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* \\_i\\_ \\~\\~s\\~\\~ \\|\\|sp\\|\\| \\`c\\`');
     assert.equal(escapeTitle('a](https://evil.example)[b'), 'a\\]\\(https\\://evil.example\\)\\[b');
+    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x [y]]');
+    assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 \\]\\(Jujutsu Kaisen\\)');
+    assert.equal(escapeTitle('a [b'), 'a \\[b');
+    assert.equal(escapeTitle(']a[b]['), '\\]a[b]\\[');
     assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<\\:e\\:3\\> \\@everyone');
-    assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q \\- l');
+    assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q - l');
     assert.equal(escapeTitle('back\\slash \\* x'), 'back\\\\slash \\\\\\* x');
+});
+
+test('a single ~ is left as it is', () => {
+    assert.equal(escapeTitle('2026/2/5~2026/4/11 ~Anata~'), '2026/2/5~2026/4/11 ~Anata~');
 });
 
 test('title cannot break out of the link', () => {
@@ -21,7 +29,7 @@ test('title cannot break out of the link', () => {
 });
 
 test('control, newline, bidi and zero-width chars become spaces', () => {
-    assert.equal(escapeTitle('a\nb\r\nc\td‮evil​!\u0000x'), 'a b c d evil \\! x');
+    assert.equal(escapeTitle('a\nb\r\nc\td‮evil​!\u0000x'), 'a b c d evil ! x');
 });
 
 test('long titles are clipped by code point, not split in a surrogate pair', () => {
@@ -81,17 +89,17 @@ test('flags: no false positives', () => {
 
 test('flags: no duplicate flag when the site already put one first', () => {
     assert.equal(languageFlags('🇨🇳 [Hamao] Fallin\' [Chinese]'), '🇨🇳');
-    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U }), `[🇨🇳 \\[A\\] b](<${U}>)`);
+    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U }), `[🇨🇳 [A] b](<${U}>)`);
 });
 
 test('link format: flag goes inside the brackets, language brackets are removed', () => {
-    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 \\[Hamao\\] Fallin'](<${U}>)`);
-    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A \\(COMIC X 1\\) \\[Digital\\]](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A \\[DL版\\]](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A \\[山嵐个人汉化\\]](<${U}>)`);
+    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 [Hamao] Fallin'](<${U}>)`);
+    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A \\(COMIC X 1\\) [Digital]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A [DL版]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
     assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇯🇵🇺🇸 A](<${U}>)`);
     assert.equal(resultLink({ title: '[English]', url: U }), U);
-    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A \\[HD\\] \\[It Girl\\]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A [HD] [It Girl]](<${U}>)`);
     assert.equal(resultLink({ title: 'plain', url: U }), `[plain](<${U}>)`);
 });
 
