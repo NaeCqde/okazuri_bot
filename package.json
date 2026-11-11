@@ -16,7 +16,8 @@
         "register": "tsx --env-file=.dev.vars src/register.ts",
         "import": "tsx scripts/import.ts",
         "export": "tsx scripts/export.ts",
-        "normalize": "tsx scripts/normalize-numbers.ts"
+        "normalize": "tsx scripts/normalize-numbers.ts",
+        "test": "tsx --test tests/*.test.ts"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^4.20251202.0",
