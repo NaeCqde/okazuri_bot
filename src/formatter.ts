@@ -28,11 +28,12 @@ export function escapeTitle(title: string): string {
     const clipped = chars.length > MAX_TITLE_LENGTH ? chars.slice(0, MAX_TITLE_LENGTH - 1).join('') + '…' : chars.join('');
 
     // ~ は1つなら普通の文字。取り消し線になる ~~ のときだけ打ち消す
+    // ( ) と _ はそのまま。ただし ]( が並ぶと別のリンクになるので、( だけ打ち消す
     return escapeUnpairedBrackets(
         clipped
-            .replace(/[\\*_|`()<>#@:]/g, '\\$&')
+            .replace(/[\\*|`<>#@]/g, '\\$&')
             .replace(/~{2,}/g, (m) => m.replace(/~/g, '\\~'))
-    );
+    ).replace(/\]\(/g, ']\\(');
 }
 
 /**

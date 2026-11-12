@@ -5,15 +5,20 @@ import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, splitT
 const U = 'https://example.com/a';
 
 test('escapes every Discord markdown character', () => {
-    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* \\_i\\_ \\~\\~s\\~\\~ \\|\\|sp\\|\\| \\`c\\`');
-    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a\\]\\(https\\://evil.example\\)\\[b');
+    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ \\|\\|sp\\|\\| \\`c\\`');
+    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a\\]\\(https://evil.example)\\[b');
     assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x [y]]');
-    assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 \\]\\(Jujutsu Kaisen\\)');
+    assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 \\]\\(Jujutsu Kaisen)');
     assert.equal(escapeTitle('a [b'), 'a \\[b');
     assert.equal(escapeTitle(']a[b]['), '\\]a[b]\\[');
-    assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<\\:e\\:3\\> \\@everyone');
+    assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<:e:3\\> \\@everyone');
     assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q - l');
     assert.equal(escapeTitle('back\\slash \\* x'), 'back\\\\slash \\\\\\* x');
+});
+
+test('( ) and _ are left as they are, except ( right after ]', () => {
+    assert.equal(escapeTitle('Hitsujida (Kumadera) snake_case_name'), 'Hitsujida (Kumadera) snake_case_name');
+    assert.equal(escapeTitle('[x](https://evil.example)'), '[x]\\(https://evil.example)');
 });
 
 test('a single ~ is left as it is', () => {
@@ -94,7 +99,7 @@ test('flags: no duplicate flag when the site already put one first', () => {
 
 test('link format: flag goes inside the brackets, language brackets are removed', () => {
     assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 [Hamao] Fallin'](<${U}>)`);
-    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A \\(COMIC X 1\\) [Digital]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A (COMIC X 1) [Digital]](<${U}>)`);
     assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A [DL版]](<${U}>)`);
     assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
     assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇯🇵🇺🇸 A](<${U}>)`);
@@ -110,7 +115,7 @@ test('resultToText numbers links and keeps every line short', () => {
             { title: 'x'.repeat(5000), website: 'w', url: U, isLegal: false },
         ],
     });
-    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [a\\_b](<${U}>)`]);
+    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [a_b](<${U}>)`]);
     assert.ok(lines.every((l) => l.length < 400));
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
 });
