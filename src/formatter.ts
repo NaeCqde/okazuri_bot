@@ -63,6 +63,8 @@ export function escapeUrl(url: string): string {
     return url.replace(/[\s()<>]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
 }
 
+const JAPAN = '🇯🇵';
+
 const FLAGS: Record<string, string> = {
     EN: '🇺🇸', ENG: '🇺🇸', JP: '🇯🇵', JA: '🇯🇵', JPN: '🇯🇵', CN: '🇨🇳', ZH: '🇨🇳', TW: '🇹🇼',
     KR: '🇰🇷', KO: '🇰🇷', ES: '🇪🇸', SPA: '🇪🇸', FR: '🇫🇷', DE: '🇩🇪', RU: '🇷🇺', IT: '🇮🇹',
@@ -120,6 +122,9 @@ export function parseTitle(title: string): { flags: string; text: string } {
         }
         return '';
     });
+
+    // 日本語は普通なので、日本国旗は付けない(括弧は消す。サイトが付けた日本国旗も外す)
+    flags.delete(JAPAN);
 
     return { flags: [...flags].join(''), text: text.replace(/\s+/g, ' ').trim() };
 }

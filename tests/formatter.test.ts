@@ -67,12 +67,12 @@ test('flags: Chinese', () => {
 test('flags: two-letter codes', () => {
     assert.equal(languageFlags('x [EN]'), '🇺🇸');
     assert.equal(languageFlags('x [en]'), '🇺🇸');
-    assert.equal(languageFlags('x (JP)'), '🇯🇵');
+    assert.equal(languageFlags('x (JP)'), '');
     assert.equal(languageFlags('x 【KR】'), '🇰🇷');
     assert.equal(languageFlags('x [TH]'), '🇹🇭');
     assert.equal(languageFlags('x [English - EN] [Digital]'), '🇺🇸');
-    assert.equal(languageFlags('x [CN,EN,JP,KR]'), '🇨🇳🇺🇸🇯🇵🇰🇷');
-    assert.equal(languageFlags('x [jap / eng / rus]'), '🇯🇵🇺🇸🇷🇺');
+    assert.equal(languageFlags('x [CN,EN,JP,KR]'), '🇨🇳🇺🇸🇰🇷');
+    assert.equal(languageFlags('x [jap / eng / rus]'), '🇺🇸🇷🇺');
 });
 
 test('flags: language names', () => {
@@ -81,7 +81,7 @@ test('flags: language names', () => {
     assert.equal(languageFlags('x (Spanish)'), '🇪🇸');
     assert.equal(languageFlags('x [RUSSIAN]'), '🇷🇺');
     assert.equal(languageFlags('x [French][Italian]'), '🇫🇷🇮🇹');
-    assert.equal(languageFlags('x [Japanese]'), '🇯🇵');
+    assert.equal(languageFlags('x [Japanese]'), '');
     assert.equal(languageFlags('x [Chinese]'), '🇨🇳');
     assert.equal(languageFlags('x [English Edition Deluxe]'), '');
 });
@@ -102,7 +102,8 @@ test('link format: flag goes inside the brackets, language brackets are removed'
     assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A (COMIC X 1) [Digital]](<${U}>)`);
     assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A [DL版]](<${U}>)`);
     assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
-    assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇯🇵🇺🇸 A](<${U}>)`);
+    assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇺🇸 A](<${U}>)`);
+    assert.equal(resultLink({ title: '🇯🇵 A [JP]', url: U }), `[A](<${U}>)`);
     assert.equal(resultLink({ title: '[English]', url: U }), U);
     assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A [HD] [It Girl]](<${U}>)`);
     assert.equal(resultLink({ title: 'plain', url: U }), `[plain](<${U}>)`);
