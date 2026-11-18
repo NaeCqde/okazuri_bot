@@ -28,45 +28,19 @@ export function escapeTitle(title: string): string {
     const clipped = chars.length > MAX_TITLE_LENGTH ? chars.slice(0, MAX_TITLE_LENGTH - 1).join('') + '…' : chars.join('');
 
     // ~ は1つなら普通の文字。取り消し線になる ~~ のときだけ打ち消す
-    // ( ) と _ はそのまま。ただし ]( が並ぶと別のリンクになるので、( だけ打ち消す
-    return escapeUnpairedBrackets(
-        clipped
-            .replace(/[\\*`<>#@]/g, '\\$&')
-            .replace(/~{2,}/g, (m) => m.replace(/~/g, '\\~'))
-    ).replace(/\]\(/g, ']\\(');
+    // ( ) _ : | ! - はそのまま(リンクの文字に [ ] が無ければ、これらでリンクは壊れない)
+    return brackets(
+        clipped.replace(/[\\*`<>#@]/g, '\\$&').replace(/~{2,}/g, (m) => m.replace(/~/g, '\\~'))
+    );
 }
 
 /**
- * [ ] は、対になっているもの([作者] など)はそのままにする。
- * 対のない [ や ] は、リンクの文字を途中で終わらせるので、\ で打ち消す。
- * Discord のリンクの文字は、[ ] の中にもう1段だけ [ ] を入れられる。リンクの文字全体が [ ] で囲まれるので、
- * タイトルの中では、対になった [ ] の中の [ ] を打ち消す([ [Fence 14] ] の内側など)。
- * そうしないと、リンクとして読まれず、一部だけがリンクになる。
+ * [ ] は全角の ［ ］ にする。
+ * Discord は、リンクの文字([ ] の中)に [ ] があると、\ で打ち消してあっても、リンクとして読まないか、
+ * 一部だけをリンクにする。\[ も ]( の並びも、[ ] の1文字として数えられるため。全角なら、そのどちらも起きない。
  */
-function escapeUnpairedBrackets(text: string): string {
-    const chars = Array.from(text);
-    const open: number[] = [];
-    const escaped = new Set<number>();
-
-    chars.forEach((c, i) => {
-        if (c === '[') {
-            // 対になった [ ] の中の [ は、対になるかどうかが分かるまで入れておく(あとで対なら打ち消す)
-            open.push(i);
-        } else if (c === ']') {
-            const start = open.pop();
-            if (start === undefined) {
-                escaped.add(i);
-            } else if (open.length) {
-                // 外側の [ ] がまだ開いている: これは入れ子の2段目
-                escaped.add(start);
-                escaped.add(i);
-            }
-        }
-    });
-
-    for (const i of open) escaped.add(i);
-
-    return chars.map((c, i) => (escaped.has(i) ? '\\' + c : c)).join('');
+function brackets(text: string): string {
+    return text.replace(/\[/g, '［').replace(/\]/g, '］');
 }
 
 /** リンク先の URL を (<…>) に入れても壊れないようにする。 */
@@ -145,20 +119,20 @@ export function languageFlags(title: string): string {
     return parseTitle(title).flags;
 }
 
-/** サイト名を、リンクの文字に入れる形にする(【 】で囲む)。サイト名にも記号が入りうるので打ち消す。 */
+/** サイト名を、リンクの文字に入れる形にする(【 】で囲む)。 */
 function siteLabel(website: string | undefined): string {
     const name = escapeTitle((website ?? '').replace(INVISIBLE, ' ').replace(/\*/g, ''));
 
     return name ? `【${name}】` : '';
 }
 
-/** `1. [🇨🇳 【サイト名】 タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
+/** `1. [【サイト名】 🇨🇳 タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
 export function resultLink(r: { title: string; url: string; website?: string }): string {
     const { flags, text } = parseTitle((r.title ?? '').replace(INVISIBLE, ' '));
     const escaped = escapeTitle(text);
     if (!escaped) return r.url;
 
-    const head = [flags, siteLabel(r.website)].filter(Boolean).join(' ');
+    const head = [siteLabel(r.website), flags].filter(Boolean).join(' ');
 
     return `[${head ? head + ' ' : ''}${escaped}](<${escapeUrl(r.url)}>)`;
 }
