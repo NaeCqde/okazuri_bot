@@ -72,75 +72,58 @@ export function escapeUrl(url: string): string {
     return url.replace(/[\s()<>]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
 }
 
-const JAPAN = '🇯🇵';
-
-const FLAGS: Record<string, string> = {
-    EN: '🇺🇸', ENG: '🇺🇸', JP: '🇯🇵', JA: '🇯🇵', JPN: '🇯🇵', CN: '🇨🇳', ZH: '🇨🇳', TW: '🇹🇼',
-    KR: '🇰🇷', KO: '🇰🇷', ES: '🇪🇸', SPA: '🇪🇸', FR: '🇫🇷', DE: '🇩🇪', RU: '🇷🇺', IT: '🇮🇹',
-    TH: '🇹🇭', PT: '🇵🇹', ID: '🇮🇩', PL: '🇵🇱', TR: '🇹🇷', VN: '🇻🇳', VI: '🇻🇳',
-    JAP: '🇯🇵', RUS: '🇷🇺', VIE: '🇻🇳',
-    // 言語名: [English] [Korean] ...
-    ENGLISH: '🇺🇸', JAPANESE: '🇯🇵', CHINESE: '🇨🇳', KOREAN: '🇰🇷', SPANISH: '🇪🇸', FRENCH: '🇫🇷',
-    GERMAN: '🇩🇪', RUSSIAN: '🇷🇺', ITALIAN: '🇮🇹', THAI: '🇹🇭', PORTUGUESE: '🇵🇹', INDONESIAN: '🇮🇩',
-    POLISH: '🇵🇱', TURKISH: '🇹🇷', VIETNAMESE: '🇻🇳', ARABIC: '🇸🇦',
+// 言語コード(API の language: 2 文字のコードを , でつないだもの。わからなければ unknown)と国旗。日本語(ja)には国旗を付けない。
+// 並びは、結果の並び順(英語、中国語、韓国語…)でもある
+const LANGUAGE_FLAGS: Record<string, string> = {
+    en: '🇺🇸', zh: '🇨🇳', ko: '🇰🇷', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', ru: '🇷🇺', it: '🇮🇹',
+    th: '🇹🇭', pt: '🇵🇹', id: '🇮🇩', pl: '🇵🇱', tr: '🇹🇷', vi: '🇻🇳', ar: '🇸🇦',
 };
 
-// 言語コードと並んでよい語(これ以外の語が混じる括弧は、言語の括弧とみなさない: [It Girl] など)
-const CODE_FILLER = new Set(['SUB', 'SUBS']);
+// 言語だけの括弧に入る語(これを消す)。言語の判定は API がしていて、ここは表示から括弧を消すためだけに持つ
+const LANGUAGE_WORDS = new Set([
+    'EN', 'ENG', 'JP', 'JA', 'JPN', 'CN', 'ZH', 'TW', 'KR', 'KO', 'ES', 'SPA', 'FR', 'DE', 'RU', 'IT',
+    'TH', 'PT', 'ID', 'PL', 'TR', 'VN', 'VI', 'JAP', 'RUS', 'VIE',
+    'ENGLISH', 'JAPANESE', 'CHINESE', 'KOREAN', 'SPANISH', 'FRENCH', 'GERMAN', 'RUSSIAN', 'ITALIAN', 'THAI',
+    'PORTUGUESE', 'INDONESIAN', 'POLISH', 'TURKISH', 'VIETNAMESE', 'ARABIC',
+    // 言語コードと並んでよい語(これ以外の語が混じる括弧は、言語の括弧とみなさない: [It Girl] など)
+    'SUB', 'SUBS',
+]);
 
-// 中国語の印(これを含むタイトルは 🇨🇳)。訳者名のような括弧は、国旗だけ付けて括弧は残す
-const CHINESE = /中国翻訳|中文|汉化|漢化|简体|簡體|繁體|繁体|嵌字/;
 // 括弧ごと消す、中国語の言語表記(括弧の中身がこれだけのもの)
 const CHINESE_LABEL = /^(中国翻訳|中国語|中文|简体中文|簡體中文|繁體中文|繁体中文|汉化|漢化)$/;
-// 先頭の国旗(サイトが付けているもの)
+// 先頭の国旗(サイトが付けているもの。リンクの先頭には API の language から付け直す)
 const LEADING_FLAGS = /^(?:\p{Regional_Indicator}{2}\s*)+/u;
 // [EN] [JP] [English] [CN,EN,JP,KR] [jap / eng] [中国翻訳] のような、言語だけの括弧(全角の空白も含めて消す)
 const BRACKET_GROUP = /\s*[\[(【]([^\[\]()【】]{1,40})[\])】]/g;
 
 /**
- * タイトルを、国旗(言語)と、言語の表記を除いたタイトルに分ける。
- * - 先頭にサイトが付けた国旗があれば、取り出す(あとでリンクの先頭に付け直す)
- * - [English] [EN] [中国翻訳] のような言語だけの括弧は、消して国旗にする
- * - 訳者名の括弧([山嵐个人汉化] など)は残す。中国語の印があれば国旗だけ付ける
+ * タイトルから、言語の表記(先頭の国旗と、[English] [EN] [中国翻訳] のような言語だけの括弧)を消す。
+ * 訳者名の括弧([山嵐个人汉化] など)は残す。どの言語かは API が判定している(languageFlags)。
  */
-export function parseTitle(title: string): { flags: string; text: string } {
-    const flags = new Set<string>();
-    let text = title.trim();
-
-    const leading = LEADING_FLAGS.exec(text);
-    if (leading) {
-        for (const f of leading[0].match(/\p{Regional_Indicator}{2}/gu) ?? []) flags.add(f);
-        text = text.slice(leading[0].length);
-    }
-
-    if (CHINESE.test(text)) flags.add('🇨🇳');
-
-    text = text.replace(BRACKET_GROUP, (whole, inner: string) => {
+export function parseTitle(title: string): { text: string } {
+    const text = title.trim().replace(LEADING_FLAGS, '').replace(BRACKET_GROUP, (whole, inner: string) => {
         const body = inner.trim();
 
-        if (CHINESE_LABEL.test(body)) {
-            flags.add('🇨🇳');
-            return '';
-        }
+        if (CHINESE_LABEL.test(body)) return '';
 
-        const codes = body.toUpperCase().split(/[\s,/&+-]+/).filter(Boolean);
-        if (!codes.length || !codes.every((c) => c in FLAGS || CODE_FILLER.has(c))) return whole;
+        const words = body.toUpperCase().split(/[\s,/&+-]+/).filter(Boolean);
 
-        for (const code of codes) {
-            if (code in FLAGS) flags.add(FLAGS[code]);
-        }
-        return '';
+        return words.length && words.every((w) => LANGUAGE_WORDS.has(w)) ? '' : whole;
     });
 
-    // 日本語は普通なので、日本国旗は付けない(括弧は消す。サイトが付けた日本国旗も外す)
-    flags.delete(JAPAN);
-
-    return { flags: [...flags].join(''), text: text.replace(/\s+/g, ' ').trim() };
+    return { text: text.replace(/\s+/g, ' ').trim() };
 }
 
-/** タイトルの言語の国旗(絵文字)を返す。なければ空文字。 */
-export function languageFlags(title: string): string {
-    return parseTitle(title).flags;
+/** API の language(`zh`、`en,ko`、`unknown`)の国旗(絵文字)。日本語と不明には付けない。なければ空文字。 */
+export function languageFlags(language: string | undefined): string {
+    const flags = new Set<string>();
+
+    for (const code of (language ?? '').split(',')) {
+        const flag = LANGUAGE_FLAGS[code.trim()];
+        if (flag) flags.add(flag);
+    }
+
+    return [...flags].join('');
 }
 
 /** サイト名を、リンクの文字に入れる形にする(【 】で囲む)。 */
@@ -151,8 +134,9 @@ function siteLabel(website: string | undefined): string {
 }
 
 /** `1. [【サイト名】 🇨🇳 タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
-export function resultLink(r: { title: string; url: string; website?: string }): string {
-    const { flags, text } = parseTitle((r.title ?? '').replace(INVISIBLE, ' '));
+export function resultLink(r: { title: string; url: string; website?: string; language?: string }): string {
+    const flags = languageFlags(r.language);
+    const { text } = parseTitle((r.title ?? '').replace(INVISIBLE, ' '));
     const escaped = escapeTitle(text);
     if (!escaped) return r.url;
 
@@ -161,24 +145,24 @@ export function resultLink(r: { title: string; url: string; website?: string }):
     return `[${head ? head + ' ' : ''}${escaped}](<${escapeUrl(r.url)}>)`;
 }
 
-// 言語の並び順: 判定できない(日本語を含む。日本語には国旗を付けない)ものが先、国旗のあるものは FLAGS に出てくる順(英語、中国語、韓国語…)
-const FLAG_ORDER = [...new Set(Object.values(FLAGS))];
+// 言語の並び順: 判定できない(日本語を含む。日本語には国旗を付けない)ものが先、国旗のあるものは LANGUAGE_FLAGS の順(英語、中国語、韓国語…)
+const FLAG_ORDER = Object.values(LANGUAGE_FLAGS);
 
-function languageRank(title: string): number {
-    const first = Array.from(parseTitle(title).flags).slice(0, 2).join('');
+function languageRank(language: string | undefined): number {
+    const first = Array.from(languageFlags(language)).slice(0, 2).join('');
     const rank = FLAG_ORDER.indexOf(first);
 
     return rank < 0 ? 0 : rank + 1;
 }
 
 /**
- * 結果を、言語(国旗のないものを先に、国旗のあるものは FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
+ * 結果を、言語(国旗のないものを先に、国旗のあるものは LANGUAGE_FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
  */
-export function sortResults<T extends { title: string; website?: string }>(results: T[]): T[] {
+export function sortResults<T extends { title: string; website?: string; language?: string }>(results: T[]): T[] {
     const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
     return results
-        .map((result, index) => ({ result, index, rank: languageRank(result.title ?? '') }))
+        .map((result, index) => ({ result, index, rank: languageRank(result.language) }))
         .sort(
             (a, b) =>
                 a.rank - b.rank ||

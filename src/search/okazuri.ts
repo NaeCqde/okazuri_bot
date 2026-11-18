@@ -37,6 +37,6 @@ export async function searchOkazuri(
     return {
         query: body.query,
         translation: body.translation?.text?.trim() || null,
-        results: body.results.map(({ title, website, url, isLegal }) => ({ title, website, url, isLegal })),
+        results: body.results.map(({ title, website, url, isLegal, language }) => ({ title, website, url, isLegal, language })),
     };
 }
