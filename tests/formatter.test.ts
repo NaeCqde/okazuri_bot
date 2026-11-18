@@ -7,7 +7,7 @@ const U = 'https://example.com/a';
 test('escapes every Discord markdown character', () => {
     assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ ||sp|| \\`c\\`');
     assert.equal(escapeTitle('a](https://evil.example)[b'), 'a］(https://evil.example)［b');
-    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '［Hamao］ Fallin! ［x ［y］］');
+    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x ［y］]');
     assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '［ Nuko.］ Jujutsu 12 ］(Jujutsu Kaisen)');
     assert.equal(escapeTitle('a [b'), 'a ［b');
     assert.equal(escapeTitle(']a[b]['), '］a［b］［');
@@ -21,10 +21,15 @@ test('( ) and _ are left as they are, except ( right after ]', () => {
     assert.equal(escapeTitle('[x](https://evil.example)'), '［x］(https://evil.example)');
 });
 
-test('brackets in the title are full-width: any [ ] in the link text, even escaped, broke the link in Discord', () => {
-    assert.equal(escapeTitle('[ [Fence 14] ] Kyoudai [! ]'), '［ ［Fence 14］ ］ Kyoudai ［! ］');
-    assert.equal(escapeTitle('[a][b] [c]'), '［a］［b］ ［c］');
-    assert.ok(!/[\[\]]/.test(escapeTitle('[x [y] z] ] [')));
+test('a pair of brackets stays; unpaired ones and the second level become full-width', () => {
+    assert.equal(escapeTitle('[Hamao] Fallin\' [Digital]'), "[Hamao] Fallin' [Digital]");
+    assert.equal(escapeTitle('(C103) [Hitsujida (Kumadela)] TS'), '(C103) [Hitsujida (Kumadela)] TS');
+    // Discord does not link the text when a [ ] has another [ ] inside it, so the inner one is full-width
+    assert.equal(escapeTitle('[ [Fence 14] ] Kyoudai [! ]'), '[ ［Fence 14］ ] Kyoudai [! ]');
+    assert.equal(escapeTitle('[a [b [c] d] e] f [g]'), '[a ［b ［c］ d］ e] f [g]');
+    assert.equal(escapeTitle('a [b'), 'a ［b');
+    assert.equal(escapeTitle(']a[b]['), '］a[b]［');
+    assert.ok(!/\](?=\()/.test(escapeTitle('a](https://evil.example)')), 'no ]( that could start a link');
 });
 
 test('the site name comes first, in 【 】, then the flag', () => {
@@ -107,18 +112,18 @@ test('flags: no false positives', () => {
 
 test('flags: no duplicate flag when the site already put one first', () => {
     assert.equal(languageFlags('🇨🇳 [Hamao] Fallin\' [Chinese]'), '🇨🇳');
-    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U }), `[🇨🇳 ［A］ b](<${U}>)`);
+    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U }), `[🇨🇳 [A] b](<${U}>)`);
 });
 
 test('link format: flag goes inside the brackets, language brackets are removed', () => {
-    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 ［Hamao］ Fallin'](<${U}>)`);
-    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A (COMIC X 1) ［Digital］](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A ［DL版］](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A ［山嵐个人汉化］](<${U}>)`);
+    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 [Hamao] Fallin'](<${U}>)`);
+    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A (COMIC X 1) [Digital]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A [DL版]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
     assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇺🇸 A](<${U}>)`);
     assert.equal(resultLink({ title: '🇯🇵 A [JP]', url: U }), `[A](<${U}>)`);
     assert.equal(resultLink({ title: '[English]', url: U }), U);
-    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A ［HD］ ［It Girl］](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A [HD] [It Girl]](<${U}>)`);
     assert.equal(resultLink({ title: 'plain', url: U }), `[plain](<${U}>)`);
 });
 

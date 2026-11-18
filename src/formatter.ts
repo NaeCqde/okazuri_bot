@@ -35,12 +35,36 @@ export function escapeTitle(title: string): string {
 }
 
 /**
- * [ ] は全角の ［ ］ にする。
- * Discord は、リンクの文字([ ] の中)に [ ] があると、\ で打ち消してあっても、リンクとして読まないか、
- * 一部だけをリンクにする。\[ も ]( の並びも、[ ] の1文字として数えられるため。全角なら、そのどちらも起きない。
+ * [ ] は、対になっているもの([作者] など)は半角のままにする。
+ * Discord は、リンクの文字([ ] の中)の [ ] を、1段の入れ子([a [b] c] の [b] の形)までしか、リンクとして読まない。
+ * \ で打ち消した [ ] も数えられるので、打ち消しは効かない。そこで、次の [ ] は全角の ［ ］ に置き換える:
+ * - 対のないもの、と ]( の ]
+ * - 対になった [ ] の中の [ ]([ [Fence 14] ] の内側など)
  */
 function brackets(text: string): string {
-    return text.replace(/\[/g, '［').replace(/\]/g, '］');
+    // ]( が並ぶと、タイトルの中に別のリンクができる。その ] は先に全角にする
+    const chars = Array.from(text.replace(/\]\(/g, '］('));
+    const open: number[] = [];
+    const wide = new Set<number>();
+
+    chars.forEach((c, i) => {
+        if (c === '[') {
+            open.push(i);
+        } else if (c === ']') {
+            const start = open.pop();
+            if (start === undefined) {
+                wide.add(i);
+            } else if (open.length) {
+                // 外側の [ がまだ開いている: 入れ子の2段目
+                wide.add(start);
+                wide.add(i);
+            }
+        }
+    });
+
+    for (const i of open) wide.add(i);
+
+    return chars.map((c, i) => (wide.has(i) ? (c === '[' ? '［' : '］') : c)).join('');
 }
 
 /** リンク先の URL を (<…>) に入れても壊れないようにする。 */
