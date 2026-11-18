@@ -5,9 +5,9 @@ import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, splitT
 const U = 'https://example.com/a';
 
 test('escapes every Discord markdown character', () => {
-    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ \\|\\|sp\\|\\| \\`c\\`');
+    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ ||sp|| \\`c\\`');
     assert.equal(escapeTitle('a](https://evil.example)[b'), 'a\\]\\(https://evil.example)\\[b');
-    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x [y]]');
+    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x \\[y\\]]');
     assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 \\]\\(Jujutsu Kaisen)');
     assert.equal(escapeTitle('a [b'), 'a \\[b');
     assert.equal(escapeTitle(']a[b]['), '\\]a[b]\\[');
@@ -19,6 +19,20 @@ test('escapes every Discord markdown character', () => {
 test('( ) and _ are left as they are, except ( right after ]', () => {
     assert.equal(escapeTitle('Hitsujida (Kumadera) snake_case_name'), 'Hitsujida (Kumadera) snake_case_name');
     assert.equal(escapeTitle('[x](https://evil.example)'), '[x]\\(https://evil.example)');
+});
+
+test('brackets inside a pair of brackets are escaped, the pair itself is not', () => {
+    // Discord reads one level of [ ] inside the link text; a second level broke the whole link
+    assert.equal(escapeTitle('[ [Fence 14] ] Kyoudai [! ]'), '[ \\[Fence 14\\] ] Kyoudai [! ]');
+    assert.equal(escapeTitle('[a [b [c] d] e] f [g]'), '[a \\[b \\[c\\] d\\] e] f [g]');
+    assert.equal(escapeTitle('[a][b] [c]'), '[a][b] [c]');
+});
+
+test('the site name follows the flag, in bold', () => {
+    assert.equal(resultLink({ title: 'A [English]', url: U, website: 'DLsite' }), `[🇺🇸 **DLsite** A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[**momon:GA** A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'a*b[c' }), `[**ab\\[c** A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U }), `[A](<${U}>)`);
 });
 
 test('a single ~ is left as it is', () => {
@@ -116,7 +130,7 @@ test('resultToText numbers links and keeps every line short', () => {
             { title: 'x'.repeat(5000), website: 'w', url: U, isLegal: false },
         ],
     });
-    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [a_b](<${U}>)`]);
+    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [**w** a_b](<${U}>)`]);
     assert.ok(lines.every((l) => l.length < 400));
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
 });
