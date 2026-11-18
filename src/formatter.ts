@@ -72,7 +72,7 @@ export function escapeUrl(url: string): string {
     return url.replace(/[\s()<>]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase().padStart(2, '0'));
 }
 
-// 言語コード(API の language: 2 文字のコードを , でつないだもの。題名に言語がなければ null)と国旗。日本語(ja)には国旗を付けない。
+// 言語コード(API の language: 2 文字のコードのリスト。題名に言語がなければ [])と国旗。日本語(ja)には国旗を付けない。
 // 並びは、結果の並び順(英語、中国語、韓国語…)でもある
 const LANGUAGE_FLAGS: Record<string, string> = {
     en: '🇺🇸', zh: '🇨🇳', ko: '🇰🇷', es: '🇪🇸', fr: '🇫🇷', de: '🇩🇪', ru: '🇷🇺', it: '🇮🇹',
@@ -114,11 +114,11 @@ export function parseTitle(title: string): { text: string } {
     return { text: text.replace(/\s+/g, ' ').trim() };
 }
 
-/** API の language(`zh`、`en,ko`、null)の国旗(絵文字)。複数あれば横に並べる。日本語と null には付けない。なければ空文字。 */
-export function languageFlags(language: string | null | undefined): string {
+/** API の language(['zh']、['en', 'ko']、[])の国旗(絵文字)。複数あれば横に並べる。日本語と [] には付けない。なければ空文字。 */
+export function languageFlags(language: string[] | undefined): string {
     const flags = new Set<string>();
 
-    for (const code of (language ?? '').split(',')) {
+    for (const code of language ?? []) {
         const flag = LANGUAGE_FLAGS[code.trim()];
         if (flag) flags.add(flag);
     }
@@ -134,7 +134,7 @@ function siteLabel(website: string | undefined): string {
 }
 
 /** `1. [【サイト名】 🇨🇳 タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
-export function resultLink(r: { title: string; url: string; website?: string; language?: string | null }): string {
+export function resultLink(r: { title: string; url: string; website?: string; language?: string[] }): string {
     const flags = languageFlags(r.language);
     const { text } = parseTitle((r.title ?? '').replace(INVISIBLE, ' '));
     const escaped = escapeTitle(text);
@@ -148,7 +148,7 @@ export function resultLink(r: { title: string; url: string; website?: string; la
 // 言語の並び順: 判定できない(日本語を含む。日本語には国旗を付けない)ものが先、国旗のあるものは LANGUAGE_FLAGS の順(英語、中国語、韓国語…)
 const FLAG_ORDER = Object.values(LANGUAGE_FLAGS);
 
-function languageRank(language: string | null | undefined): number {
+function languageRank(language: string[] | undefined): number {
     const first = Array.from(languageFlags(language)).slice(0, 2).join('');
     const rank = FLAG_ORDER.indexOf(first);
 
@@ -158,7 +158,7 @@ function languageRank(language: string | null | undefined): number {
 /**
  * 結果を、言語(国旗のないものを先に、国旗のあるものは LANGUAGE_FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
  */
-export function sortResults<T extends { title: string; website?: string; language?: string | null }>(results: T[]): T[] {
+export function sortResults<T extends { title: string; website?: string; language?: string[] }>(results: T[]): T[] {
     const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
     return results
