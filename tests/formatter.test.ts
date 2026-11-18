@@ -10,7 +10,7 @@ test('escapes every Discord markdown character', () => {
     assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x ［y］]');
     assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 ］(Jujutsu Kaisen)');
     assert.equal(escapeTitle('a [b'), 'a ［b');
-    assert.equal(escapeTitle(']a[b]['), '］a［b］［');
+    assert.equal(escapeTitle(']a[b]['), '］a[b]［');
     assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<:e:3\\> \\@everyone');
     assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q - l');
     assert.equal(escapeTitle('back\\slash \\* x'), 'back\\\\slash \\\\\\* x');
