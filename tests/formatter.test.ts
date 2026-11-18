@@ -6,19 +6,19 @@ const U = 'https://example.com/a';
 
 test('escapes every Discord markdown character', () => {
     assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ ||sp|| \\`c\\`');
-    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a］(https://evil.example)［b');
+    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a］(https\\://evil.example)［b');
     assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '［Hamao］ Fallin! ［x ［y］］');
     assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '［ Nuko.］ Jujutsu 12 ］(Jujutsu Kaisen)');
     assert.equal(escapeTitle('a [b'), 'a ［b');
     assert.equal(escapeTitle(']a[b]['), '］a［b］［');
-    assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<:e:3\\> \\@everyone');
+    assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<\\:e\\:3\\> \\@everyone');
     assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q - l');
     assert.equal(escapeTitle('back\\slash \\* x'), 'back\\\\slash \\\\\\* x');
 });
 
 test('( ) and _ are left as they are, except ( right after ]', () => {
     assert.equal(escapeTitle('Hitsujida (Kumadera) snake_case_name'), 'Hitsujida (Kumadera) snake_case_name');
-    assert.equal(escapeTitle('[x](https://evil.example)'), '［x］(https://evil.example)');
+    assert.equal(escapeTitle('[x](https://evil.example)'), '［x］(https\\://evil.example)');
 });
 
 test('brackets in the title are full-width: any [ ] in the link text, even escaped, broke the link in Discord', () => {
@@ -29,7 +29,7 @@ test('brackets in the title are full-width: any [ ] in the link text, even escap
 
 test('the site name comes first, in 【 】, then the flag', () => {
     assert.equal(resultLink({ title: 'A [English]', url: U, website: 'DLsite' }), `[【DLsite】 🇺🇸 A](<${U}>)`);
-    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[【momon:GA】 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[【momon\\:GA】 A](<${U}>)`);
     assert.equal(resultLink({ title: 'A', url: U, website: 'a*b[c' }), `[【ab［c】 A](<${U}>)`);
     assert.equal(resultLink({ title: 'A', url: U }), `[A](<${U}>)`);
 });
