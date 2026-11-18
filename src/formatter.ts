@@ -145,14 +145,14 @@ export function languageFlags(title: string): string {
     return parseTitle(title).flags;
 }
 
-/** サイト名を、リンクの文字に入れる形にする(太字)。サイト名にも記号が入りうるので打ち消す。 */
+/** サイト名を、リンクの文字に入れる形にする(【 】で囲む)。サイト名にも記号が入りうるので打ち消す。 */
 function siteLabel(website: string | undefined): string {
     const name = escapeTitle((website ?? '').replace(INVISIBLE, ' ').replace(/\*/g, ''));
 
-    return name ? `**${name}**` : '';
+    return name ? `【${name}】` : '';
 }
 
-/** `1. [🇨🇳 **サイト名** タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
+/** `1. [🇨🇳 【サイト名】 タイトル](<url>)` の形の、リンクの文字。タイトルがなければ URL だけ。 */
 export function resultLink(r: { title: string; url: string; website?: string }): string {
     const { flags, text } = parseTitle((r.title ?? '').replace(INVISIBLE, ' '));
     const escaped = escapeTitle(text);

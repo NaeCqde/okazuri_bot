@@ -28,10 +28,10 @@ test('brackets inside a pair of brackets are escaped, the pair itself is not', (
     assert.equal(escapeTitle('[a][b] [c]'), '[a][b] [c]');
 });
 
-test('the site name follows the flag, in bold', () => {
-    assert.equal(resultLink({ title: 'A [English]', url: U, website: 'DLsite' }), `[🇺🇸 **DLsite** A](<${U}>)`);
-    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[**momon:GA** A](<${U}>)`);
-    assert.equal(resultLink({ title: 'A', url: U, website: 'a*b[c' }), `[**ab\\[c** A](<${U}>)`);
+test('the site name follows the flag, in 【 】', () => {
+    assert.equal(resultLink({ title: 'A [English]', url: U, website: 'DLsite' }), `[🇺🇸 【DLsite】 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[【momon:GA】 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'a*b[c' }), `[【ab\\[c】 A](<${U}>)`);
     assert.equal(resultLink({ title: 'A', url: U }), `[A](<${U}>)`);
 });
 
@@ -130,7 +130,7 @@ test('resultToText numbers links and keeps every line short', () => {
             { title: 'x'.repeat(5000), website: 'w', url: U, isLegal: false },
         ],
     });
-    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [**w** a_b](<${U}>)`]);
+    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [【w】 a_b](<${U}>)`]);
     assert.ok(lines.every((l) => l.length < 400));
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
 });
