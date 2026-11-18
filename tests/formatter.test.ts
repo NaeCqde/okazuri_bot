@@ -139,7 +139,7 @@ test('resultToText numbers links and keeps every line short', () => {
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
 });
 
-test('results are sorted by language (known first), site name, then title', () => {
+test('results are sorted by language (no flag, i.e. Japanese or unknown, first), site name, then title', () => {
     const r = (title: string, website: string) => ({ title, website, url: U, isLegal: false });
     const sorted = sortResults([
         r('B plain', 'Z'),
@@ -153,13 +153,13 @@ test('results are sorted by language (known first), site name, then title', () =
     ]).map((x) => `${x.website}:${x.title}`);
 
     assert.deepEqual(sorted, [
+        'A:A plain',
+        'A:A plain',
+        'Z:B plain',
         'A:c [English]',
         'B:a [English]',
         'B:b [English]',
         'B:y [Chinese]',
         'A:x [Korean]',
-        'A:A plain',
-        'A:A plain',
-        'Z:B plain',
     ]);
 });

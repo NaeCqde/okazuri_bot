@@ -161,18 +161,18 @@ export function resultLink(r: { title: string; url: string; website?: string }):
     return `[${head ? head + ' ' : ''}${escaped}](<${escapeUrl(r.url)}>)`;
 }
 
-// 言語の並び順: FLAGS に出てくる順(英語、中国語、韓国語…)。言語が判定できないものは最後
+// 言語の並び順: 判定できない(日本語を含む。日本語には国旗を付けない)ものが先、国旗のあるものは FLAGS に出てくる順(英語、中国語、韓国語…)
 const FLAG_ORDER = [...new Set(Object.values(FLAGS))];
 
 function languageRank(title: string): number {
     const first = Array.from(parseTitle(title).flags).slice(0, 2).join('');
     const rank = FLAG_ORDER.indexOf(first);
 
-    return rank < 0 ? FLAG_ORDER.length : rank;
+    return rank < 0 ? 0 : rank + 1;
 }
 
 /**
- * 結果を、言語(判定できたものを先に、FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
+ * 結果を、言語(国旗のないものを先に、国旗のあるものは FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
  */
 export function sortResults<T extends { title: string; website?: string }>(results: T[]): T[] {
     const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
