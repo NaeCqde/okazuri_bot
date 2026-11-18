@@ -161,6 +161,34 @@ export function resultLink(r: { title: string; url: string; website?: string }):
     return `[${head ? head + ' ' : ''}${escaped}](<${escapeUrl(r.url)}>)`;
 }
 
+// 言語の並び順: FLAGS に出てくる順(英語、中国語、韓国語…)。言語が判定できないものは最後
+const FLAG_ORDER = [...new Set(Object.values(FLAGS))];
+
+function languageRank(title: string): number {
+    const first = Array.from(parseTitle(title).flags).slice(0, 2).join('');
+    const rank = FLAG_ORDER.indexOf(first);
+
+    return rank < 0 ? FLAG_ORDER.length : rank;
+}
+
+/**
+ * 結果を、言語(判定できたものを先に、FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
+ */
+export function sortResults<T extends { title: string; website?: string }>(results: T[]): T[] {
+    const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
+
+    return results
+        .map((result, index) => ({ result, index, rank: languageRank(result.title ?? '') }))
+        .sort(
+            (a, b) =>
+                a.rank - b.rank ||
+                collator.compare(a.result.website ?? '', b.result.website ?? '') ||
+                collator.compare(parseTitle(a.result.title ?? '').text, parseTitle(b.result.title ?? '').text) ||
+                a.index - b.index
+        )
+        .map(({ result }) => result);
+}
+
 export function resultToText(
     resultMap: SearchResultMap,
     originalQuery: string[] | null = null
@@ -176,16 +204,14 @@ export function resultToText(
         }
 
         if (result.length) {
-            const legal: string[] = result
-                .filter((r) => r.isLegal)
+            const legal: string[] = sortResults(result.filter((r) => r.isLegal))
                 .map((r, i) => `${i + 1}. ${resultLink(r)}`);
 
             if (legal.length) {
                 lines.push('### 合法：', ...legal);
             }
 
-            const leak: string[] = result
-                .filter((r) => !r.isLegal)
+            const leak: string[] = sortResults(result.filter((r) => !r.isLegal))
                 .map((r, i) => `${i + 1}. ${resultLink(r)}`);
 
             if (leak.length) {

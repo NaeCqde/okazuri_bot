@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, splitText } from '../src/formatter';
+import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, sortResults, splitText } from '../src/formatter';
 
 const U = 'https://example.com/a';
 
@@ -137,4 +137,29 @@ test('resultToText numbers links and keeps every line short', () => {
     assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [【w】 a_b](<${U}>)`]);
     assert.ok(lines.every((l) => l.length < 400));
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
+});
+
+test('results are sorted by language (known first), site name, then title', () => {
+    const r = (title: string, website: string) => ({ title, website, url: U, isLegal: false });
+    const sorted = sortResults([
+        r('B plain', 'Z'),
+        r('A plain', 'A'),
+        r('x [Korean]', 'A'),
+        r('y [Chinese]', 'B'),
+        r('b [English]', 'B'),
+        r('a [English]', 'B'),
+        r('c [English]', 'A'),
+        r('A plain', 'A'),
+    ]).map((x) => `${x.website}:${x.title}`);
+
+    assert.deepEqual(sorted, [
+        'A:c [English]',
+        'B:a [English]',
+        'B:b [English]',
+        'B:y [Chinese]',
+        'A:x [Korean]',
+        'A:A plain',
+        'A:A plain',
+        'Z:B plain',
+    ]);
 });
