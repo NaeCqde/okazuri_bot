@@ -191,18 +191,23 @@ export function sortResults<T extends { title: string; website?: string }>(resul
 
 export function resultToText(
     resultMap: SearchResultMap,
-    originalQuery: string[] | null = null
+    originalQuery: string[] | null = null,
+    english: (string | null)[] | null = null
 ): string[] {
     let lines: string[] = ['# 検索結果'];
     const results = Object.entries(resultMap);
 
     for (let i: number = 0; results.length > i; i++) {
-        // query は API が検索に使った語(ローマ字)。見出しは、入力された語にして、ローマ字は小さく添える
+        // query は API が検索に使った語(ローマ字)。見出しは入力された語にして、ローマ字と英語訳を添える
         const [query, result] = results[i];
         const original = originalQuery?.[i] ?? query;
         lines.push('## ' + original);
         if (original.trim().toLowerCase() !== query.trim().toLowerCase()) {
-            lines.push('-# ローマ字も検索済み：' + query);
+            lines.push('ローマ字：' + query);
+        }
+        const translated = english?.[i];
+        if (translated) {
+            lines.push('英語　　：' + escapeTitle(translated));
         }
 
         if (result.length) {

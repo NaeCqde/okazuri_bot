@@ -170,9 +170,19 @@ test('the heading is the query that was typed, with the romaji under it when it 
     assert.deepEqual(resultToText(none, ['パエトーン強襲戦']), [
         '# 検索結果',
         '## パエトーン強襲戦',
-        '-# ローマ字も検索済み：paeto-n kyoushuusen',
+        'ローマ字：paeto-n kyoushuusen',
         '### なし',
     ]);
+    // the English title goes under the romaji
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦'], ['ZenZero Gyaku Ra Goudou "Phaethon Assault"']), [
+        '# 検索結果',
+        '## パエトーン強襲戦',
+        'ローマ字：paeto-n kyoushuusen',
+        '英語　　：ZenZero Gyaku Ra Goudou "Phaethon Assault"',
+        '### なし',
+    ]);
+    // no English title: no line
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦'], [null]).includes('英語　　：'), false);
     // the same text (case aside): nothing to add
     assert.deepEqual(resultToText({ 'comic exe 11': [] }, ['COMIC EXE 11']), ['# 検索結果', '## COMIC EXE 11', '### なし']);
     // no typed query: the heading is the query of the API
