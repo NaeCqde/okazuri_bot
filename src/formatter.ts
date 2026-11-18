@@ -197,10 +197,12 @@ export function resultToText(
     const results = Object.entries(resultMap);
 
     for (let i: number = 0; results.length > i; i++) {
+        // query は API が検索に使った語(ローマ字)。見出しは、入力された語にして、ローマ字は小さく添える
         const [query, result] = results[i];
-        lines.push('## ' + query);
-        if (originalQuery) {
-            lines.push('-# 元のクエリ：' + originalQuery[i]);
+        const original = originalQuery?.[i] ?? query;
+        lines.push('## ' + original);
+        if (original.trim().toLowerCase() !== query.trim().toLowerCase()) {
+            lines.push('-# ローマ字も検索済み：' + query);
         }
 
         if (result.length) {

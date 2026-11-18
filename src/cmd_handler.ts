@@ -65,6 +65,8 @@ export async function searchHandler(
         return;
     }
 
-    // 雑誌の号は名前にして検索するので、元のクエリも示す
-    await reply(ctx, splitText(resultToText(result, originalQueries)), editOriginal);
+    // 見出しは入力された語。検索は重複を除いて順に行うので、見出しも同じ順に合わせる
+    const headings = [...new Set(queries)].map((q) => originalQueries[queries.indexOf(q)]);
+
+    await reply(ctx, splitText(resultToText(result, headings)), editOriginal);
 }

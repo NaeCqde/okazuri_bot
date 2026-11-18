@@ -163,3 +163,18 @@ test('results are sorted by language (no flag, i.e. Japanese or unknown, first),
         'A:x [Korean]',
     ]);
 });
+
+test('the heading is the query that was typed, with the romaji under it when it differs', () => {
+    const none = { 'paeto-n kyoushuusen': [] as { title: string; website: string; url: string; isLegal: boolean }[] };
+
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦']), [
+        '# 検索結果',
+        '## パエトーン強襲戦',
+        '-# ローマ字も検索済み：paeto-n kyoushuusen',
+        '### なし',
+    ]);
+    // the same text (case aside): nothing to add
+    assert.deepEqual(resultToText({ 'comic exe 11': [] }, ['COMIC EXE 11']), ['# 検索結果', '## COMIC EXE 11', '### なし']);
+    // no typed query: the heading is the query of the API
+    assert.deepEqual(resultToText({ q: [] }), ['# 検索結果', '## q', '### なし']);
+});
