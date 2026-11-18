@@ -82,13 +82,15 @@ test('flags come from the language that the API answers: codes joined with a com
     assert.equal(languageFlags('vi'), '🇻🇳');
 });
 
-test('flags: Japanese, unknown and no language have no flag', () => {
+test('flags: Japanese and no language (null) have no flag', () => {
     assert.equal(languageFlags('ja'), '');
-    assert.equal(languageFlags('unknown'), '');
+    assert.equal(languageFlags(null), '');
     assert.equal(languageFlags(''), '');
     assert.equal(languageFlags(undefined), '');
     // only the Japanese flag is left out of a list
     assert.equal(languageFlags('ja,en'), '🇺🇸');
+    // several languages: the flags side by side, in the order of the API
+    assert.equal(languageFlags('zh,en,ja,ko'), '🇨🇳🇺🇸🇰🇷');
 });
 
 test('the title is not read for its language any more: the flag is the one of the API', () => {
@@ -106,7 +108,7 @@ test('link format: flag goes inside the brackets, language brackets are removed'
     assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U, language: 'ja,en' }), `[🇺🇸 A](<${U}>)`);
     assert.equal(resultLink({ title: '🇯🇵 A [JP]', url: U, language: 'ja' }), `[A](<${U}>)`);
     assert.equal(resultLink({ title: '[English]', url: U, language: 'en' }), U);
-    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U, language: 'unknown' }), `[A [HD] [It Girl]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U, language: null }), `[A [HD] [It Girl]](<${U}>)`);
     assert.equal(resultLink({ title: 'plain', url: U }), `[plain](<${U}>)`);
 });
 
@@ -123,7 +125,7 @@ test('resultToText numbers links and keeps every line short', () => {
 });
 
 test('results are sorted by language (no flag, i.e. Japanese or unknown, first), site name, then title', () => {
-    const r = (title: string, website: string, language?: string) => ({ title, website, url: U, isLegal: false, language });
+    const r = (title: string, website: string, language?: string | null) => ({ title, website, url: U, isLegal: false, language });
     const sorted = sortResults([
         r('B plain', 'Z'),
         r('A plain', 'A', 'ja'),
@@ -132,7 +134,7 @@ test('results are sorted by language (no flag, i.e. Japanese or unknown, first),
         r('b [English]', 'B', 'en'),
         r('a [English]', 'B', 'en'),
         r('c [English]', 'A', 'en'),
-        r('A plain', 'A', 'unknown'),
+        r('A plain', 'A', null),
     ]).map((x) => `${x.website}:${x.title}`);
 
     assert.deepEqual(sorted, [
