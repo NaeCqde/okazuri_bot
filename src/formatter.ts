@@ -242,6 +242,40 @@ export function splitText(lines: string[], maxLength: number = 2000): string[] {
     return contents;
 }
 
+/**
+ * splitText と同じに分けるが、メッセージは maxMessages 通まで。入らない行は後ろから省略し、最後に省略した件数(「1. 」のように番号で始まる行の数)を添える。
+ * 見出しだけが残らないよう、省略のすぐ前の見出し行も外す。
+ */
+export function splitTextWithin(lines: string[], maxMessages: number = 2, maxLength: number = 2000): string[] {
+    const whole = splitText(lines, maxLength);
+
+    if (whole.length <= maxMessages) {
+        return whole;
+    }
+
+    const omittedNote = (kept: number): string => {
+        const omitted = lines.slice(kept).filter((l) => /^\d+\. /.test(l)).length;
+
+        return `…ほか ${omitted} 件は省略しました`;
+    };
+
+    for (let kept = lines.length - 1; kept >= 0; kept--) {
+        let end = kept;
+
+        while (end > 0 && lines[end - 1].startsWith('#')) {
+            end--;
+        }
+
+        const messages = splitText([...lines.slice(0, end), omittedNote(end)], maxLength);
+
+        if (messages.length <= maxMessages) {
+            return messages;
+        }
+    }
+
+    return splitText([omittedNote(0)], maxLength);
+}
+
 export function createErrorLog(
     queries: string[],
     command: string,

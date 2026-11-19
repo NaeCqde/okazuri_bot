@@ -1,7 +1,8 @@
 import type { CommandContext, ComponentContext } from 'discord-hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { ERROR_MESSAGE } from './consts';
-import { createErrorLog, resultToText, splitText } from './formatter';
+import { MAX_REPLY_MESSAGES } from './consts';
+import { createErrorLog, resultToText, splitTextWithin } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
 import { searchMultiple, titleByUrl } from './search/search';
@@ -70,5 +71,5 @@ export async function searchHandler(
     // 見出しは入力された語。検索は重複を除いて順に行うので、見出しも同じ順に合わせる
     const headings = [...new Set(queries)].map((q) => originalQueries[queries.indexOf(q)]);
 
-    await reply(ctx, splitText(resultToText(result, headings, english)), editOriginal);
+    await reply(ctx, splitTextWithin(resultToText(result, headings, english), MAX_REPLY_MESSAGES), editOriginal);
 }

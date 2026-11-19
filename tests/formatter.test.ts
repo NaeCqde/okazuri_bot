@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, sortResults, splitText } from '../src/formatter';
+import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, sortResults, splitText, splitTextWithin } from '../src/formatter';
 
 const U = 'https://example.com/a';
 
@@ -171,4 +171,24 @@ test('the heading is the query that was typed, with the romaji under it when it 
     assert.deepEqual(resultToText({ 'comic exe 11': [] }, ['COMIC EXE 11']), ['# 検索結果', '## COMIC EXE 11', '### なし']);
     // no typed query: the heading is the query of the API
     assert.deepEqual(resultToText({ q: [] }), ['# 検索結果', '## q', '### なし']);
+});
+
+test('splitTextWithin keeps at most the given number of messages and says how many links were left out', () => {
+    const lines = ['# 検索結果', '## q', '### 合法：'];
+    for (let i = 1; i <= 60; i++) lines.push(`${i}. ${'x'.repeat(95)}`);
+    lines.push('### 違法：', `1. ${'y'.repeat(95)}`);
+
+    assert.ok(splitText(lines).length > 2);
+    const within = splitTextWithin(lines, 2);
+    assert.equal(within.length, 2);
+    assert.ok(within.every((m) => m.length <= 2000));
+    const last = within[1].split('\n').at(-1)!;
+    assert.match(last, /^…ほか \d+ 件は省略しました$/);
+    const kept = within.join('\n').split('\n').filter((l) => /^\d+\. /.test(l)).length;
+    assert.equal(kept + Number(last.match(/\d+/)![0]), 61, 'every link is either shown or counted');
+    assert.ok(!within[1].split('\n').at(-2)!.startsWith('#'), 'no heading is left alone before the note');
+
+    // what fits is not touched
+    const small = ['# 検索結果', '## q', '1. a'];
+    assert.deepEqual(splitTextWithin(small, 2), splitText(small));
 });
