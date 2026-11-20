@@ -35,6 +35,8 @@ This app (BOT) is provided only for the following purposes.
 
 If you take part in anything illegal, the operator is not responsible in any way.
 
-Also, even if a rights holder asks this site to remove a link, we are unable to accept the request. Please ask the site that hosts the work to remove it. A work that is removed there is checked automatically and is dropped from the search results of this site as well.
+Also, even if a rights holder asks this site to remove a link, we are unable to accept the request.
+
+Please ask the site that hosts the work to remove it. A work that is removed there is checked automatically and is dropped from the search results of this site as well.
 
 By using this app (BOT) you agree to these conditions.

@@ -48,7 +48,7 @@ def build(lang: str):
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
 <p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>by_magazine</code>(雑誌で検索)をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>by_magazine</code> on.')}</p>
 <p class="note">{T('あなたが違法行為に関与した場合、運営は一切の責任を負いません。BOT を使うことで、この条件に同意したことになります。', 'If you take part in anything illegal, the operator is not responsible in any way. By using the bot you agree to this.')}</p>
-<p class="note">{T('また、権利者様がこのサイトに対してリンク掲載の削除要請を行ったとしても承りかねます。削除は、掲載先のサイトへご依頼ください。掲載先から削除された作品は、自動で確認され、このサイトの検索結果からも外れます。', 'Also, even if a rights holder asks this site to remove a link, we are unable to accept the request. Please ask the site that hosts the work to remove it. A work that is removed there is checked automatically and is dropped from the search results of this site as well.')}</p></main>''' + foot)
+<p class="note">{T('また、権利者様がこのサイトに対してリンク掲載の削除要請を行ったとしても承りかねます。<br>削除は、掲載先のサイトへご依頼ください。掲載先から削除された作品は、自動で確認され、このサイトの検索結果からも外れます。', 'Also, even if a rights holder asks this site to remove a link, we are unable to accept the request.<br>Please ask the site that hosts the work to remove it. A work that is removed there is checked automatically and is dropped from the search results of this site as well.')}</p></main>''' + foot)
 
     def tryit(path, fields):
         """A form that sends the request: one input per query parameter (a name, a kind, a default or the options)."""
