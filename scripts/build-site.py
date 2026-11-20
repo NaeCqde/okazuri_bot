@@ -48,7 +48,12 @@ def build(lang: str):
         rows = []
         for name, kind, value in fields:
             if kind == 'select':
-                options = ''.join(f'<option value="{o}">{o or T("(既定)", "(default)")}</option>' for o in value)
+                default = {'live': 'diff', 'translator': 'auto', 'loanwords': 'romaji'}.get(name, '')
+                # the empty option is the default, labelled with its value; the same value is not listed twice
+                options = ''.join(
+                    f'<option value="{o}">{o or T("(既定) ", "(default) ") + default}</option>'
+                    for o in value if o == '' or o != default or '' not in value
+                )
                 control = f'<select name="{name}">{options}</select>'
             else:
                 control = f'<input name="{name}" type="{kind}" value="{value}" autocomplete="off" spellcheck="false">'
