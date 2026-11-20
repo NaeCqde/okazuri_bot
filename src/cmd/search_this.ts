@@ -18,7 +18,7 @@ export const searchThisCommand = factory.command(
 
         if (urls.length) {
             return c.resDefer(async (c) => {
-                const queries: string[] = await titlesFromUrls(urls);
+                const queries: string[] = await titlesFromUrls(c.env.OKAZURI_API_URL, urls);
 
                 if (!queries.length) {
                     await c.flags('SUPPRESS_EMBEDS').followup({

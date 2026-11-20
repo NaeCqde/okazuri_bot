@@ -35,7 +35,7 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 - `/search`: 作品名などを検索する。`to_magazine` を付けると、入力した作品が載った号の名前に直して検索する。
 - `/works`: 雑誌の作品一覧。号の名前(オートコンプリート付き)から掲載作品を一覧する(`listWorks`、`searchNumberNames`)。
-- コンテキストメニュー「これらを検索」(`search_this`、設定付きは `search_this_option`):メッセージ中の URL からタイトルを取り(`titleByUrl`、非対応サイトや失敗は除く)、検索する。
+- コンテキストメニュー「これらを検索」(`search_this`、設定付きは `search_this_option`):メッセージ中の URL からタイトルを取り(`titlesByUrls`。API の `GET /okazuri/title` が、保存済みの作品、なければページから答える。非対応サイトや失敗は除く)、検索する。
 - `/magazine`(旧 `from_work`): 作品名から雑誌を探す。
 
 検索結果は `searchMultiple` で複数クエリを順に検索し、`resultToText` で整形、`splitText` で 2000 文字ごとに分けて返信する。
@@ -43,7 +43,8 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## 検索
 
-- おかずり検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。
+- おかずり検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。応答の JSON のキーは snake_case(`is_legal`、`translation_ja` など)。
+- URL からタイトル: `GET {OKAZURI_API_URL}/okazuri/title?url=…`(1 回に 10 件まで。`titlesByUrls` が分けて呼ぶ)。
 - `GET /:engine/search`、`GET /:engine/images/search`: engine は `google` か `bing`。`q` は 1〜150 文字、`start` は 0 以上(任意)。
 
 ## 雑誌の取得 `POST /api/bot/internal/fetch-magazines`

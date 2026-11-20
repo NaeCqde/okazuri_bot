@@ -5,14 +5,13 @@ import { MAX_REPLY_MESSAGES } from './consts';
 import { createErrorLog, resultToText, splitTextWithin } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
-import { searchMultiple, titleByUrl } from './search/search';
+import { titlesByUrls } from './search/okazuri';
+import { searchMultiple } from './search/search';
 import type { SearchResultMap } from './types';
 
-/** URL からタイトルを取る。対応していないサイトや取れなかったURLは除く */
-export async function titlesFromUrls(urls: string[]): Promise<string[]> {
-    const titles = await Promise.all(urls.map((url) => titleByUrl(url).catch(() => '')));
-
-    return titles.filter(Boolean);
+/** URL からタイトルを取る(okazuri-search-api)。対応していないサイトや取れなかった URL は除く */
+export async function titlesFromUrls(api: string, urls: string[]): Promise<string[]> {
+    return titlesByUrls(api, urls);
 }
 
 /**
