@@ -193,17 +193,23 @@ export function resultToText(
         const asked = sent?.[i] ?? original;
         const flat = (text: string): string => text.replace(/\s+/g, ' ').trim().toLowerCase();
         const isJapanese = /[\u3040-\u30ff\u3400-\u9fff]/.test(asked);
+        const notes: [string, string][] = [];
         if (isJapanese && flat(asked) !== flat(query)) {
-            lines.push('ローマ字：' + query);
+            notes.push(['ローマ字', query]);
         }
         const translated = english?.[i];
         if (isJapanese && translated) {
-            lines.push('英語　　：' + escapeTitle(translated));
+            notes.push(['英語', escapeTitle(translated)]);
         }
         // 日本語を含まない語(英語、ローマ字)には、日本語の題名の行を付ける
         const japaneseTitle = japanese?.[i];
         if (!isJapanese && japaneseTitle) {
-            lines.push('日本語　：' + escapeTitle(japaneseTitle));
+            notes.push(['日本語', escapeTitle(japaneseTitle)]);
+        }
+        // 「：」の位置は全角スペースで揃える。空白は、並んだ行のいちばん長い見出しに合わせた最小限
+        const width = Math.max(0, ...notes.map(([label]) => label.length));
+        for (const [label, text] of notes) {
+            lines.push(label + '　'.repeat(width - label.length) + '：' + text);
         }
 
         if (result.length) {

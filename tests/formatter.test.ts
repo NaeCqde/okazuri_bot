@@ -207,11 +207,13 @@ test('a query in Latin letters (English or romaji) has no romaji line and no Eng
     assert.deepEqual(resultToText({ 'nine lives': [] }, ['Nine Lives'], [null], ['Nine Lives'], ['九つの命']), [
         '# 検索結果',
         '## Nine Lives',
-        '日本語　：九つの命',
+        '日本語：九つの命',
         '### なし',
     ]);
     // a Japanese query has no Japanese line
     assert.deepEqual(resultToText({ kairakuten: [] }, ['快楽天'], null, ['快楽天'], ['快楽天']), ['# 検索結果', '## 快楽天', 'ローマ字：kairakuten', '### なし']);
+    // without a romaji line the labels are padded only to the longest one
+    assert.deepEqual(resultToText({ 快楽天: [] }, ['快楽天'], ['Kairakuten'], ['快楽天']).filter((l) => l.includes('：')), ['英語：Kairakuten']);
     // Japanese: both lines stay
     assert.deepEqual(resultToText({ kairakuten: [] }, ['快楽天'], ['pleasure heaven']), [
         '# 検索結果',
