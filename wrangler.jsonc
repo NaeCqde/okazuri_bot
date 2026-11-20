@@ -33,12 +33,20 @@
             "LBL00334", // COMICエウロパ
         ],
     },
+    // 静的なサイト(site/: トップ、/dev、/search、/invite、/add)は Workers の静的アセットとして配る。アセットの配信は無料で、Worker の呼び出しに数えない。
+    // Worker が動くのは run_worker_first のパスだけ(BOT)
+    "assets": {
+        "directory": "./site",
+        // アセットにないパスは 404.html を返す(Worker を呼ばないので、無駄な呼び出しが増えない)
+        "not_found_handling": "404-page",
+        "run_worker_first": ["/api/bot/*", "/interaction*", "/internal/*"],
+    },
     "routes": [
         { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
         { "pattern": "okazuri-api.nae.quest/internal/*", "zone_name": "nae.quest" },
-        // https://okazuri.nae.quest/api/bot/* は BOT。/api/v1/* は Worker を通さず、Cloudflare のルール(Origin Rule と Cache Rule)で
-        // okazuri-search-api に届ける。それ以外は Pages(カスタムドメイン)
-        { "pattern": "okazuri.nae.quest/api/bot/*", "zone_name": "nae.quest" },
+        // okazuri.nae.quest 全体を Worker(静的アセットと BOT)に割り当てる。/api/v1/* だけは、ダッシュボードで「Worker なし」のルートを足して
+        // Worker を迂回させ、Origin Rule(ポート 8010)で okazuri-search-api に直接届ける(Cache Rule でキャッシュ)
+        { "pattern": "okazuri.nae.quest/*", "zone_name": "nae.quest" },
     ],
     "d1_databases": [
         {
