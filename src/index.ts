@@ -1,5 +1,6 @@
 import { Hono } from 'hono/tiny';
 import * as handlers from './cmd';
+import { proxyApi } from './api-proxy';
 import { endpoints, triggerFetchMagazines } from './endpoints';
 import { factory } from './init';
 import type { EnvTypes } from './types';
@@ -11,6 +12,8 @@ const bot = factory
 
 const hono = new Hono<EnvTypes>();
 hono.mount('/interaction', bot.fetch.bind(bot));
+hono.all('/api/*', proxyApi);
+hono.get('/api', (c) => c.redirect('/dev', 302));
 hono.route('/', endpoints);
 
 export default {

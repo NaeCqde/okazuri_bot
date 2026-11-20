@@ -1,0 +1,37 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>検索 | オカズリBOT</title><meta name="description" content="複数のサイトの作品をまとめて検索"><meta name="color-scheme" content="dark">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/">オカズリBOT</a>
+<a class="link active" href="/search/">検索</a><a class="link" href="/dev/">API</a><span class="sp"></span>
+<a class="btn primary" href="/add">追加</a></div></header><main><h1 style="margin-top:48px;font-size:32px">検索</h1><p class="note">日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。</p>
+<form class="sbox" id="f"><input id="q" placeholder="例: 快楽天 2026 11" autocomplete="off" autofocus><button class="btn primary">検索</button></form>
+<div id="out"></div></main><footer>オカズリBOT ・ <a href="/invite">サポートサーバー</a> ・ <a href="/dev/">API</a></footer><script>
+const $=s=>document.querySelector(s),out=$('#out');
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function run(q){
+  if(!q.trim())return;
+  history.replaceState(null,'','?q='+encodeURIComponent(q));
+  out.innerHTML='<p class="note">検索しています…(初めての語は少し時間がかかります)</p>';
+  try{
+    const r=await fetch('/api/okazuri/search?live=diff&q='+encodeURIComponent(q));
+    const d=await r.json();
+    if(!r.ok){out.innerHTML='<p class="note">'+esc(d.detail||'エラーです')+'</p>';return}
+    const ja=/[\u3040-\u30ff\u3400-\u9fff]/.test(q);
+    let h='<div class="lines">';
+    if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>ローマ字　<b>'+esc(d.query)+'</b></div>';
+    if(d.translation?.text)h+='<div>英語　　<b>'+esc(d.translation.text)+'</b></div>';
+    if(d.translationJa?.text)h+='<div>日本語　<b>'+esc(d.translationJa.text)+'</b></div>';
+    h+='<div>'+d.total+' 件'+(d.total>d.results.length?'(先頭の '+d.results.length+' 件)':'')+'</div></div>';
+    for(const [legal,label,color] of [[true,'合法','var(--ok)'],[false,'違法','var(--ng)']]){
+      const rs=d.results.filter(x=>x.isLegal===legal);
+      if(!rs.length)continue;
+      h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
+    }
+    if(!d.results.length)h+='<p class="note">見つかりませんでした。</p>';
+    h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
+    out.innerHTML=h;
+  }catch(e){out.innerHTML='<p class="note">通信に失敗しました。</p>'}
+}
+$('#f').addEventListener('submit',e=>{e.preventDefault();run($('#q').value)});
+const init=new URLSearchParams(location.search).get('q');if(init){$('#q').value=init;run(init)}
+</script></body></html>
