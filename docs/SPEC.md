@@ -7,8 +7,8 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 | 場所 | 役割 |
 |---|---|
-| `src/index.ts` | Hono。`/interaction` に discord-hono、`scheduled` で雑誌の取得を起動 |
-| `src/endpoints.ts` | HTTP エンドポイント(`/internal/fetch-magazines`、検索) |
+| `src/index.ts` | Hono。`/api/bot/interaction` に discord-hono、`scheduled` で雑誌の取得を起動 |
+| `src/endpoints.ts` | HTTP エンドポイント(`/api/bot/internal/fetch-magazines`、検索) |
 | `src/cmd/` | スラッシュコマンド・コンテキストメニュー・コンポーネント |
 | `src/cmd_handler.ts` | 検索の実行と返信(`searchHandler`) |
 | `src/search/` | 検索クライアント(おかずり検索 API、Google、Bing) |
@@ -19,10 +19,10 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## 設定
 
-`wrangler.jsonc`: Worker 名 `okazuri-bot`、cron `0 0 * * *`(毎日)、配置 `aws:ap-northeast-1`、ルート `okazuri-api.nae.quest/interaction*` と `/internal/*`、D1 は `DB`(okazuri)。
+`wrangler.jsonc`: Worker 名 `okazuri-bot`、cron `0 0 * * *`(毎日)、配置 `aws:ap-northeast-1`、ルートは `okazuri.nae.quest/api/bot/interaction*` と `/api/bot/internal/*` など、Worker が処理するパスだけ(静的サイトは Workers の静的アセット)、D1 は `DB`(okazuri)。
 `vars`: `WORKER_URL`、`MAGAZINE_IDS`(対象の LBL id、11件)。
 
-シークレット(`example.dev.vars`): `APPLICATION_ID`, `PUBLIC_KEY`, `BOT_TOKEN`, `OKAZURI_API_URL`(既定 `https://okazuri-api.nae.quest`), `ERROR_LOG_WEBHOOK`, `CRON_SECRET`。コミットしない。
+シークレット(`example.dev.vars`): `APPLICATION_ID`, `PUBLIC_KEY`, `BOT_TOKEN`, `OKAZURI_API_URL`(既定 `https://okazuri.nae.quest/api/v1`), `ERROR_LOG_WEBHOOK`, `CRON_SECRET`。コミットしない。
 
 ## テーブル(D1)
 
@@ -46,7 +46,7 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 - おかずり検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。
 - `GET /:engine/search`、`GET /:engine/images/search`: engine は `google` か `bing`。`q` は 1〜150 文字、`start` は 0 以上(任意)。
 
-## 雑誌の取得 `POST /internal/fetch-magazines`
+## 雑誌の取得 `POST /api/bot/internal/fetch-magazines`
 
 - `Authorization: Bearer ${CRON_SECRET}` を定数時間比較(`safeEqual`)で検査。一致しなければ 404。
 - `labelIds` は最大 50 件、各 `^LBL\d+$` に一致すること。
@@ -56,8 +56,8 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## セキュリティ上の注意
 
-- Discord の `/interaction` は `PUBLIC_KEY` による署名検証に頼る。
-- `/internal/*` は `CRON_SECRET` が唯一の防御。
+- Discord の `/api/bot/interaction` は `PUBLIC_KEY` による署名検証に頼る。
+- `/api/bot/internal/*` は `CRON_SECRET` が唯一の防御。
 - 検索エンドポイントは認証なしだが、`q` の長さと engine を検査する。
 - 外部サイトの HTML を解析するので、結果は必ず長さ・形式を検査して使う。
 - トークン・Webhook URL をコードやログに含めない。
