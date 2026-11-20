@@ -1,2 +1,2 @@
-export * from './from_work';
+export * from './magazine';
 export * from './works';
