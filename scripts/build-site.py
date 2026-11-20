@@ -48,7 +48,7 @@ def build(lang: str):
         t = f'<table><tr><th>{T("パラメータ", "Parameter")}</th><th></th></tr>{rows}</table>' if params else ''
         return f'''<h2 id="{path.strip('/').replace('/', '-')}"><span class="method">{m}</span><code>/api/v1{path}</code></h2><p>{desc}</p>{t}<pre><code>{example}</code></pre>'''
 
-    docs = nav('dev', '/dev') + f'''<main><div class="docs"><nav class="side"><b>API</b><a href="#start">{T('はじめに', 'Start')}</a><a href="#okazuri-search">{T('検索', 'Search')}</a><a href="#okazuri-sites">{T('サイト一覧', 'Sites')}</a><a href="#hitomila-search">{T('Hitomi.La 以外', 'Without Hitomi.La')}</a><a href="#translate">{T('翻訳', 'Translate')}</a><a href="#romaji">{T('ローマ字', 'Romaji')}</a><a href="#cache">{T('キャッシュ', 'Cache')}</a></nav>
+    docs = nav('dev', '/dev') + f'''<main><div class="docs"><nav class="side"><b>API</b><a href="#start">{T('はじめに', 'Start')}</a><a href="#okazuri-search">{T('検索', 'Search')}</a><a href="#okazuri-sites">{T('サイト一覧', 'Sites')}</a><a href="#translate">{T('翻訳', 'Translate')}</a><a href="#romaji">{T('ローマ字', 'Romaji')}</a><a href="#cache">{T('キャッシュ', 'Cache')}</a></nav>
 <article><h1>{T('API ドキュメント', 'API documentation')}</h1><p class="note">{T('okazuri-search-api の公開サーバーです。認証は要りません。', 'The public server of okazuri-search-api. No authentication.')}</p>
 <h2 id="start">{T('はじめに', 'Start')}</h2><p>{T('ベース URL は <code>https://okazuri.nae.quest/api/v1</code>。すべて <code>GET</code> で、JSON(<code>/romaji</code> と <code>/health</code> はテキスト)を返します。不正なリクエストは <code>422</code> と <code>{"detail": "..."}</code> です。', 'The base URL is <code>https://okazuri.nae.quest/api/v1</code>. Everything is a <code>GET</code> and answers JSON (<code>/romaji</code> and <code>/health</code> answer text). A bad request is a <code>422</code> with <code>{"detail": "..."}</code>.')}</p>
 <pre><code>curl "https://okazuri.nae.quest/api/v1/okazuri/search?q=快楽天+2026+11"</code></pre>'''
@@ -71,7 +71,6 @@ def build(lang: str):
   "sites": [ { "website": "DLsite", "status": "searched", "count": 30 } ]
 }''')
     docs += ep('GET', '/okazuri/sites', T('検索の対象のサイトと、いま検索しているかを返します。', 'The sites that can be searched, and whether each is searched now.'), [], 'GET /api/v1/okazuri/sites\n[ { "name": "DLsite", "isLegal": true, "support": "ready", "hasSearch": true, "japanese": true, "active": true } ]')
-    docs += ep('GET', '/hitomila/search', T('Hitomi.La を除いたサイトだけを検索します(<code>/okazuri/search</code> と同じ形)。', 'Searches only the sites other than Hitomi.La (the same shape as <code>/okazuri/search</code>).'), [('q', T('検索語。', 'The words.'))], 'GET /api/v1/hitomila/search?q=nine+lives')
     docs += f'''<h2 id="translate"><span class="method">GET</span><code>/api/v1/{{hitomila,google,auto}}/translate</code></h2><p>{T('題名の翻訳です。日本語の語は英語に、英語の語は日本語に訳します。<code>auto</code> は Hitomi.La、だめなら Google 翻訳。', 'Translates a title: Japanese into English, English into Japanese. <code>auto</code> uses Hitomi.La, and Google Translate if that fails.')}</p>
 <table><tr><th>{T('パラメータ', 'Parameter')}</th><th></th></tr><tr><td><code>q</code></td><td>{T('翻訳する語。必須。', 'The text. Required.')}</td></tr><tr><td><code>live</code></td><td><code>off</code> / <code>diff</code> ({T('既定', 'default')}) / <code>force</code>.</td></tr></table>
 <pre><code>GET /api/v1/auto/translate?q=姉弟</code></pre>'''
