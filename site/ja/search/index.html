@@ -6,7 +6,7 @@
 <a class="link active" href="/ja/search">検索</a><a class="link" href="/ja/dev">API</a><span class="sp"></span>
 <a class="lang" href="/search" hreflang="en">English</a>
 <a class="btn primary" href="/bot/add">追加</a></div></header><main><h1 style="margin-top:48px;font-size:32px">検索</h1><p class="note">日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。</p>
-<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ 入力欄を足す</button><button class="btn primary">検索</button></div>
+<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ 入力欄を足す</button><button class="btn primary">検索</button><button type="button" class="btn" id="share">URLを共有</button></div>
 <label class="note"><input type="checkbox" id="bm"> 雑誌で検索(この作品が載っている号を探す)</label>
 <div class="opts"><label>グループ <select id="grp"><option value="legal">合法 / 違法</option><option value="site">サイト</option><option value="lang">言語</option><option value="none">なし</option></select></label>
 <label>並び順 <select id="srt"><option value="lang">言語 → サイト → タイトル</option><option value="site">サイト → タイトル</option><option value="title">タイトル</option></select></label></div></form>
@@ -106,6 +106,14 @@ async function run(){
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">通信に失敗しました。</p>'})));
 }
 $('#grp').onchange=$('#srt').onchange=paint;
+$('#share').onclick=async()=>{
+  const b=$('#share'),label=b.textContent;
+  if(!location.hash.includes('q=')){const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);if(!qs.length)return;history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked)}
+  const u=location.href;
+  try{await navigator.clipboard.writeText(u);b.textContent='コピーしました'}
+  catch(e){prompt('URL',u)}
+  setTimeout(()=>b.textContent=label,1800);
+};
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
 if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}

@@ -37,7 +37,7 @@ def build(lang: str):
 <div class="grid">
 <div class="card"><h3>{T('複数サイトを一度に', 'Many sites at once')}</h3><p>{T('DLsite などの合法サイトと、そのほかのサイトの結果を、合法・違法に分けて並べます。', 'The results of legal sites such as DLsite and of other sites, sorted into legal and illegal.')}</p></div>
 <div class="card"><h3>{T('日本語・ローマ字・英語', 'Japanese, romaji, English')}</h3><p>{T('日本語の題名はローマ字と英語に、英語の語は日本語の題名にも当たって、取りこぼしを減らします。', 'A Japanese title is also searched in romaji and English, and an English one in its Japanese title, so fewer works are missed.')}</p></div>
-<div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('COMIC快楽天など、DLsite のレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of DLsite labels such as COMIC Kairakuten are fetched every day and can be found by search.')}</p></div>
+<div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('DLsite のレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of DLsite labels are fetched every day and can be found by search.')}</p></div>
 <div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="{base}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
 <p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>by_magazine</code>(雑誌で検索)をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>by_magazine</code> on.')}</p>
@@ -124,13 +124,13 @@ document.querySelectorAll('form.try').forEach(form=>{
     out['dev/index.html'] = page('API | オカズリBOT', T('okazuri-search-api の公開 HTTP API', 'The public HTTP API of okazuri-search-api'), '/dev', docs, try_js)
 
     search = nav('search', '/search') + f'''<main><h1 style="margin-top:48px;font-size:32px">{T('検索', 'Search')}</h1><p class="note">{T('日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。', 'Search in Japanese, romaji or English. Separate several words with spaces.')}</p>
-<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button></div>
+<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button><button type="button" class="btn" id="share">{T('URLを共有', 'Share URL')}</button></div>
 <label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
 <div class="opts"><label>{T('グループ', 'Group')} <select id="grp"><option value="legal">{T('合法 / 違法', 'Legal / illegal')}</option><option value="site">{T('サイト', 'Site')}</option><option value="lang">{T('言語', 'Language')}</option><option value="none">{T('なし', 'None')}</option></select></label>
 <label>{T('並び順', 'Sort')} <select id="srt"><option value="lang">{T('言語 → サイト → タイトル', 'Language → site → title')}</option><option value="site">{T('サイト → タイトル', 'Site → title')}</option><option value="title">{T('タイトル', 'Title')}</option></select></label></div></form>
 <div id="out"></div></main>''' + foot
-    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
-          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
+    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', copied='コピーしました', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
+          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', copied='Copied', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
     js = '''<script>
 const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -227,6 +227,14 @@ async function run(){
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">%(net)s</p>'})));
 }
 $('#grp').onchange=$('#srt').onchange=paint;
+$('#share').onclick=async()=>{
+  const b=$('#share'),label=b.textContent;
+  if(!location.hash.includes('q=')){const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);if(!qs.length)return;history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked)}
+  const u=location.href;
+  try{await navigator.clipboard.writeText(u);b.textContent='%(copied)s'}
+  catch(e){prompt('URL',u)}
+  setTimeout(()=>b.textContent=label,1800);
+};
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
 if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}

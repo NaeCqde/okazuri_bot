@@ -6,7 +6,7 @@
 <a class="link active" href="/search">Search</a><a class="link" href="/dev">API</a><span class="sp"></span>
 <a class="lang" href="/ja/search" hreflang="ja">日本語</a>
 <a class="btn primary" href="/bot/add">Add</a></div></header><main><h1 style="margin-top:48px;font-size:32px">Search</h1><p class="note">Search in Japanese, romaji or English. Separate several words with spaces.</p>
-<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ Add a field</button><button class="btn primary">Search</button></div>
+<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ Add a field</button><button class="btn primary">Search</button><button type="button" class="btn" id="share">Share URL</button></div>
 <label class="note"><input type="checkbox" id="bm"> By magazine (find the issue that printed this work)</label>
 <div class="opts"><label>Group <select id="grp"><option value="legal">Legal / illegal</option><option value="site">Site</option><option value="lang">Language</option><option value="none">None</option></select></label>
 <label>Sort <select id="srt"><option value="lang">Language → site → title</option><option value="site">Site → title</option><option value="title">Title</option></select></label></div></form>
@@ -106,6 +106,14 @@ async function run(){
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">The request failed.</p>'})));
 }
 $('#grp').onchange=$('#srt').onchange=paint;
+$('#share').onclick=async()=>{
+  const b=$('#share'),label=b.textContent;
+  if(!location.hash.includes('q=')){const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);if(!qs.length)return;history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked)}
+  const u=location.href;
+  try{await navigator.clipboard.writeText(u);b.textContent='Copied'}
+  catch(e){prompt('URL',u)}
+  setTimeout(()=>b.textContent=label,1800);
+};
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
 if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}
