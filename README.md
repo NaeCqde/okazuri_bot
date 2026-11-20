@@ -2,7 +2,7 @@
 
 日本語 | [English](README.en.md)
 
-DLsite のレーベル(COMIC快楽天 など)の雑誌と、複数のサイトの作品を、Discord からまとめて検索する BOT です。
+DLsiteに配信されているレーベルの雑誌と、複数のサイトの作品を、Discord からまとめて検索する BOT です。
 サイト: https://okazuri.nae.quest/ ・ [API ドキュメント](https://okazuri.nae.quest/dev) ・ [検索サーバー(okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
 
 ## コマンド

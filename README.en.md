@@ -2,7 +2,7 @@
 
 [日本語](README.md) | English
 
-A Discord bot that searches the magazines of DLsite labels (COMIC Kairakuten and others) and the works of many sites at once.
+A Discord bot that searches the magazines of the labels distributed on DLsite and the works of many sites at once.
 Site: https://okazuri.nae.quest/ - [API documentation](https://okazuri.nae.quest/dev) - [search server (okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
 
 ## Commands

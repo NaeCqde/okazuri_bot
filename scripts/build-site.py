@@ -43,7 +43,7 @@ def build(lang: str):
 <div class="card"><h3>{T('複数サイトを一度に', 'Many sites at once')}</h3><p>{T('DLsite などの合法サイトと、そのほかのサイトの結果を、合法・違法に分けて並べます。', 'The results of legal sites such as DLsite and of other sites, sorted into legal and illegal.')}</p></div>
 <div class="card"><h3>{T('権利者の発見を助ける', 'Helping rights holders find copies')}</h3><p>{T('著作者が違法アップロードを見つけて、削除要請や訴訟などの対応に進むまでの時間を短縮することも、目的のひとつです。', 'One of the aims is to shorten the time it takes an author to find an illegal upload and to move on to a takedown request or a lawsuit.')}</p></div>
 <div class="card"><h3>{T('日本語・ローマ字・英語', 'Japanese, romaji, English')}</h3><p>{T('日本語の題名はローマ字と英語に、英語の語は日本語の題名にも当たって、取りこぼしを減らします。', 'A Japanese title is also searched in romaji and English, and an English one in its Japanese title, so fewer works are missed.')}</p></div>
-<div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('DLsite のレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of DLsite labels are fetched every day and can be found by search.')}</p></div>
+<div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('DLsiteに配信されているレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of the labels distributed on DLsite are fetched every day and can be found by search.')}</p></div>
 <div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="{base}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
 <p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>by_magazine</code>(雑誌で検索)をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>by_magazine</code> on.')}</p>
