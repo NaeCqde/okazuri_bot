@@ -36,11 +36,9 @@
     "routes": [
         { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
         { "pattern": "okazuri-api.nae.quest/internal/*", "zone_name": "nae.quest" },
-        // https://okazuri.nae.quest/api/v1/* は okazuri-search-api(Cloudflare のキャッシュ付き)、/api/bot/* は BOT。それ以外は Pages
-        { "pattern": "okazuri.nae.quest/api/v1/*", "zone_name": "nae.quest" },
+        // https://okazuri.nae.quest/api/bot/* は BOT。/api/v1/* は Worker を通さず、Cloudflare のルール(Origin Rule と Cache Rule)で
+        // okazuri-search-api に届ける。それ以外は Pages(カスタムドメイン)
         { "pattern": "okazuri.nae.quest/api/bot/*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/api", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/api/v1", "zone_name": "nae.quest" },
     ],
     "d1_databases": [
         {
