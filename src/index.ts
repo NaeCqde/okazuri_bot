@@ -12,6 +12,8 @@ const bot = factory
 
 const hono = new Hono<EnvTypes>();
 hono.mount('/interaction', bot.fetch.bind(bot));
+// 新しい入口: https://okazuri.nae.quest/api/bot/interaction(/api/* の API プロキシより先に置く)
+hono.mount('/api/bot/interaction', bot.fetch.bind(bot));
 hono.all('/api/*', proxyApi);
 hono.get('/api', (c) => c.redirect('/dev', 302));
 hono.route('/', endpoints);
