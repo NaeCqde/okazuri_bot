@@ -4,7 +4,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/ja">オカズリBOT</a>
 <a class="link" href="/ja/search">検索</a><a class="link active" href="/ja/dev">API</a><span class="sp"></span>
-<a class="lang" href="/dev" hreflang="en">English</a>
 <a class="btn primary" href="/bot/add">追加</a></div></header><main><div class="docs"><nav class="side"><b>API</b><a href="#start">はじめに</a><a href="#okazuri-search">検索</a><a href="#okazuri-title">タイトル</a><a href="#okazuri-magazine">雑誌</a><a href="#okazuri-works">号の作品</a><a href="#okazuri-magazines">雑誌一覧</a><a href="#okazuri-sites">サイト一覧</a><a href="#translate">翻訳</a><a href="#romaji">ローマ字</a><a href="#cache">キャッシュ</a></nav>
 <article><h1>API ドキュメント</h1><p class="note">okazuri-search-api の公開サーバーです。認証は要りません。</p>
 <h2 id="start">はじめに</h2><p>ベース URL は <code>https://okazuri.nae.quest/api/v1</code>。すべて <code>GET</code> で、JSON(<code>/romaji</code> と <code>/health</code> はテキスト)を返します。不正なリクエストは <code>422</code> と <code>{"detail": "..."}</code> です。</p>

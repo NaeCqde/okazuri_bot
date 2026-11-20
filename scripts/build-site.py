@@ -17,7 +17,6 @@ def build(lang: str):
     def nav(active, rest):
         return f'''<header class="nav"><div class="nav-in"><a class="brand" href="{base or '/'}">オカズリBOT</a>
 <a class="link{' active' if active == 'search' else ''}" href="{base}/search">{T('検索', 'Search')}</a><a class="link{' active' if active == 'dev' else ''}" href="{base}/dev">API</a><span class="sp"></span>
-<a class="lang" href="{(other + rest) or '/'}" hreflang="{OTHER[lang]}">{NAME[OTHER[lang]]}</a>
 <a class="btn primary" href="/bot/add">{T('追加', 'Add')}</a></div></header>'''
 
     foot = f'<footer>オカズリBOT ・ <a href="/support/invite">{T("サポートサーバー", "Support server")}</a> ・ <a href="{base}/dev">API</a></footer>'
