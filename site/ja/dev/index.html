@@ -1,8 +1,10 @@
 <!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>API ドキュメント | オカズリBOT</title><meta name="description" content="okazuri-search-api の公開 HTTP API"><meta name="color-scheme" content="dark">
+<title>API | オカズリBOT</title><meta name="description" content="okazuri-search-api の公開 HTTP API"><meta name="color-scheme" content="dark">
+<link rel="alternate" hreflang="ja" href="/ja/dev"><link rel="alternate" hreflang="en" href="/en/dev">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/">オカズリBOT</a>
-<a class="link" href="/search">検索</a><a class="link active" href="/dev">API</a><span class="sp"></span>
+<link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/ja">オカズリBOT</a>
+<a class="link" href="/ja/search">検索</a><a class="link active" href="/ja/dev">API</a><span class="sp"></span>
+<a class="lang" href="/en/dev" hreflang="en">English</a>
 <a class="btn primary" href="/add">追加</a></div></header><main><div class="docs"><nav class="side"><b>API</b><a href="#start">はじめに</a><a href="#okazuri-search">検索</a><a href="#okazuri-sites">サイト一覧</a><a href="#hitomila-search">Hitomi.La 以外</a><a href="#translate">翻訳</a><a href="#romaji">ローマ字</a><a href="#cache">キャッシュ</a></nav>
 <article><h1>API ドキュメント</h1><p class="note">okazuri-search-api の公開サーバーです。認証は要りません。</p>
 <h2 id="start">はじめに</h2><p>ベース URL は <code>https://okazuri.nae.quest/api/v1</code>。すべて <code>GET</code> で、JSON(<code>/romaji</code> と <code>/health</code> はテキスト)を返します。不正なリクエストは <code>422</code> と <code>{"detail": "..."}</code> です。</p>
@@ -19,7 +21,7 @@
   "sites": [ { "website": "DLsite", "status": "searched", "count": 30 } ]
 }</code></pre><h2 id="okazuri-sites"><span class="method">GET</span><code>/api/v1/okazuri/sites</code></h2><p>検索の対象のサイトと、いま検索しているかを返します。</p><pre><code>GET /api/v1/okazuri/sites
 [ { "name": "DLsite", "isLegal": true, "support": "ready", "hasSearch": true, "japanese": true, "active": true } ]</code></pre><h2 id="hitomila-search"><span class="method">GET</span><code>/api/v1/hitomila/search</code></h2><p>Hitomi.La を除いたサイトだけを検索します(<code>/okazuri/search</code> と同じ形)。</p><table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>検索語。</td></tr></table><pre><code>GET /api/v1/hitomila/search?q=nine+lives</code></pre><h2 id="translate"><span class="method">GET</span><code>/api/v1/{hitomila,google,auto}/translate</code></h2><p>題名の翻訳です。日本語の語は英語に、英語の語は日本語に訳します。<code>auto</code> は Hitomi.La、だめなら Google 翻訳。</p>
-<table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>翻訳する語。必須。</td></tr><tr><td><code>live</code></td><td><code>off</code> / <code>diff</code>(既定) / <code>force</code>。</td></tr></table>
+<table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>翻訳する語。必須。</td></tr><tr><td><code>live</code></td><td><code>off</code> / <code>diff</code> (既定) / <code>force</code>.</td></tr></table>
 <pre><code>GET /api/v1/auto/translate?q=姉弟</code></pre><h2 id="romaji"><span class="method">GET</span><code>/api/v1/romaji</code></h2><p>日本語のローマ字を <code>text/plain</code> で返します。</p><table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>テキスト。必須。</td></tr><tr><td><code>loanwords</code></td><td><code>romaji</code>(既定) / <code>english</code>: ひらがなの外来語の書き方。</td></tr></table><pre><code>GET /api/v1/romaji?q=チートアイテム管理局のお仕事
 chiito aitemu kanrikyoku no oshigoto</code></pre><h2 id="cache">キャッシュ</h2><p>Cloudflare が成功(<code>200</code>)の応答を保持します。検索は 5 分、サイト一覧は 1 時間、翻訳とローマ字は 1 日です。<code>live=on</code>、エラー、<code>/health</code> は保持されません。応答の <code>Cache-Control</code> と <code>cf-cache-status</code> で確認できます。</p>
-<p class="note">正確な仕様は <a href="https://github.com/NaeCqde/okazuri-search-api/blob/main/docs/API.md">GitHub の API.md</a> にあります。</p></article></div></main><footer>オカズリBOT ・ <a href="/invite">サポートサーバー</a> ・ <a href="/dev">API</a></footer></body></html>
+<p class="note">正確な仕様は <a href="https://github.com/NaeCqde/okazuri-search-api/blob/main/docs/API.md">API.md (GitHub)</a>.</p></article></div></main><footer>オカズリBOT ・ <a href="/invite">サポートサーバー</a> ・ <a href="/ja/dev">API</a></footer></body></html>
