@@ -60,3 +60,4 @@ th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vert
 .try-bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:14px}
 .try-url{word-break:break-all;color:var(--muted)}
 .try-out{margin:14px 0 0;max-height:420px;white-space:pre-wrap;word-break:break-all}
+#rows{margin-top:40px}#rows .sbox{margin:0 0 10px}#f>.sbox{margin:14px 0 8px}.query+.query{margin-top:36px}

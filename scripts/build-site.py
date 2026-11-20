@@ -124,49 +124,61 @@ document.querySelectorAll('form.try').forEach(form=>{
     out['dev/index.html'] = page('API | オカズリBOT', T('okazuri-search-api の公開 HTTP API', 'The public HTTP API of okazuri-search-api'), '/dev', docs, try_js)
 
     search = nav('search', '/search') + f'''<main><h1 style="margin-top:48px;font-size:32px">{T('検索', 'Search')}</h1><p class="note">{T('日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。', 'Search in Japanese, romaji or English. Separate several words with spaces.')}</p>
-<form class="sbox" id="f"><input id="q" placeholder="{T('例: 快楽天 2026 11', 'e.g. kairakuten 2026 11')}" autocomplete="off" autofocus><button class="btn primary">{T('検索', 'Search')}</button></form>
-<label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
+<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button></div>
+<label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label></form>
 <div id="out"></div></main>''' + foot
-    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
-          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
+    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
+          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
     js = '''<script>
-const $=s=>document.querySelector(s),out=$('#out');
+const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function run(q){
-  if(!q.trim())return;
-  const bm=$('#bm').checked;
-  history.replaceState(null,'','#q='+encodeURIComponent(q)+'&by_magazine='+bm);
-  out.innerHTML='<p class="note">%(busy)s</p>';
-  try{
-    if(bm){
-      const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
-      if(!m.ok){out.innerHTML='<p class="note">'+esc(md.detail||'%(err)s')+'</p>';return}
-      q=md.results[0].issue.name.replace(/年|月号?/g,' ');
-    }
-    const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
-    const d=await r.json();
-    if(!r.ok){out.innerHTML='<p class="note">'+esc(d.detail||'%(err)s')+'</p>';return}
-    const ja=/[\\u3040-\\u30ff\\u3400-\\u9fff]/.test(q);
-    let h='<div class="lines">';
-    if(ja&&d.query.replace(/\\s+/g,' ')!==q.trim().toLowerCase())h+='<div>%(romaji)s<b>'+esc(d.query)+'</b></div>';
-    if(d.translation?.text)h+='<div>%(en)s<b>'+esc(d.translation.text)+'</b></div>';
-    if(d.translation_ja?.text)h+='<div>%(ja)s<b>'+esc(d.translation_ja.text)+'</b></div>';
-    const n=d.total;
-    h+='<div>'+(%(count)s)+(d.total>d.results.length?(function(n){return %(first)s})(d.results.length):'')+'</div></div>';
-    for(const [legal,label,color] of [[true,'%(legal)s','var(--ok)'],[false,'%(illegal)s','var(--ng)']]){
-      const rs=d.results.filter(x=>x.is_legal===legal);
-      if(!rs.length)continue;
-      h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
-    }
-    if(!d.results.length)h+='<p class="note">%(none)s</p>';
-    h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
-    out.innerHTML=h;
-  }catch(e){out.innerHTML='<p class="note">%(net)s</p>'}
+function addRow(v){
+  const d=document.createElement('div');d.className='sbox';
+  d.innerHTML='<input placeholder="%(ph)s" autocomplete="off"><button type="button" class="btn" title="%(rm)s">×</button>';
+  d.querySelector('input').value=v||'';
+  d.querySelector('button').onclick=()=>{if(rows.children.length>1)d.remove();else d.querySelector('input').value=''};
+  rows.append(d);return d;
 }
-$('#f').addEventListener('submit',e=>{e.preventDefault();run($('#q').value)});
-const hash=new URLSearchParams(location.hash.slice(1)),init=hash.get('q')||new URLSearchParams(location.search).get('q');
+$('#add').onclick=()=>addRow('').querySelector('input').focus();
+async function one(q,bm){
+  if(bm){
+    const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
+    if(!m.ok)return '<p class="note">'+esc(md.detail||'%(err)s')+'</p>';
+    q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+  }
+  const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
+  const d=await r.json();
+  if(!r.ok)return '<p class="note">'+esc(d.detail||'%(err)s')+'</p>';
+  const ja=/[぀-ヿ㐀-鿿]/.test(q);
+  let h='<div class="lines">';
+  if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>%(romaji)s<b>'+esc(d.query)+'</b></div>';
+  if(d.translation?.text)h+='<div>%(en)s<b>'+esc(d.translation.text)+'</b></div>';
+  if(d.translation_ja?.text)h+='<div>%(ja)s<b>'+esc(d.translation_ja.text)+'</b></div>';
+  const n=d.total;
+  h+='<div>'+(%(count)s)+(d.total>d.results.length?(function(n){return %(first)s})(d.results.length):'')+'</div></div>';
+  for(const [legal,label,color] of [[true,'%(legal)s','var(--ok)'],[false,'%(illegal)s','var(--ng)']]){
+    const rs=d.results.filter(x=>x.is_legal===legal);
+    if(!rs.length)continue;
+    h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
+  }
+  if(!d.results.length)h+='<p class="note">%(none)s</p>';
+  h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
+  return h;
+}
+async function run(){
+  const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),bm=$('#bm').checked;
+  if(!qs.length)return;
+  history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+bm);
+  out.innerHTML='<p class="note">%(busy)s</p>';
+  const parts=await Promise.all(qs.map(q=>one(q,bm).catch(()=>'<p class="note">%(net)s</p>')));
+  out.innerHTML=parts.map((h,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(qs[i])+'</h2>':'')+h+'</section>').join('');
+}
+$('#f').addEventListener('submit',e=>{e.preventDefault();run()});
+const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
+if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;
-if(init){$('#q').value=init;run(init)}
+(init.length?init:['']).forEach(addRow);
+if(init.length)run();
 </script>''' % tx
     out['search/index.html'] = page(T('検索 | オカズリBOT', 'Search | Okazuri BOT'), T('複数のサイトの作品をまとめて検索', 'Search the works of many sites at once'), '/search', search, js)
     return out
