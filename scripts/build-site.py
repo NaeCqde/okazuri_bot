@@ -127,7 +127,7 @@ document.querySelectorAll('form.try').forEach(form=>{
 <form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button></div>
 <label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
 <div class="opts"><label>{T('グループ', 'Group')} <select id="grp"><option value="legal">{T('合法 / 違法', 'Legal / illegal')}</option><option value="site">{T('サイト', 'Site')}</option><option value="lang">{T('言語', 'Language')}</option><option value="none">{T('なし', 'None')}</option></select></label>
-<label>{T('並び順', 'Sort')} <select id="srt"><option value="lang">{T('言語 → サイト → タイトル', 'Language → site → title')}</option><option value="site">{T('サイト → タイトル', 'Site → title')}</option><option value="title">{T('タイトル', 'Title')}</option><option value="new">{T('新しい順(保存した順)', 'Newest first (as saved)')}</option></select></label></div></form>
+<label>{T('並び順', 'Sort')} <select id="srt"><option value="lang">{T('言語 → サイト → タイトル', 'Language → site → title')}</option><option value="site">{T('サイト → タイトル', 'Site → title')}</option><option value="title">{T('タイトル', 'Title')}</option></select></label></div></form>
 <div id="out"></div></main>''' + foot
     tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
           'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
@@ -156,8 +156,7 @@ const col=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
 const SORTS={
   lang:(a,b)=>a.r-b.r||col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
   site:(a,b)=>col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
-  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,
-  new:(a,b)=>a.i-b.i};
+  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,};
 function arrange(hits){
   const rows=hits.map((x,i)=>({x,i,r:rank(x),t:clean(x.title||'')}));
   rows.sort(SORTS[$('#srt').value]);

@@ -9,7 +9,7 @@
 <form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ Add a field</button><button class="btn primary">Search</button></div>
 <label class="note"><input type="checkbox" id="bm"> By magazine (find the issue that printed this work)</label>
 <div class="opts"><label>Group <select id="grp"><option value="legal">Legal / illegal</option><option value="site">Site</option><option value="lang">Language</option><option value="none">None</option></select></label>
-<label>Sort <select id="srt"><option value="lang">Language → site → title</option><option value="site">Site → title</option><option value="title">Title</option><option value="new">Newest first (as saved)</option></select></label></div></form>
+<label>Sort <select id="srt"><option value="lang">Language → site → title</option><option value="site">Site → title</option><option value="title">Title</option></select></label></div></form>
 <div id="out"></div></main><footer>オカズリBOT ・ <a href="/support/invite">Support server</a> ・ <a href="/dev">API</a></footer><script>
 const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -35,8 +35,7 @@ const col=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
 const SORTS={
   lang:(a,b)=>a.r-b.r||col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
   site:(a,b)=>col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
-  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,
-  new:(a,b)=>a.i-b.i};
+  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,};
 function arrange(hits){
   const rows=hits.map((x,i)=>({x,i,r:rank(x),t:clean(x.title||'')}));
   rows.sort(SORTS[$('#srt').value]);
