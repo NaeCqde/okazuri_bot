@@ -18,7 +18,12 @@ export async function proxyApi(c: Context<EnvTypes>): Promise<Response> {
 
     const url = new URL(c.req.url);
     const path = url.pathname.replace(/^\/api/, '') || '/';
-    const origin = new URL(path + url.search, c.env.OKAZURI_API_URL);
+    const base = new URL(c.env.OKAZURI_API_URL);
+    // `//host/...` や `\\host` はスキーム相対 URL として解釈され、別のホストへ転送されてしまう(SSRF)。
+    const origin = new URL(base);
+    origin.pathname = '/' + path.replace(/^[/\\]+/, '');
+    origin.search = url.search;
+    if (origin.origin !== base.origin) return c.json({ detail: 'bad request' }, 400);
     const upstream = await fetch(origin, {
         method,
         headers: { Accept: c.req.header('Accept') ?? '*/*' },
