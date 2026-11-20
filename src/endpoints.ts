@@ -1,4 +1,4 @@
-// Workers が公開する HTTP の API(検索・内部の取得)。Discord の /interaction は index.ts
+// Workers が公開する HTTP の API(検索・内部の取得)。Discord の /api/bot/interaction は index.ts
 import { sValidator } from '@hono/standard-validator';
 import { type } from 'arktype';
 import { drizzle } from 'drizzle-orm/d1';
@@ -35,7 +35,7 @@ export const endpoints = new Hono<EnvTypes>();
  * (wrangler.jsonc)がないと、同じゾーンの Worker への fetch として Cloudflare のエラー 1042 で断られる。
  * フラグがあると外部からのリクエストと同じ扱いになり、子も placement で日本の拠点で動く(確認済み)。
  */
-export const FETCH_MAGAZINES_PATH = '/internal/fetch-magazines';
+export const FETCH_MAGAZINES_PATH = '/api/bot/internal/fetch-magazines';
 
 /** 親が子を呼ぶ回数の上限(サブリクエストの上限は、無料プランで1回の呼び出しにつき50) */
 const MAX_CHUNKS = 40;

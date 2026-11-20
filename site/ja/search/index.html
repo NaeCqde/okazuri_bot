@@ -22,11 +22,11 @@ async function run(q){
     let h='<div class="lines">';
     if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>ローマ字　<b>'+esc(d.query)+'</b></div>';
     if(d.translation?.text)h+='<div>英語　　<b>'+esc(d.translation.text)+'</b></div>';
-    if(d.translationJa?.text)h+='<div>日本語　<b>'+esc(d.translationJa.text)+'</b></div>';
+    if(d.translation_ja?.text)h+='<div>日本語　<b>'+esc(d.translation_ja.text)+'</b></div>';
     const n=d.total;
     h+='<div>'+(n+' 件')+(d.total>d.results.length?(function(n){return '(先頭の '+n+' 件)'})(d.results.length):'')+'</div></div>';
     for(const [legal,label,color] of [[true,'合法','var(--ok)'],[false,'違法','var(--ng)']]){
-      const rs=d.results.filter(x=>x.isLegal===legal);
+      const rs=d.results.filter(x=>x.is_legal===legal);
       if(!rs.length)continue;
       h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
     }

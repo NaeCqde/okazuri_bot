@@ -22,11 +22,11 @@ async function run(q){
     let h='<div class="lines">';
     if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>Romaji　<b>'+esc(d.query)+'</b></div>';
     if(d.translation?.text)h+='<div>English　<b>'+esc(d.translation.text)+'</b></div>';
-    if(d.translationJa?.text)h+='<div>Japanese <b>'+esc(d.translationJa.text)+'</b></div>';
+    if(d.translation_ja?.text)h+='<div>Japanese <b>'+esc(d.translation_ja.text)+'</b></div>';
     const n=d.total;
     h+='<div>'+(n+' works')+(d.total>d.results.length?(function(n){return ' (first '+n+')'})(d.results.length):'')+'</div></div>';
     for(const [legal,label,color] of [[true,'Legal','var(--ok)'],[false,'Illegal','var(--ng)']]){
-      const rs=d.results.filter(x=>x.isLegal===legal);
+      const rs=d.results.filter(x=>x.is_legal===legal);
       if(!rs.length)continue;
       h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
     }

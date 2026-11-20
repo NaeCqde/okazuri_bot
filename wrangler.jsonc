@@ -44,8 +44,6 @@
         "run_worker_first": ["/api/bot/interaction*", "/api/bot/internal/*", "/interaction*", "/internal/*"],
     },
     "routes": [
-        { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri-api.nae.quest/internal/*", "zone_name": "nae.quest" },
         // okazuri.nae.quest のうち Worker(静的アセットと BOT)に割り当てるパスだけを並べる。/api/v1/* などそれ以外は、Worker を通らず webarena に届く
         { "pattern": "okazuri.nae.quest/api/bot/interaction*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/api/bot/internal/*", "zone_name": "nae.quest" },

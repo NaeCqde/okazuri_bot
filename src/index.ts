@@ -10,15 +10,8 @@ const bot = factory
     .loader(Object.values(handlers));
 
 const hono = new Hono<EnvTypes>();
-hono.mount('/interaction', bot.fetch.bind(bot));
-// 新しい入口: https://okazuri.nae.quest/api/bot/interaction
+// Discord の Interactions Endpoint URL: https://okazuri.nae.quest/api/bot/interaction
 hono.mount('/api/bot/interaction', bot.fetch.bind(bot));
-// /api/bot/internal/* は /internal/* と同じ(cron などの内部用)
-hono.all('/api/bot/internal/*', (c) => {
-    const url = new URL(c.req.url);
-    url.pathname = url.pathname.replace(/^\/api\/bot/, '');
-    return hono.fetch(new Request(url, c.req.raw), c.env, c.executionCtx);
-});
 hono.route('/', endpoints);
 
 export default {
