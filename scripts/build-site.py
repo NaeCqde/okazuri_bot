@@ -251,7 +251,8 @@ function show(st){
   return h;
 }
 let states=[],lastQs=[];
-function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=show(st)})}
+function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=view(st)})}
+const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' / '+st.d.total+' %(loading)s</p>':'');
 async function one(q,bm,i){
   const el=document.getElementById('res'+i);
   if(bm){
@@ -269,10 +270,13 @@ async function one(q,bm,i){
     // offset を知らない古いサーバーは、同じ 100 件を返し続ける
     if(st.hits.length&&d.results.length&&st.hits[0].url===d.results[0].url)break;
     st.hits.push(...d.results);
-    if(!d.results.length||st.hits.length>=d.total)break;
-    el.innerHTML='<p class="note">'+st.hits.length+' / '+d.total+' %(loading)s</p>';
+    st.more=d.results.length>0&&st.hits.length<d.total;
+    // 取れた分から、順に表示する
+    el.innerHTML=view(st);
+    if(!st.more)break;
   }
-  el.innerHTML=show(st);
+  st.more=false;
+  el.innerHTML=view(st);
 }
 async function run(){
   const qs=queries(),bm=$('#bm').checked;
