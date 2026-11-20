@@ -12,10 +12,11 @@ const bot = factory
 const hono = new Hono<EnvTypes>();
 // Discord の Interactions Endpoint URL: https://okazuri.nae.quest/api/bot/interaction
 hono.mount('/api/bot/interaction', bot.fetch.bind(bot));
-hono.route('/', endpoints);
+// These come before the endpoints, whose /:engine/search would take /ja/search.
 // The search page is a static asset; with ?q= the title of the link embed (Open Graph) names the searched words
 hono.get('/search', (c) => searchPage(c.req.raw, c.env, false));
 hono.get('/ja/search', (c) => searchPage(c.req.raw, c.env, true));
+hono.route('/', endpoints);
 
 const MAX_TITLE_QUERIES = 3;
 const MAX_QUERY_CHARS = 40;
