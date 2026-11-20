@@ -33,7 +33,7 @@ This app (BOT) is provided only for the following purposes.
 
 ### - Helping to expose illegal uploads by their authors
 
-If you take part in illegal acts, I take no responsibility whatsoever.
+If you take part in anything illegal, the operator is not responsible in any way.
 
 Also, even if a rights holder asks this site to remove a link, we are unable to accept the request. Please ask the site that hosts the work to remove it. A work that is removed there is checked and then dropped from the search results.
 
