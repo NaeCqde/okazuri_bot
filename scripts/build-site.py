@@ -161,12 +161,13 @@ document.querySelectorAll('form.try').forEach(form=>{
 
     search = nav('search', '/search') + f'''<main><h1 style="margin-top:48px;font-size:32px">{T('検索', 'Search')}</h1><p class="note">{T('日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。', 'Search in Japanese, romaji or English. Separate several words with spaces.')}</p>
 <form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button><button type="button" class="btn" id="share">{T('URLを共有', 'Share URL')}</button></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
 <div class="opts"><label>{T('グループ', 'Group')} <select id="grp"><option value="legal">{T('合法 / 違法', 'Legal / illegal')}</option><option value="site">{T('サイト', 'Site')}</option><option value="lang">{T('言語', 'Language')}</option><option value="none">{T('なし', 'None')}</option></select></label>
 <label>{T('並び順', 'Sort')} <select id="srt"><option value="lang">{T('言語 → サイト → タイトル', 'Language → site → title')}</option><option value="site">{T('サイト → タイトル', 'Site → title')}</option><option value="title">{T('タイトル', 'Title')}</option></select></label></div></form>
 <div id="out"></div></main>''' + foot
-    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', copied='コピーしました', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
-          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', copied='Copied', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
+    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', copied='リンクをコピーしました', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
+          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', copied='Link copied', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
     js = '''<script>
 const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -174,9 +175,17 @@ function addRow(v){
   const d=document.createElement('div');d.className='sbox';
   d.innerHTML='<input placeholder="%(ph)s" autocomplete="off"><button type="button" class="btn" title="%(rm)s">×</button>';
   d.querySelector('input').value=v||'';
-  d.querySelector('button').onclick=()=>{if(rows.children.length>1)d.remove();else d.querySelector('input').value=''};
-  rows.append(d);return d;
+  d.querySelector('button').onclick=()=>{if(rows.children.length>1)d.remove();else d.querySelector('input').value='';syncShare()};
+  rows.append(d);syncShare();return d;
 }
+const queries=()=>[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+// # 以降: 検索語(q を語の数だけ)、雑誌で検索、グループ、並び順
+const hashOf=qs=>'#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked+'&group='+$('#grp').value+'&sort='+$('#srt').value;
+// 検索語が 1 つもないときは、共有を押せない
+function syncShare(){$('#share').disabled=!queries().length}
+rows.addEventListener('input',syncShare);
+let toastTimer;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('on'),2200)}
 $('#add').onclick=()=>addRow('').querySelector('input').focus();
 const LANGS=['en','zh','ko','es','fr','de','ru','it','th','pt','id','pl','tr','vi','ar'],FLAGS=['🇺🇸','🇨🇳','🇰🇷','🇪🇸','🇫🇷','🇩🇪','🇷🇺','🇮🇹','🇹🇭','🇵🇹','🇮🇩','🇵🇱','🇹🇷','🇻🇳','🇸🇦'];
 const LW=new Set('EN ENG JP JA JPN CN ZH TW KR KO ES SPA FR DE RU IT TH PT ID PL TR VN VI JAP RUS VIE ENGLISH JAPANESE CHINESE KOREAN SPANISH FRENCH GERMAN RUSSIAN ITALIAN THAI PORTUGUESE INDONESIAN POLISH TURKISH VIETNAMESE ARABIC SUB SUBS'.split(' '));
@@ -230,7 +239,7 @@ function show(st){
   h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
   return h;
 }
-let states=[];
+let states=[],lastQs=[];
 function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=show(st)})}
 async function one(q,bm,i){
   const el=document.getElementById('res'+i);
@@ -255,27 +264,28 @@ async function one(q,bm,i){
   el.innerHTML=show(st);
 }
 async function run(){
-  const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),bm=$('#bm').checked;
+  const qs=queries(),bm=$('#bm').checked;
   if(!qs.length)return;
-  history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+bm);
+  lastQs=qs;
+  history.replaceState(null,'',hashOf(qs));
   states=[];
   out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">%(busy)s</p></div></section>').join('');
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">%(net)s</p>'})));
 }
-$('#grp').onchange=$('#srt').onchange=paint;
+$('#grp').onchange=$('#srt').onchange=()=>{paint();if(lastQs.length)history.replaceState(null,'',hashOf(lastQs))};
 $('#share').onclick=async()=>{
-  const b=$('#share'),label=b.textContent;
-  if(!location.hash.includes('q=')){const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);if(!qs.length)return;history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked)}
+  const qs=queries();
+  if(!qs.length)return;
   // 共有する URL に /ja は付けない(日本語の表示の人は、Cloudflare のルールで /ja に転送される)
-  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+location.hash;
-  try{await navigator.clipboard.writeText(u);b.textContent='%(copied)s'}
+  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+hashOf(qs);
+  try{await navigator.clipboard.writeText(u);toast('%(copied)s')}
   catch(e){prompt('URL',u)}
-  setTimeout(()=>b.textContent=label,1800);
 };
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
 if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;
+for(const [id,key] of [['#grp','group'],['#srt','sort']]){const v=hash.get(key);if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v}
 (init.length?init:['']).forEach(addRow);
 if(init.length)run();
 </script>''' % tx
