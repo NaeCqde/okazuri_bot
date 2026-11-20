@@ -14,7 +14,7 @@ DLsite のレーベル(COMIC快楽天 など)の雑誌と、複数のサイト�
 | `/works` | 雑誌の号の名前から、その号の作品の一覧を出します。 |
 | メッセージのメニュー「Search this」 | メッセージに貼られた作品ページのリンクから題名を読み取って、検索します。「Search this with option」では、雑誌で検索するかどうかを選べます。 |
 
-WEB の検索ページ(https://okazuri.nae.quest/search)では、複数の語を一度に検索し、グループや並び順を選べます。
+[WEB の検索ページ](https://okazuri.nae.quest/search)では、複数の語を一度に検索し、グループや並び順を選べます。
 
 ## オカズリBOTの招待リンク
 

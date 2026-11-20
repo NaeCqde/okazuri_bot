@@ -14,7 +14,7 @@ Site: https://okazuri.nae.quest/ - [API documentation](https://okazuri.nae.quest
 | `/works` | Lists the works of a magazine issue, from the name of the issue. |
 | Message menu "Search this" | Reads the titles from the links to work pages in a message and searches them. "Search this with option" lets you choose whether to search by magazine. |
 
-The search page of the website (https://okazuri.nae.quest/search) searches several words at once and lets you choose the grouping and the sort.
+The [search page of the website](https://okazuri.nae.quest/search) searches several words at once and lets you choose the grouping and the sort.
 
 ## Invitation link of Okazuri BOT
 
