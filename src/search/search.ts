@@ -13,17 +13,19 @@ import { WEBSITES } from '../websites';
 export async function searchMultiple(
     api: string,
     queries: string[]
-): Promise<{ resultMap: SearchResultMap; english: (string | null)[] }> {
+): Promise<{ resultMap: SearchResultMap; english: (string | null)[]; japanese: (string | null)[] }> {
     const resultMap: SearchResultMap = {};
     const english: (string | null)[] = [];
+    const japanese: (string | null)[] = [];
 
     for (const q of new Set(queries)) {
         let key = q;
         let results: SearchResult[] = [];
         let translation: string | null = null;
+        let translationJa: string | null = null;
 
         try {
-            ({ query: key, results, translation } = await searchOkazuri(api, q));
+            ({ query: key, results, translation, translationJa } = await searchOkazuri(api, q));
         } catch (e: any) {
             if (
                 !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
@@ -36,9 +38,10 @@ export async function searchMultiple(
 
         resultMap[key] = results;
         english.push(translation);
+        japanese.push(translationJa);
     }
 
-    return { resultMap, english };
+    return { resultMap, english, japanese };
 }
 
 export async function titleByUrl(url: string): Promise<string> {

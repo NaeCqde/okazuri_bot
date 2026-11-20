@@ -9,13 +9,14 @@ import type { SearchResult } from '../types';
  * live=diff は、未取得か期限切れ(1ヶ月)の、検索語とサイトの組み合わせだけサイトに問い合わせる指定。
  *
  * query は、API が検索に使った検索語(ローマ字にしたもの)。結果の見出しに使える。
+ * translationJa は、日本語を含まない検索語(英語、ローマ字)の日本語訳(同じく API が取り、その題名の作品も結果に含めている)。なければ null。
  * translation は、日本語の検索語の英語訳(API が Hitomi.La か Google 翻訳で取り、その題名の作品も結果に含めている)。なければ null。
  * 翻訳エンジンは translator(auto: Hitomi.La、だめなら Google 翻訳 / hitomi / google / none)。既定は auto。
  */
 export async function searchOkazuri(
     api: string,
     query: string
-): Promise<{ query: string; results: SearchResult[]; translation: string | null }> {
+): Promise<{ query: string; results: SearchResult[]; translation: string | null; translationJa: string | null }> {
     if (!query) throw Error('okazuri: Title not found');
 
     const resp = await fetch(api + `/okazuri/search?q=${encodeURIComponent(query)}&live=diff`);
@@ -30,6 +31,7 @@ export async function searchOkazuri(
         query?: string;
         results?: SearchResult[];
         translation?: { text?: string } | null;
+        translationJa?: { text?: string } | null;
     };
 
     if (!body.query || !body.results) throw Error('okazuri: the search answered without the query or the results');
@@ -37,6 +39,7 @@ export async function searchOkazuri(
     return {
         query: body.query,
         translation: body.translation?.text?.trim() || null,
+        translationJa: body.translationJa?.text?.trim() || null,
         results: body.results.map(({ title, website, url, isLegal, language }) => ({ title, website, url, isLegal, language })),
     };
 }
