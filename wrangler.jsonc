@@ -50,9 +50,10 @@
         { "pattern": "okazuri.nae.quest/api/bot/interaction*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/api/bot/internal/*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/", "zone_name": "nae.quest" },
-        // 言語ごとのページ: /ja, /ja/search, /ja/dev, /en, /en/search, /en/dev
+        // 英語が /, /search, /dev。日本語は /ja, /ja/search, /ja/dev
+        { "pattern": "okazuri.nae.quest/search*", "zone_name": "nae.quest" },
+        { "pattern": "okazuri.nae.quest/dev*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/ja*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/en*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/invite", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/add", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/style.css", "zone_name": "nae.quest" },

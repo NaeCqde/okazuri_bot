@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds site/ (static pages): site/<lang>/{index,search,dev}.html for ja and en, and the language gateway site/index.html.
+"""Builds site/ (static pages): English at the root (/, /search, /dev) and Japanese under /ja (/ja, /ja/search, /ja/dev).
 Run from the repository root: python3 scripts/build-site.py"""
 import os, shutil
 
@@ -9,21 +9,23 @@ NAME = {'ja': '日本語', 'en': 'English'}
 
 
 def build(lang: str):
+    base = '/ja' if lang == 'ja' else ''  # the path of the language's pages
+    other = '' if lang == 'ja' else '/ja'
     def T(ja, en):
         return ja if lang == 'ja' else en
 
     def nav(active, rest):
-        return f'''<header class="nav"><div class="nav-in"><a class="brand" href="/{lang}">オカズリBOT</a>
-<a class="link{' active' if active == 'search' else ''}" href="/{lang}/search">{T('検索', 'Search')}</a><a class="link{' active' if active == 'dev' else ''}" href="/{lang}/dev">API</a><span class="sp"></span>
-<a class="lang" href="/{OTHER[lang]}{rest}" hreflang="{OTHER[lang]}">{NAME[OTHER[lang]]}</a>
+        return f'''<header class="nav"><div class="nav-in"><a class="brand" href="{base or '/'}">オカズリBOT</a>
+<a class="link{' active' if active == 'search' else ''}" href="{base}/search">{T('検索', 'Search')}</a><a class="link{' active' if active == 'dev' else ''}" href="{base}/dev">API</a><span class="sp"></span>
+<a class="lang" href="{(other + rest) or '/'}" hreflang="{OTHER[lang]}">{NAME[OTHER[lang]]}</a>
 <a class="btn primary" href="/add">{T('追加', 'Add')}</a></div></header>'''
 
-    foot = f'<footer>オカズリBOT ・ <a href="/invite">{T("サポートサーバー", "Support server")}</a> ・ <a href="/{lang}/dev">API</a></footer>'
+    foot = f'<footer>オカズリBOT ・ <a href="/invite">{T("サポートサーバー", "Support server")}</a> ・ <a href="{base}/dev">API</a></footer>'
 
     def page(title, desc, rest, body, extra=''):
         return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>{title}</title><meta name="description" content="{desc}"><meta name="color-scheme" content="dark">
-<link rel="alternate" hreflang="ja" href="/ja{rest}"><link rel="alternate" hreflang="en" href="/en{rest}">
+<link rel="alternate" hreflang="ja" href="/ja{rest}"><link rel="alternate" hreflang="en" href="{rest or '/'}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body>{body}{extra}</body></html>'''
 
@@ -31,12 +33,12 @@ def build(lang: str):
 
     out['index.html'] = page('オカズリBOT', T('Discord で複数サイトの作品をまとめて検索する BOT', 'A Discord bot that searches many sites at once'), '', nav('', '') + f'''<main><section class="hero"><h1>{T('探したい作品を、<br><span>全部まとめて</span>検索', 'Search many sites<br><span>all at once</span>')}</h1>
 <p>{T('日本語、ローマ字、英語のどれで聞いても、複数のサイトの作品を一度に探して返します。雑誌の最新号チェックにも使えます。', 'Ask in Japanese, romaji or English: it looks the works up on several sites at once. It also keeps track of the latest issues of magazines.')}</p>
-<div class="cta"><a class="btn primary" href="/add">{T('Discord に追加', 'Add to Discord')}</a><a class="btn" href="/invite">{T('サポートサーバーに参加', 'Join the support server')}</a><a class="btn" href="/{lang}/search">{T('ブラウザで検索', 'Search in the browser')}</a></div></section>
+<div class="cta"><a class="btn primary" href="/add">{T('Discord に追加', 'Add to Discord')}</a><a class="btn" href="/invite">{T('サポートサーバーに参加', 'Join the support server')}</a><a class="btn" href="{base}/search">{T('ブラウザで検索', 'Search in the browser')}</a></div></section>
 <div class="grid">
 <div class="card"><h3>{T('複数サイトを一度に', 'Many sites at once')}</h3><p>{T('DLsite などの合法サイトと、そのほかのサイトの結果を、合法・違法に分けて並べます。', 'The results of legal sites such as DLsite and of other sites, sorted into legal and illegal.')}</p></div>
 <div class="card"><h3>{T('日本語・ローマ字・英語', 'Japanese, romaji, English')}</h3><p>{T('日本語の題名はローマ字と英語に、英語の語は日本語の題名にも当たって、取りこぼしを減らします。', 'A Japanese title is also searched in romaji and English, and an English one in its Japanese title, so fewer works are missed.')}</p></div>
 <div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('COMIC快楽天など、DLsite のレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of DLsite labels such as COMIC Kairakuten are fetched every day and can be found by search.')}</p></div>
-<div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="/{lang}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
+<div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="{base}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
 <p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>to_magazine</code> をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>to_magazine</code> on.')}</p>
 <p class="note">{T('あなたが違法行為に関与した場合、運営は一切の責任を負いません。BOT を使うことで、この条件に同意したことになります。', 'If you take part in anything illegal, the operator is not responsible in any way. By using the bot you agree to this.')}</p></main>''' + foot)
@@ -119,18 +121,13 @@ const init=new URLSearchParams(location.search).get('q');if(init){$('#q').value=
 
 
 root = os.path.join(os.path.dirname(__file__), '..', 'site')
+shutil.rmtree(os.path.join(root, 'en'), ignore_errors=True)
 for lang in LANGS:
     for name, html in build(lang).items():
-        path = os.path.join(root, lang, name)
+        path = os.path.join(root, 'ja' if lang == 'ja' else '', name)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         open(path, 'w').write(html)
 
-# the gateway at "/": the browser's language picks /ja or /en (the two links are there without JavaScript)
-open(os.path.join(root, 'index.html'), 'w').write('''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>オカズリBOT / Okazuri BOT</title><meta name="color-scheme" content="dark"><link rel="stylesheet" href="/style.css">
-<link rel="alternate" hreflang="ja" href="/ja"><link rel="alternate" hreflang="en" href="/en">
-<script>location.replace(/^ja/i.test(navigator.language||'')?'/ja':'/en')</script></head>
-<body><main><section class="hero"><h1>オカズリBOT</h1><div class="cta"><a class="btn primary" href="/ja">日本語</a><a class="btn primary" href="/en">English</a></div></section></main></body></html>''')
-open(os.path.join(root, '404.html'), 'w').write('''<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>404 | オカズリBOT</title><meta name="color-scheme" content="dark"><link rel="stylesheet" href="/style.css"></head>
-<body><main><section class="hero"><h1>404</h1><p>見つかりません / Not found</p><div class="cta"><a class="btn primary" href="/ja">日本語</a><a class="btn primary" href="/en">English</a></div></section></main></body></html>''')
+open(os.path.join(root, '404.html'), 'w').write('''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 | Okazuri BOT</title><meta name="color-scheme" content="dark"><link rel="stylesheet" href="/style.css"></head>
+<body><main><section class="hero"><h1>404</h1><p>Not found / 見つかりません</p><div class="cta"><a class="btn primary" href="/">English</a><a class="btn primary" href="/ja">日本語</a></div></section></main></body></html>''')
