@@ -18,9 +18,9 @@ def build(lang: str):
         return f'''<header class="nav"><div class="nav-in"><a class="brand" href="{base or '/'}">オカズリBOT</a>
 <a class="link{' active' if active == 'search' else ''}" href="{base}/search">{T('検索', 'Search')}</a><a class="link{' active' if active == 'dev' else ''}" href="{base}/dev">API</a><span class="sp"></span>
 <a class="lang" href="{(other + rest) or '/'}" hreflang="{OTHER[lang]}">{NAME[OTHER[lang]]}</a>
-<a class="btn primary" href="/add">{T('追加', 'Add')}</a></div></header>'''
+<a class="btn primary" href="/bot/add">{T('追加', 'Add')}</a></div></header>'''
 
-    foot = f'<footer>オカズリBOT ・ <a href="/invite">{T("サポートサーバー", "Support server")}</a> ・ <a href="{base}/dev">API</a></footer>'
+    foot = f'<footer>オカズリBOT ・ <a href="/support/invite">{T("サポートサーバー", "Support server")}</a> ・ <a href="{base}/dev">API</a></footer>'
 
     def page(title, desc, rest, body, extra=''):
         return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -33,7 +33,7 @@ def build(lang: str):
 
     out['index.html'] = page('オカズリBOT', T('Discord で複数サイトの作品をまとめて検索する BOT', 'A Discord bot that searches many sites at once'), '', nav('', '') + f'''<main><section class="hero"><h1>{T('探したい作品を、<br><span>全部まとめて</span>検索', 'Search many sites<br><span>all at once</span>')}</h1>
 <p>{T('日本語、ローマ字、英語のどれで聞いても、複数のサイトの作品を一度に探して返します。雑誌の最新号チェックにも使えます。', 'Ask in Japanese, romaji or English: it looks the works up on several sites at once. It also keeps track of the latest issues of magazines.')}</p>
-<div class="cta"><a class="btn primary" href="/add">{T('Discord に追加', 'Add to Discord')}</a><a class="btn" href="/invite">{T('サポートサーバーに参加', 'Join the support server')}</a><a class="btn" href="{base}/search">{T('ブラウザで検索', 'Search in the browser')}</a></div></section>
+<div class="cta"><a class="btn primary" href="/bot/add">{T('Discord に追加', 'Add to Discord')}</a><a class="btn" href="/support/invite">{T('サポートサーバーに参加', 'Join the support server')}</a><a class="btn" href="{base}/search">{T('ブラウザで検索', 'Search in the browser')}</a></div></section>
 <div class="grid">
 <div class="card"><h3>{T('複数サイトを一度に', 'Many sites at once')}</h3><p>{T('DLsite などの合法サイトと、そのほかのサイトの結果を、合法・違法に分けて並べます。', 'The results of legal sites such as DLsite and of other sites, sorted into legal and illegal.')}</p></div>
 <div class="card"><h3>{T('日本語・ローマ字・英語', 'Japanese, romaji, English')}</h3><p>{T('日本語の題名はローマ字と英語に、英語の語は日本語の題名にも当たって、取りこぼしを減らします。', 'A Japanese title is also searched in romaji and English, and an English one in its Japanese title, so fewer works are missed.')}</p></div>

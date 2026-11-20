@@ -5,9 +5,9 @@
 <link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/">オカズリBOT</a>
 <a class="link active" href="/search">Search</a><a class="link" href="/dev">API</a><span class="sp"></span>
 <a class="lang" href="/ja/search" hreflang="ja">日本語</a>
-<a class="btn primary" href="/add">Add</a></div></header><main><h1 style="margin-top:48px;font-size:32px">Search</h1><p class="note">Search in Japanese, romaji or English. Separate several words with spaces.</p>
+<a class="btn primary" href="/bot/add">Add</a></div></header><main><h1 style="margin-top:48px;font-size:32px">Search</h1><p class="note">Search in Japanese, romaji or English. Separate several words with spaces.</p>
 <form class="sbox" id="f"><input id="q" placeholder="e.g. kairakuten 2026 11" autocomplete="off" autofocus><button class="btn primary">Search</button></form>
-<div id="out"></div></main><footer>オカズリBOT ・ <a href="/invite">Support server</a> ・ <a href="/dev">API</a></footer><script>
+<div id="out"></div></main><footer>オカズリBOT ・ <a href="/support/invite">Support server</a> ・ <a href="/dev">API</a></footer><script>
 const $=s=>document.querySelector(s),out=$('#out');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function run(q){

@@ -5,9 +5,9 @@
 <link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/ja">オカズリBOT</a>
 <a class="link active" href="/ja/search">検索</a><a class="link" href="/ja/dev">API</a><span class="sp"></span>
 <a class="lang" href="/search" hreflang="en">English</a>
-<a class="btn primary" href="/add">追加</a></div></header><main><h1 style="margin-top:48px;font-size:32px">検索</h1><p class="note">日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。</p>
+<a class="btn primary" href="/bot/add">追加</a></div></header><main><h1 style="margin-top:48px;font-size:32px">検索</h1><p class="note">日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。</p>
 <form class="sbox" id="f"><input id="q" placeholder="例: 快楽天 2026 11" autocomplete="off" autofocus><button class="btn primary">検索</button></form>
-<div id="out"></div></main><footer>オカズリBOT ・ <a href="/invite">サポートサーバー</a> ・ <a href="/ja/dev">API</a></footer><script>
+<div id="out"></div></main><footer>オカズリBOT ・ <a href="/support/invite">サポートサーバー</a> ・ <a href="/ja/dev">API</a></footer><script>
 const $=s=>document.querySelector(s),out=$('#out');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function run(q){
