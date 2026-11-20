@@ -19,7 +19,6 @@ DLsiteに配信されているレーベルの雑誌と、複数のサイトの�
 ## オカズリBOTの招待リンク
 
 - https://okazuri.nae.quest/bot/add
-- https://discord.com/oauth2/authorize?client_id=1241014631024037898
 
 ## サポートサーバーの招待リンク
 

@@ -19,7 +19,6 @@ The [search page of the website](https://okazuri.nae.quest/search) searches seve
 ## Invitation link of Okazuri BOT
 
 - https://okazuri.nae.quest/bot/add
-- https://discord.com/oauth2/authorize?client_id=1241014631024037898
 
 ## Invitation link of the support server
 
