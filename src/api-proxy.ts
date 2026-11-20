@@ -2,7 +2,7 @@ import type { Context } from 'hono';
 import type { EnvTypes } from './types';
 
 /**
- * https://okazuri.nae.quest/api/<path> -> okazuri-search-api の /<path>。
+ * https://okazuri.nae.quest/api/v1/<path> -> okazuri-search-api の /<path>。
  * Cloudflare のキャッシュを効かせるため、Worker 経由にして cacheEverything で取る。
  * 保持する時間はサーバーの Cache-Control(s-maxage)に従う(200 だけ。live=on やエラーは no-store)。
  */
@@ -17,7 +17,7 @@ export async function proxyApi(c: Context<EnvTypes>): Promise<Response> {
     }
 
     const url = new URL(c.req.url);
-    const path = url.pathname.replace(/^\/api/, '') || '/';
+    const path = url.pathname.replace(/^\/api\/v1/, '') || '/';
     const base = new URL(c.env.OKAZURI_API_URL);
     // `//host/...` や `\\host` はスキーム相対 URL として解釈され、別のホストへ転送されてしまう(SSRF)。
     const origin = new URL(base);
