@@ -41,7 +41,8 @@ def build(lang: str):
 <div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="{base}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
 <p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>by_magazine</code>(雑誌で検索)をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>by_magazine</code> on.')}</p>
-<p class="note">{T('あなたが違法行為に関与した場合、運営は一切の責任を負いません。BOT を使うことで、この条件に同意したことになります。', 'If you take part in anything illegal, the operator is not responsible in any way. By using the bot you agree to this.')}</p></main>''' + foot)
+<p class="note">{T('あなたが違法行為に関与した場合、運営は一切の責任を負いません。BOT を使うことで、この条件に同意したことになります。', 'If you take part in anything illegal, the operator is not responsible in any way. By using the bot you agree to this.')}</p>
+<p class="note">{T('また、権利者様がこのサイトに対してリンク掲載の削除要請を行ったとしても承りかねます。', 'Also, even if a rights holder asks this site to remove a link, we are unable to accept the request.')}</p></main>''' + foot)
 
     def tryit(path, fields):
         """A form that sends the request: one input per query parameter (a name, a kind, a default or the options)."""
