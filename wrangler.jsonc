@@ -37,6 +37,8 @@
     // Worker が動くのは run_worker_first のパスだけ(BOT)
     "assets": {
         "directory": "./site",
+        // /dev/ ではなく /dev(末尾の / なし)で配る。/dev/ は /dev に転送される
+        "html_handling": "drop-trailing-slash",
         // アセットにないパスは 404.html を返す(Worker を呼ばないので、無駄な呼び出しが増えない)
         "not_found_handling": "404-page",
         "run_worker_first": ["/api/bot/interaction*", "/api/bot/internal/*", "/interaction*", "/internal/*"],
