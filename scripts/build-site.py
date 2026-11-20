@@ -125,10 +125,12 @@ document.querySelectorAll('form.try').forEach(form=>{
 
     search = nav('search', '/search') + f'''<main><h1 style="margin-top:48px;font-size:32px">{T('検索', 'Search')}</h1><p class="note">{T('日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。', 'Search in Japanese, romaji or English. Separate several words with spaces.')}</p>
 <form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">{T('+ 入力欄を足す', '+ Add a field')}</button><button class="btn primary">{T('検索', 'Search')}</button></div>
-<label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label></form>
+<label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
+<div class="opts"><label>{T('グループ', 'Group')} <select id="grp"><option value="legal">{T('合法 / 違法', 'Legal / illegal')}</option><option value="site">{T('サイト', 'Site')}</option><option value="lang">{T('言語', 'Language')}</option><option value="none">{T('なし', 'None')}</option></select></label>
+<label>{T('並び順', 'Sort')} <select id="srt"><option value="lang">{T('言語 → サイト → タイトル', 'Language → site → title')}</option><option value="site">{T('サイト → タイトル', 'Site → title')}</option><option value="title">{T('タイトル', 'Title')}</option><option value="new">{T('新しい順(保存した順)', 'Newest first (as saved)')}</option></select></label></div></form>
 <div id="out"></div></main>''' + foot
-    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
-          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
+    tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', otherlang='日本語・不明', loading='件を取得しています…', ph='例: 快楽天 2026 11', rm='消す', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
+          'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', otherlang='Japanese / unknown', loading='works loaded…', ph='e.g. kairakuten 2026 11', rm='Remove', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
     js = '''<script>
 const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -140,39 +142,92 @@ function addRow(v){
   rows.append(d);return d;
 }
 $('#add').onclick=()=>addRow('').querySelector('input').focus();
-async function one(q,bm){
-  if(bm){
-    const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
-    if(!m.ok)return '<p class="note">'+esc(md.detail||'%(err)s')+'</p>';
-    q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+const LANGS=['en','zh','ko','es','fr','de','ru','it','th','pt','id','pl','tr','vi','ar'],FLAGS=['🇺🇸','🇨🇳','🇰🇷','🇪🇸','🇫🇷','🇩🇪','🇷🇺','🇮🇹','🇹🇭','🇵🇹','🇮🇩','🇵🇱','🇹🇷','🇻🇳','🇸🇦'];
+const LW=new Set('EN ENG JP JA JPN CN ZH TW KR KO ES SPA FR DE RU IT TH PT ID PL TR VN VI JAP RUS VIE ENGLISH JAPANESE CHINESE KOREAN SPANISH FRENCH GERMAN RUSSIAN ITALIAN THAI PORTUGUESE INDONESIAN POLISH TURKISH VIETNAMESE ARABIC SUB SUBS'.split(' '));
+const CL=/^(中国翻訳|中国語|中文|简体中文|簡體中文|繁體中文|繁体中文|汉化|漢化)$/;
+function clean(t){
+  return t.trim().replace(/^(?:\p{Regional_Indicator}{2}\s*)+/u,'').replace(/\s*[\[(【]([^\[\]()【】]{1,40})[\])】]/g,(w,i)=>{
+    const b=i.trim();if(CL.test(b))return '';
+    const ws=b.toUpperCase().split(/[\s,/&+-]+/).filter(Boolean);return ws.length&&ws.every(x=>LW.has(x))?'':w}).replace(/\s+/g,' ').trim();
+}
+function codes(x){const c=[];for(const l of x.language||[]){const k=l.trim();if(LANGS.includes(k)&&!c.includes(k))c.push(k)}return c}
+function rank(x){const c=codes(x).slice(0,2);return c.length===1?LANGS.indexOf(c[0])+1:0}
+const col=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
+const SORTS={
+  lang:(a,b)=>a.r-b.r||col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
+  site:(a,b)=>col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
+  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,
+  new:(a,b)=>a.i-b.i};
+function arrange(hits){
+  const rows=hits.map((x,i)=>({x,i,r:rank(x),t:clean(x.title||'')}));
+  rows.sort(SORTS[$('#srt').value]);
+  const g=$('#grp').value,groups=new Map();
+  for(const r of rows){
+    let key,label,color='';
+    if(g==='legal'){key=r.x.is_legal?'1':'0';label=r.x.is_legal?'%(legal)s':'%(illegal)s';color=r.x.is_legal?'var(--ok)':'var(--ng)'}
+    else if(g==='site'){key=label=r.x.website}
+    else if(g==='lang'){const c=codes(r.x);key=String(r.r);label=r.r?FLAGS[LANGS.indexOf(c[0])]+' '+c[0]:'%(otherlang)s'}
+    else{key='';label=''}
+    if(!groups.has(key))groups.set(key,{label,color,rows:[]});groups.get(key).rows.push(r);
   }
-  const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
-  const d=await r.json();
-  if(!r.ok)return '<p class="note">'+esc(d.detail||'%(err)s')+'</p>';
-  const ja=/[぀-ヿ㐀-鿿]/.test(q);
-  let h='<div class="lines">';
-  if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>%(romaji)s<b>'+esc(d.query)+'</b></div>';
+  let list=[...groups.entries()];
+  if(g==='legal')list.sort((a,b)=>b[0]-a[0]);
+  else if(g==='lang')list.sort((a,b)=>a[0]-b[0]);
+  else if(g==='site')list.sort((a,b)=>col.compare(a[1].label,b[1].label));
+  return list.map(e=>e[1]);
+}
+function items(rows){
+  return '<div class="res">'+rows.map(({x,t})=>{const c=codes(x),f=c.length?FLAGS[LANGS.indexOf(c[0])]+' ':'';
+    return '<div class="item"><small>'+esc(x.website)+'</small>'+f+'<a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(t||x.title||x.url)+'</a></div>'}).join('')+'</div>';
+}
+function show(st){
+  const d=st.d;let h='<div class="lines">';
+  if(st.ja&&d.query.replace(/\s+/g,' ')!==st.q.trim().toLowerCase())h+='<div>%(romaji)s<b>'+esc(d.query)+'</b></div>';
   if(d.translation?.text)h+='<div>%(en)s<b>'+esc(d.translation.text)+'</b></div>';
   if(d.translation_ja?.text)h+='<div>%(ja)s<b>'+esc(d.translation_ja.text)+'</b></div>';
   const n=d.total;
-  h+='<div>'+(%(count)s)+(d.total>d.results.length?(function(n){return %(first)s})(d.results.length):'')+'</div></div>';
-  for(const [legal,label,color] of [[true,'%(legal)s','var(--ok)'],[false,'%(illegal)s','var(--ng)']]){
-    const rs=d.results.filter(x=>x.is_legal===legal);
-    if(!rs.length)continue;
-    h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
+  h+='<div>'+(%(count)s)+(st.hits.length<d.total?(function(n){return %(first)s})(st.hits.length):'')+'</div></div>';
+  for(const g of arrange(st.hits)){
+    if(g.label)h+='<div class="group">'+(g.color?'<span class="dot" style="background:'+g.color+'"></span>':'')+esc(g.label)+' <small>'+g.rows.length+'</small></div>';
+    h+=items(g.rows);
   }
-  if(!d.results.length)h+='<p class="note">%(none)s</p>';
+  if(!st.hits.length)h+='<p class="note">%(none)s</p>';
   h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
   return h;
+}
+let states=[];
+function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=show(st)})}
+async function one(q,bm,i){
+  const el=document.getElementById('res'+i);
+  if(bm){
+    const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
+    if(!m.ok){el.innerHTML='<p class="note">'+esc(md.detail||'%(err)s')+'</p>';return}
+    q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+  }
+  const st={q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null};states[i]=st;
+  // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
+  for(let offset=0;;offset+=100){
+    const r=await fetch('/api/v1/okazuri/search?live=diff&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
+    const d=await r.json();
+    if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'%(err)s')+'</p>';return}
+    if(!st.d)st.d=d;else st.d.total=d.total;
+    // offset を知らない古いサーバーは、同じ 100 件を返し続ける
+    if(st.hits.length&&d.results.length&&st.hits[0].url===d.results[0].url)break;
+    st.hits.push(...d.results);
+    if(!d.results.length||st.hits.length>=d.total)break;
+    el.innerHTML='<p class="note">'+st.hits.length+' / '+d.total+' %(loading)s</p>';
+  }
+  el.innerHTML=show(st);
 }
 async function run(){
   const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean),bm=$('#bm').checked;
   if(!qs.length)return;
   history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+bm);
-  out.innerHTML='<p class="note">%(busy)s</p>';
-  const parts=await Promise.all(qs.map(q=>one(q,bm).catch(()=>'<p class="note">%(net)s</p>')));
-  out.innerHTML=parts.map((h,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(qs[i])+'</h2>':'')+h+'</section>').join('');
+  states=[];
+  out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">%(busy)s</p></div></section>').join('');
+  await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">%(net)s</p>'})));
 }
+$('#grp').onchange=$('#srt').onchange=paint;
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
 if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}
