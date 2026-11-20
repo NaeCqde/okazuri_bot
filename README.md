@@ -4,7 +4,7 @@
 
 商業誌、同人誌作品の販売ページや違法アップロードをまとめて検索するBOTです。
 
-- サイト: https://okazuri.nae.quest/
+- [WEBサイト](https://okazuri.nae.quest/)
 - [API ドキュメント](https://okazuri.nae.quest/dev)
 - [検索サーバー(okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
 

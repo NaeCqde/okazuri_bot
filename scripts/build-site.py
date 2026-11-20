@@ -29,7 +29,9 @@ def build(lang: str):
 
     def page(title, desc, rest, body, extra=''):
         return f'''<!doctype html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{title}</title><meta name="description" content="{desc}"><meta name="color-scheme" content="dark">
+<title>{title}</title><meta name="description" content="{desc}"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#7c8cff">
+<meta property="og:type" content="website"><meta property="og:site_name" content="オカズリBOT"><meta property="og:title" content="{title}"><meta property="og:description" content="{desc}"><meta property="og:url" content="https://okazuri.nae.quest{base}{rest}"><meta property="og:locale" content="{'ja_JP' if lang == 'ja' else 'en_US'}"><meta property="og:image" content="https://okazuri.nae.quest/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{title}"><meta name="twitter:description" content="{desc}"><meta name="twitter:image" content="https://okazuri.nae.quest/og.png">
 <link rel="alternate" hreflang="ja" href="/ja{rest}"><link rel="alternate" hreflang="en" href="{rest or '/'}">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body>{body}{extra}</body></html>'''
