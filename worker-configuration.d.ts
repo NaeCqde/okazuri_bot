@@ -15,6 +15,7 @@ declare namespace Cloudflare {
 		CRON_SECRET: string;
 		MAGAZINE_IDS: string[];
 		WORKER_URL: string;
+		ASSETS: Fetcher;
 	}
 }
 interface Env extends Cloudflare.Env {}
