@@ -1,7 +1,8 @@
 import type { CommandContext, ComponentContext } from 'discord-hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { ERROR_MESSAGE } from './consts';
-import { createErrorLog, resultToText, splitText } from './formatter';
+import { MAX_REPLY_MESSAGES } from './consts';
+import { createErrorLog, resultToText, splitTextWithin } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
 import { searchMultiple, titleByUrl } from './search/search';
@@ -28,6 +29,7 @@ export async function searchHandler(
     const db = drizzle(ctx.env.DB);
     const queries = [...originalQueries];
     let result: SearchResultMap;
+    let english: (string | null)[];
 
     try {
         for (const [i, original] of originalQueries.entries()) {
@@ -38,7 +40,8 @@ export async function searchHandler(
             queries[i] = query;
         }
 
-        result = await searchMultiple(ctx.env.OKAZURI_API_URL, queries);
+        // 英語訳は API が取り、その題名の作品も結果に入れている
+        ({ resultMap: result, english } = await searchMultiple(ctx.env.OKAZURI_API_URL, queries));
     } catch (e: any) {
         // 掲載されている雑誌がないのは入力の問題なので、開発者には通知しない
         if (e instanceof NotFoundError) {
@@ -65,6 +68,8 @@ export async function searchHandler(
         return;
     }
 
-    // 雑誌の号は名前にして検索するので、元のクエリも示す
-    await reply(ctx, splitText(resultToText(result, originalQueries)), editOriginal);
+    // 見出しは入力された語。検索は重複を除いて順に行うので、見出しも同じ順に合わせる
+    const headings = [...new Set(queries)].map((q) => originalQueries[queries.indexOf(q)]);
+
+    await reply(ctx, splitTextWithin(resultToText(result, headings, english), MAX_REPLY_MESSAGES), editOriginal);
 }

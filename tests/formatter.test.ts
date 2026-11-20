@@ -1,16 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, splitText } from '../src/formatter';
+import { escapeTitle, escapeUrl, languageFlags, resultLink, resultToText, sortResults, splitText, splitTextWithin } from '../src/formatter';
 
 const U = 'https://example.com/a';
 
 test('escapes every Discord markdown character', () => {
-    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ \\|\\|sp\\|\\| \\`c\\`');
-    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a\\]\\(https://evil.example)\\[b');
-    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x [y]]');
-    assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 \\]\\(Jujutsu Kaisen)');
-    assert.equal(escapeTitle('a [b'), 'a \\[b');
-    assert.equal(escapeTitle(']a[b]['), '\\]a[b]\\[');
+    assert.equal(escapeTitle('*b* _i_ ~~s~~ ||sp|| `c`'), '\\*b\\* _i_ \\~\\~s\\~\\~ ||sp|| \\`c\\`');
+    assert.equal(escapeTitle('a](https://evil.example)[b'), 'a］(https://evil.example)［b');
+    assert.equal(escapeTitle('[Hamao] Fallin! [x [y]]'), '[Hamao] Fallin! [x ［y］]');
+    assert.equal(escapeTitle('[ Nuko.] Jujutsu 12 ](Jujutsu Kaisen)'), '[ Nuko.] Jujutsu 12 ］(Jujutsu Kaisen)');
+    assert.equal(escapeTitle('a [b'), 'a ［b');
+    assert.equal(escapeTitle(']a[b]['), '］a[b]［');
     assert.equal(escapeTitle('<@123> <@&1> <#2> <:e:3> @everyone'), '\\<\\@123\\> \\<\\@&1\\> \\<\\#2\\> \\<:e:3\\> \\@everyone');
     assert.equal(escapeTitle('# h > q - l'), '\\# h \\> q - l');
     assert.equal(escapeTitle('back\\slash \\* x'), 'back\\\\slash \\\\\\* x');
@@ -18,7 +18,25 @@ test('escapes every Discord markdown character', () => {
 
 test('( ) and _ are left as they are, except ( right after ]', () => {
     assert.equal(escapeTitle('Hitsujida (Kumadera) snake_case_name'), 'Hitsujida (Kumadera) snake_case_name');
-    assert.equal(escapeTitle('[x](https://evil.example)'), '[x]\\(https://evil.example)');
+    assert.equal(escapeTitle('[x](https://evil.example)'), '［x］(https://evil.example)');
+});
+
+test('a pair of brackets stays; unpaired ones and the second level become full-width', () => {
+    assert.equal(escapeTitle('[Hamao] Fallin\' [Digital]'), "[Hamao] Fallin' [Digital]");
+    assert.equal(escapeTitle('(C103) [Hitsujida (Kumadela)] TS'), '(C103) [Hitsujida (Kumadela)] TS');
+    // Discord does not link the text when a [ ] has another [ ] inside it, so the inner one is full-width
+    assert.equal(escapeTitle('[ [Fence 14] ] Kyoudai [! ]'), '[ ［Fence 14］ ] Kyoudai [! ]');
+    assert.equal(escapeTitle('[a [b [c] d] e] f [g]'), '[a ［b ［c］ d］ e] f [g]');
+    assert.equal(escapeTitle('a [b'), 'a ［b');
+    assert.equal(escapeTitle(']a[b]['), '］a[b]［');
+    assert.ok(!/\](?=\()/.test(escapeTitle('a](https://evil.example)')), 'no ]( that could start a link');
+});
+
+test('the site name comes first, in 【 】, then the flag', () => {
+    assert.equal(resultLink({ title: 'A [English]', url: U, website: 'DLsite', language: ['en'] }), `[【DLsite】 🇺🇸 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'momon:GA' }), `[【momon:GA】 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U, website: 'a*b[c' }), `[【ab［c】 A](<${U}>)`);
+    assert.equal(resultLink({ title: 'A', url: U }), `[A](<${U}>)`);
 });
 
 test('a single ~ is left as it is', () => {
@@ -55,56 +73,41 @@ test('empty title falls back to the bare url', () => {
     assert.equal(resultLink({ title: ' \n ', url: U }), U);
 });
 
-test('flags: Chinese', () => {
-    assert.equal(languageFlags('[A] B [Chinese] [Digital]'), '🇨🇳');
-    assert.equal(languageFlags('[A] B [chinese]'), '🇨🇳');
-    assert.equal(languageFlags('[A] B [RanaMycin个人汉化] [DL版]'), '🇨🇳');
-    assert.equal(languageFlags('[A] B [中国翻訳] [DL版]'), '🇨🇳');
-    assert.equal(languageFlags('[A] B [無邪気漢化組]'), '🇨🇳');
-    assert.equal(languageFlags('[A] 普通の日本語タイトル'), '');
+test('flags come from the language that the API answers: codes joined with a comma', () => {
+    assert.equal(languageFlags(['zh']), '🇨🇳');
+    assert.equal(languageFlags(['en']), '🇺🇸');
+    assert.equal(languageFlags(['zh', 'en', 'ko']), '🇨🇳🇺🇸🇰🇷');
+    assert.equal(languageFlags(['fr', 'it']), '🇫🇷🇮🇹');
+    assert.equal(languageFlags(['th']), '🇹🇭');
+    assert.equal(languageFlags(['vi']), '🇻🇳');
 });
 
-test('flags: two-letter codes', () => {
-    assert.equal(languageFlags('x [EN]'), '🇺🇸');
-    assert.equal(languageFlags('x [en]'), '🇺🇸');
-    assert.equal(languageFlags('x (JP)'), '🇯🇵');
-    assert.equal(languageFlags('x 【KR】'), '🇰🇷');
-    assert.equal(languageFlags('x [TH]'), '🇹🇭');
-    assert.equal(languageFlags('x [English - EN] [Digital]'), '🇺🇸');
-    assert.equal(languageFlags('x [CN,EN,JP,KR]'), '🇨🇳🇺🇸🇯🇵🇰🇷');
-    assert.equal(languageFlags('x [jap / eng / rus]'), '🇯🇵🇺🇸🇷🇺');
+test('flags: Japanese and no language ([]) have no flag', () => {
+    assert.equal(languageFlags(['ja']), '');
+    assert.equal(languageFlags([]), '');
+    assert.equal(languageFlags(undefined), '');
+    // only the Japanese flag is left out of a list
+    assert.equal(languageFlags(['ja', 'en']), '🇺🇸');
+    // several languages: the flags side by side, in the order of the API
+    assert.equal(languageFlags(['zh', 'en', 'ja', 'ko']), '🇨🇳🇺🇸🇰🇷');
 });
 
-test('flags: language names', () => {
-    assert.equal(languageFlags('x [English] [Digital]'), '🇺🇸');
-    assert.equal(languageFlags('x [korean]'), '🇰🇷');
-    assert.equal(languageFlags('x (Spanish)'), '🇪🇸');
-    assert.equal(languageFlags('x [RUSSIAN]'), '🇷🇺');
-    assert.equal(languageFlags('x [French][Italian]'), '🇫🇷🇮🇹');
-    assert.equal(languageFlags('x [Japanese]'), '🇯🇵');
-    assert.equal(languageFlags('x [Chinese]'), '🇨🇳');
-    assert.equal(languageFlags('x [English Edition Deluxe]'), '');
-});
-
-test('flags: no false positives', () => {
-    for (const t of ['x [HD]', 'x [NR]', 'x [UC]', 'x [AI]', 'x [VR]', 'x [KS]', 'x [It Girl]', 'x [ID Card]', 'x (mr)', 'x EN']) {
-        assert.equal(languageFlags(t), '', t);
-    }
-});
-
-test('flags: no duplicate flag when the site already put one first', () => {
-    assert.equal(languageFlags('🇨🇳 [Hamao] Fallin\' [Chinese]'), '🇨🇳');
-    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U }), `[🇨🇳 [A] b](<${U}>)`);
+test('the title is not read for its language any more: the flag is the one of the API', () => {
+    assert.equal(resultLink({ title: 'x [English]', url: U }), `[x](<${U}>)`, 'the bracket is removed, and there is no flag without a language');
+    assert.equal(resultLink({ title: 'x [English]', url: U, language: ['en'] }), `[🇺🇸 x](<${U}>)`);
 });
 
 test('link format: flag goes inside the brackets, language brackets are removed', () => {
-    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U }), `[🇨🇳 [Hamao] Fallin'](<${U}>)`);
-    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U }), `[🇺🇸 A (COMIC X 1) [Digital]](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U }), `[🇨🇳 A [DL版]](<${U}>)`);
-    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
-    assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U }), `[🇯🇵🇺🇸 A](<${U}>)`);
-    assert.equal(resultLink({ title: '[English]', url: U }), U);
-    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U }), `[A [HD] [It Girl]](<${U}>)`);
+    assert.equal(resultLink({ title: '[Hamao] Fallin\' [Chinese]', url: U, language: ['zh'] }), `[🇨🇳 [Hamao] Fallin'](<${U}>)`);
+    assert.equal(resultLink({ title: 'A (COMIC X 1) [English] [Digital]', url: U, language: ['en'] }), `[🇺🇸 A (COMIC X 1) [Digital]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [中国翻訳] [DL版]', url: U, language: ['zh'] }), `[🇨🇳 A [DL版]](<${U}>)`);
+    assert.equal(resultLink({ title: 'A [山嵐个人汉化]', url: U, language: ['zh'] }), `[🇨🇳 A [山嵐个人汉化]](<${U}>)`);
+    // the flag the site put first is taken off the title (the API read it), and the Japanese flag is never shown
+    assert.equal(resultLink({ title: '🇨🇳 [A] b [Chinese]', url: U, language: ['zh'] }), `[🇨🇳 [A] b](<${U}>)`);
+    assert.equal(resultLink({ title: '🇯🇵 A [EN]', url: U, language: ['ja', 'en'] }), `[🇺🇸 A](<${U}>)`);
+    assert.equal(resultLink({ title: '🇯🇵 A [JP]', url: U, language: ['ja'] }), `[A](<${U}>)`);
+    assert.equal(resultLink({ title: '[English]', url: U, language: ['en'] }), U);
+    assert.equal(resultLink({ title: 'A [HD] [It Girl]', url: U, language: [] }), `[A [HD] [It Girl]](<${U}>)`);
     assert.equal(resultLink({ title: 'plain', url: U }), `[plain](<${U}>)`);
 });
 
@@ -115,7 +118,77 @@ test('resultToText numbers links and keeps every line short', () => {
             { title: 'x'.repeat(5000), website: 'w', url: U, isLegal: false },
         ],
     });
-    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [a_b](<${U}>)`]);
+    assert.deepEqual(lines.slice(0, 4), ['# 検索結果', '## q', '### 合法：', `1. [【w】 a_b](<${U}>)`]);
     assert.ok(lines.every((l) => l.length < 400));
     assert.ok(splitText(lines).every((m) => m.length <= 2000));
+});
+
+test('results are sorted by language (no flag, i.e. Japanese or unknown, first), site name, then title', () => {
+    const r = (title: string, website: string, language?: string[]) => ({ title, website, url: U, isLegal: false, language });
+    const sorted = sortResults([
+        r('B plain', 'Z'),
+        r('A plain', 'A', ['ja']),
+        r('x [Korean]', 'A', ['ko']),
+        r('y [Chinese]', 'B', ['zh']),
+        r('b [English]', 'B', ['en']),
+        r('a [English]', 'B', ['en']),
+        r('c [English]', 'A', ['en']),
+        r('A plain', 'A', []),
+    ]).map((x) => `${x.website}:${x.title}`);
+
+    assert.deepEqual(sorted, [
+        'A:A plain',
+        'A:A plain',
+        'Z:B plain',
+        'A:c [English]',
+        'B:a [English]',
+        'B:b [English]',
+        'B:y [Chinese]',
+        'A:x [Korean]',
+    ]);
+});
+
+test('the heading is the query that was typed, with the romaji under it when it differs', () => {
+    const none = { 'paeto-n kyoushuusen': [] as { title: string; website: string; url: string; isLegal: boolean }[] };
+
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦']), [
+        '# 検索結果',
+        '## パエトーン強襲戦',
+        'ローマ字：paeto-n kyoushuusen',
+        '### なし',
+    ]);
+    // the English title goes under the romaji
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦'], ['ZenZero Gyaku Ra Goudou "Phaethon Assault"']), [
+        '# 検索結果',
+        '## パエトーン強襲戦',
+        'ローマ字：paeto-n kyoushuusen',
+        '英語　　：ZenZero Gyaku Ra Goudou "Phaethon Assault"',
+        '### なし',
+    ]);
+    // no English title: no line
+    assert.deepEqual(resultToText(none, ['パエトーン強襲戦'], [null]).includes('英語　　：'), false);
+    // the same text (case aside): nothing to add
+    assert.deepEqual(resultToText({ 'comic exe 11': [] }, ['COMIC EXE 11']), ['# 検索結果', '## COMIC EXE 11', '### なし']);
+    // no typed query: the heading is the query of the API
+    assert.deepEqual(resultToText({ q: [] }), ['# 検索結果', '## q', '### なし']);
+});
+
+test('splitTextWithin keeps at most the given number of messages and says how many links were left out', () => {
+    const lines = ['# 検索結果', '## q', '### 合法：'];
+    for (let i = 1; i <= 60; i++) lines.push(`${i}. ${'x'.repeat(95)}`);
+    lines.push('### 違法：', `1. ${'y'.repeat(95)}`);
+
+    assert.ok(splitText(lines).length > 2);
+    const within = splitTextWithin(lines, 2);
+    assert.equal(within.length, 2);
+    assert.ok(within.every((m) => m.length <= 2000));
+    const last = within[1].split('\n').at(-1)!;
+    assert.match(last, /^…ほか \d+ 件は省略しました$/);
+    const kept = within.join('\n').split('\n').filter((l) => /^\d+\. /.test(l)).length;
+    assert.equal(kept + Number(last.match(/\d+/)![0]), 61, 'every link is either shown or counted');
+    assert.ok(!within[1].split('\n').at(-2)!.startsWith('#'), 'no heading is left alone before the note');
+
+    // what fits is not touched
+    const small = ['# 検索結果', '## q', '1. a'];
+    assert.deepEqual(splitTextWithin(small, 2), splitText(small));
 });

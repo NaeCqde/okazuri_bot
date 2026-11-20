@@ -11,3 +11,6 @@ export const ERROR_RESPONSE: APIInteractionResponseCallbackData = {
     content: ERROR_MESSAGE,
     flags: MessageFlags.Ephemeral,
 };
+
+/** 検索結果の返信に使うメッセージの最大数。超えた分は省略する */
+export const MAX_REPLY_MESSAGES: number = 2;
