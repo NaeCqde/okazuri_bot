@@ -2,7 +2,7 @@
 
 日本語 | [English](README.en.md)
 
-DLsiteに配信されているレーベルの雑誌と、複数のサイトの作品を、Discord からまとめて検索する BOT です。
+商業誌、同人誌作品の販売ページや違法アップロードをまとめて検索するBOTです。
 サイト: https://okazuri.nae.quest/ ・ [API ドキュメント](https://okazuri.nae.quest/dev) ・ [検索サーバー(okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
 
 ## コマンド
