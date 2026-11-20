@@ -109,7 +109,8 @@ $('#grp').onchange=$('#srt').onchange=paint;
 $('#share').onclick=async()=>{
   const b=$('#share'),label=b.textContent;
   if(!location.hash.includes('q=')){const qs=[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);if(!qs.length)return;history.replaceState(null,'','#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked)}
-  const u=location.href;
+  // 共有する URL に /ja は付けない(日本語の表示の人は、Cloudflare のルールで /ja に転送される)
+  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+location.hash;
   try{await navigator.clipboard.writeText(u);b.textContent='コピーしました'}
   catch(e){prompt('URL',u)}
   setTimeout(()=>b.textContent=label,1800);
