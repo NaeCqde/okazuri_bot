@@ -23,8 +23,8 @@ function addRow(v){
   rows.append(d);syncShare();return d;
 }
 const queries=()=>[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
-// # 以降: 検索語(q を語の数だけ)、雑誌で検索、グループ、並び順
-const hashOf=qs=>'#'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked+'&group='+$('#grp').value+'&sort='+$('#srt').value;
+// ? 以降: 検索語(q を語の数だけ)、雑誌で検索、グループ、並び順
+const queryOf=qs=>'?'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked+'&group='+$('#grp').value+'&sort='+$('#srt').value;
 // 検索語が 1 つもないときは、共有を押せない
 function syncShare(){$('#share').disabled=!queries().length}
 rows.addEventListener('input',syncShare);
@@ -111,23 +111,22 @@ async function run(){
   const qs=queries(),bm=$('#bm').checked;
   if(!qs.length)return;
   lastQs=qs;
-  history.replaceState(null,'',hashOf(qs));
+  history.replaceState(null,'',queryOf(qs));
   states=[];
   out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">検索しています…(初めての語は少し時間がかかります)</p></div></section>').join('');
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">通信に失敗しました。</p>'})));
 }
-$('#grp').onchange=$('#srt').onchange=()=>{paint();if(lastQs.length)history.replaceState(null,'',hashOf(lastQs))};
+$('#grp').onchange=$('#srt').onchange=()=>{paint();if(lastQs.length)history.replaceState(null,'',queryOf(lastQs))};
 $('#share').onclick=async()=>{
   const qs=queries();
   if(!qs.length)return;
   // 共有する URL に /ja は付けない(日本語の表示の人は、Cloudflare のルールで /ja に転送される)
-  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+hashOf(qs);
+  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+queryOf(qs);
   try{await navigator.clipboard.writeText(u);toast('リンクをコピーしました')}
   catch(e){prompt('URL',u)}
 };
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
-const hash=new URLSearchParams(location.hash.slice(1)),init=hash.getAll('q').filter(Boolean);
-if(!init.length){const o=new URLSearchParams(location.search).get('q');if(o)init.push(o)}
+const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;
 for(const [id,key] of [['#grp','group'],['#srt','sort']]){const v=hash.get(key);if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v}
 (init.length?init:['']).forEach(addRow);

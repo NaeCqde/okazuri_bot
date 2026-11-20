@@ -240,8 +240,8 @@ test('splitTextWithin keeps at most the given number of messages and says how ma
     assert.ok(!within[1].split('\n').at(-2)!.startsWith('#'), 'no heading is left alone before the note');
 
     // with a URL the whole note line is the link
-    const linked = splitTextWithin(lines, 2, 2000, 'https://example.com/search#q=a&by_magazine=false');
-    assert.match(linked[1].split('\n').at(-1)!, /^\[…残り\d+件はWEBでご覧ください\]\(<https:\/\/example\.com\/search#q=a&by_magazine=false>\)$/);
+    const linked = splitTextWithin(lines, 2, 2000, 'https://example.com/search?q=a&by_magazine=false');
+    assert.match(linked[1].split('\n').at(-1)!, /^\[…残り\d+件はWEBでご覧ください\]\(<https:\/\/example\.com\/search\?q=a&by_magazine=false>\)$/);
 
     // what fits is not touched
     const small = ['# 検索結果', '## q', '1. a'];

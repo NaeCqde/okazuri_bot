@@ -81,7 +81,7 @@ export async function searchHandler(
     const headings = sent.map((q) => names[queries.indexOf(q)]);
 
     // 省略したときの行は、サイトの検索ページへのリンク(# 以降を、サイトが読む)
-    const moreUrl = `${WEB_SEARCH_URL}#${originalQueries.map((q) => `q=${encodeURIComponent(q)}`).join('&')}&by_magazine=${toMagazine}`;
+    const moreUrl = `${WEB_SEARCH_URL}?${originalQueries.map((q) => `q=${encodeURIComponent(q)}`).join('&')}&by_magazine=${toMagazine}`;
 
     await reply(
         ctx,
