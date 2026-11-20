@@ -173,6 +173,24 @@ test('the heading is the query that was typed, with the romaji under it when it 
     assert.deepEqual(resultToText({ q: [] }), ['# 検索結果', '## q', '### なし']);
 });
 
+test('a magazine: the heading is its name, and the romaji line is only for a difference from what was asked', () => {
+    const lines = (query: string, name: string, sent: string) => resultToText({ [query]: [] }, [name], null, [sent]);
+
+    // the name has Japanese: what was asked differs from its romaji
+    assert.deepEqual(lines('comic kairakuten 2026 11', 'COMIC快楽天 2026年11月号', 'COMIC快楽天 2026 11 '), [
+        '# 検索結果',
+        '## COMIC快楽天 2026年11月号',
+        'ローマ字：comic kairakuten 2026 11',
+        '### なし',
+    ]);
+    // a name in Latin letters: "年" and "月号" are only spaces, so the romaji is the same and has no line
+    assert.deepEqual(lines('comic x-eros 2026 7', 'COMIC X-EROS 2026年7月号', 'COMIC X-EROS 2026 7 '), [
+        '# 検索結果',
+        '## COMIC X-EROS 2026年7月号',
+        '### なし',
+    ]);
+});
+
 test('splitTextWithin keeps at most the given number of messages and says how many links were left out', () => {
     const lines = ['# 検索結果', '## q', '### 合法：'];
     for (let i = 1; i <= 60; i++) lines.push(`${i}. ${'x'.repeat(95)}`);
