@@ -8,16 +8,22 @@ import { WEBSITES } from '../websites';
 /**
  * 検索語ごとに、okazuri-search-api で検索する。
  * 結果の見出し(キー)は、API が検索に使った検索語(ローマ字にしたもの)。検索できなかった語は、そのままの語。
+ * english は、検索語(重複を除いた順)ごとの英語訳。API が英語訳の題名でも検索している。訳がない語は null。
  */
-export async function searchMultiple(api: string, queries: string[]): Promise<SearchResultMap> {
+export async function searchMultiple(
+    api: string,
+    queries: string[]
+): Promise<{ resultMap: SearchResultMap; english: (string | null)[] }> {
     const resultMap: SearchResultMap = {};
+    const english: (string | null)[] = [];
 
     for (const q of new Set(queries)) {
         let key = q;
         let results: SearchResult[] = [];
+        let translation: string | null = null;
 
         try {
-            ({ query: key, results } = await searchOkazuri(api, q));
+            ({ query: key, results, translation } = await searchOkazuri(api, q));
         } catch (e: any) {
             if (
                 !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
@@ -29,9 +35,10 @@ export async function searchMultiple(api: string, queries: string[]): Promise<Se
         }
 
         resultMap[key] = results;
+        english.push(translation);
     }
 
-    return resultMap;
+    return { resultMap, english };
 }
 
 export async function titleByUrl(url: string): Promise<string> {

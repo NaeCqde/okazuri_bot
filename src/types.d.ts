@@ -3,6 +3,8 @@ export interface SearchResult {
     website: string;
     url: string;
     isLegal: boolean;
+    /** okazuri-search-api が題名から判定した言語: 2 文字のコードのリスト(['zh', 'en'])。題名に言語がなければ []。他の検索にはない */
+    language?: string[];
 }
 
 export type SearchResultMap = Record<string, SearchResult[]>;
