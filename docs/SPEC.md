@@ -1,6 +1,6 @@
 # okazuri_bot 仕様
 
-DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Discord ボット。Cloudflare Workers(Hono + discord-hono + Drizzle/D1)。
+DLsite のオカズリ(LBL レーベル)雑誌の掲載作品を検索する Discord ボット。Cloudflare Workers(Hono + discord-hono + Drizzle/D1)。
 仕様を変えたときは、このファイルも必ず更新する。
 
 ## 構成
@@ -11,7 +11,7 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 | `src/endpoints.ts` | HTTP エンドポイント(`/api/bot/internal/fetch-magazines`、検索) |
 | `src/cmd/` | スラッシュコマンド・コンテキストメニュー・コンポーネント |
 | `src/cmd_handler.ts` | 検索の実行と返信(`searchHandler`) |
-| `src/search/` | 検索クライアント(おかずり検索 API、Google、Bing) |
+| `src/search/` | 検索クライアント(オカズリ検索 API、Google、Bing) |
 | `src/magazines.ts` | D1 の雑誌・号・作品の検索、DLsite からの取得(`Fetcher`、`fetchMagazines`) |
 | `src/dlsite.ts`, `src/html.ts` | DLsite の HTML 取得・解析 |
 | `src/issue-name.ts`, `src/number-search.ts` | 号の名前の正規化と検索用キー |
@@ -43,7 +43,7 @@ DLsite のおかずり(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## 検索
 
-- おかずり検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。応答の JSON のキーは snake_case(`is_legal`、`translation_ja` など)。
+- オカズリ検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。応答の JSON のキーは snake_case(`is_legal`、`translation_ja` など)。
 - URL からタイトル: `GET {OKAZURI_API_URL}/okazuri/title?url=…`(1 回に 10 件まで。`titlesByUrls` が分けて呼ぶ)。
 - `GET /:engine/search`、`GET /:engine/images/search`: engine は `google` か `bing`。`q` は 1〜150 文字、`start` は 0 以上(任意)。
 
