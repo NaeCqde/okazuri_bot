@@ -3,7 +3,10 @@
 [日本語](README.md) | English
 
 A bot that searches, all at once, the sales pages of commercial magazines and doujinshi works, and illegal uploads.
-Site: https://okazuri.nae.quest/ - [API documentation](https://okazuri.nae.quest/dev) - [search server (okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
+
+- Site: https://okazuri.nae.quest/
+- [API documentation](https://okazuri.nae.quest/dev)
+- [Search server (okazuri-search-api)](https://github.com/NaeCqde/okazuri-search-api)
 
 ## Commands
 
