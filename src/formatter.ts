@@ -177,7 +177,8 @@ export function resultToText(
     resultMap: SearchResultMap,
     originalQuery: string[] | null = null,
     english: (string | null)[] | null = null,
-    sent: string[] | null = null
+    sent: string[] | null = null,
+    japanese: (string | null)[] | null = null
 ): string[] {
     let lines: string[] = ['# 検索結果'];
     const results = Object.entries(resultMap);
@@ -187,17 +188,22 @@ export function resultToText(
         const [query, result] = results[i];
         const original = originalQuery?.[i] ?? query;
         lines.push('## ' + original);
-        // ローマ字の行と英語の行は、日本語の語を調べたときだけ。ローマ字や英語で入力された語には、どちらも付けない
+        // ローマ字の行と英語の行は、日本語の語を調べたときだけ。ローマ字や英語で入力された語には、日本語の行を付ける
         // (ローマ字の行は、API に渡した語(sent。なければ見出し)とローマ字に差があるときだけ)
         const asked = sent?.[i] ?? original;
         const flat = (text: string): string => text.replace(/\s+/g, ' ').trim().toLowerCase();
-        const japanese = /[\u3040-\u30ff\u3400-\u9fff]/.test(asked);
-        if (japanese && flat(asked) !== flat(query)) {
+        const isJapanese = /[\u3040-\u30ff\u3400-\u9fff]/.test(asked);
+        if (isJapanese && flat(asked) !== flat(query)) {
             lines.push('ローマ字：' + query);
         }
         const translated = english?.[i];
-        if (japanese && translated) {
+        if (isJapanese && translated) {
             lines.push('英語　　：' + escapeTitle(translated));
+        }
+        // 日本語を含まない語(英語、ローマ字)には、日本語の題名の行を付ける
+        const japaneseTitle = japanese?.[i];
+        if (!isJapanese && japaneseTitle) {
+            lines.push('日本語　：' + escapeTitle(japaneseTitle));
         }
 
         if (result.length) {

@@ -32,6 +32,7 @@ export async function searchHandler(
     const names = [...originalQueries];
     let result: SearchResultMap;
     let english: (string | null)[];
+    let japanese: (string | null)[];
 
     try {
         for (const [i, original] of originalQueries.entries()) {
@@ -48,7 +49,7 @@ export async function searchHandler(
         }
 
         // 英語訳は API が取り、その題名の作品も結果に入れている
-        ({ resultMap: result, english } = await searchMultiple(ctx.env.OKAZURI_API_URL, queries));
+        ({ resultMap: result, english, japanese } = await searchMultiple(ctx.env.OKAZURI_API_URL, queries));
     } catch (e: any) {
         // 掲載されている雑誌がないのは入力の問題なので、開発者には通知しない
         if (e instanceof NotFoundError) {
@@ -80,5 +81,5 @@ export async function searchHandler(
     const sent = [...new Set(queries)];
     const headings = sent.map((q) => names[queries.indexOf(q)]);
 
-    await reply(ctx, splitTextWithin(resultToText(result, headings, english, sent), MAX_REPLY_MESSAGES), editOriginal);
+    await reply(ctx, splitTextWithin(resultToText(result, headings, english, sent, japanese), MAX_REPLY_MESSAGES), editOriginal);
 }
