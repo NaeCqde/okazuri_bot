@@ -8,7 +8,7 @@
 <a class="btn primary" href="/bot/add">追加</a></div></header><main><div class="docs"><nav class="side"><b>API</b><a href="#start">はじめに</a><a href="#okazuri-search">検索</a><a href="#okazuri-sites">サイト一覧</a><a href="#translate">翻訳</a><a href="#romaji">ローマ字</a><a href="#cache">キャッシュ</a></nav>
 <article><h1>API ドキュメント</h1><p class="note">okazuri-search-api の公開サーバーです。認証は要りません。</p>
 <h2 id="start">はじめに</h2><p>ベース URL は <code>https://okazuri.nae.quest/api/v1</code>。すべて <code>GET</code> で、JSON(<code>/romaji</code> と <code>/health</code> はテキスト)を返します。不正なリクエストは <code>422</code> と <code>{"detail": "..."}</code> です。</p>
-<pre><code>curl "https://okazuri.nae.quest/api/v1/okazuri/search?q=快楽天+2026+11"</code></pre><h2 id="okazuri-search"><span class="method">GET</span><code>/api/v1/okazuri/search</code></h2><p>各サイトの作品を検索します。クエリはまずローマ字にされ、題名のローマ字と全部の語が合うものを返します。日本語のクエリには英語訳(<code>translation</code>)、日本語を含まないクエリには日本語訳(<code>translation_ja</code>)の題名の作品も含まれます。各結果には <code>title_english</code>(英語のタイトル、<code>英語 | 日本語</code> の英語側、または保存済みの翻訳)と <code>title_english_source</code>(<code>official</code>: 作品自身のタイトル(Hitomi.La のものも)、<code>google</code>: 機械翻訳)が付きます。なければどちらも <code>null</code> です。このリクエストのために翻訳はしません。</p><table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>検索語。必須、1〜300 文字。空白で語を分けます。</td></tr><tr><td><code>live</code></td><td><code>off</code>: DB だけで答える。<code>diff</code>(既定): 未取得か古い組み合わせだけサイトに聞く。<code>on</code>: 全サイトに聞く。</td></tr><tr><td><code>limit</code></td><td>結果の最大数(1〜100)。</td></tr><tr><td><code>exclude</code></td><td>除くサイトの名前(カンマ区切り)。</td></tr><tr><td><code>translator</code></td><td><code>auto</code>(既定) / <code>hitomi</code> / <code>google</code> / <code>none</code>。翻訳の題名でも探すか、どこで訳すか。</td></tr></table><pre><code>GET /api/v1/okazuri/search?q=快楽天+2026+7
+<pre><code>curl "https://okazuri.nae.quest/api/v1/okazuri/search?q=快楽天+2026+11"</code></pre><h2 id="okazuri-search"><span class="method">GET</span><code>/api/v1/okazuri/search</code></h2><p>各サイトの作品を検索します。クエリはまずローマ字にされ、題名のローマ字と全部の語が合うものを返します。日本語のクエリには英語訳(<code>translation</code>)、日本語を含まないクエリには日本語訳(<code>translation_ja</code>)の題名の作品も含まれます。各結果には <code>title_english</code>(英語のタイトル、<code>英語 | 日本語</code> の英語側、または保存済みの翻訳)は <code>{text, source}</code> の形で、<code>source</code> は <code>official</code>(作品自身のタイトル。Hitomi.La のものも)か <code>google</code>(機械翻訳)です。なければ <code>null</code> です。このリクエストのために翻訳はしません。</p><table><tr><th>パラメータ</th><th></th></tr><tr><td><code>q</code></td><td>検索語。必須、1〜300 文字。空白で語を分けます。</td></tr><tr><td><code>live</code></td><td><code>off</code>: DB だけで答える。<code>diff</code>(既定): 未取得か古い組み合わせだけサイトに聞く。<code>on</code>: 全サイトに聞く。</td></tr><tr><td><code>limit</code></td><td>結果の最大数(1〜100)。</td></tr><tr><td><code>exclude</code></td><td>除くサイトの名前(カンマ区切り)。</td></tr><tr><td><code>translator</code></td><td><code>auto</code>(既定) / <code>hitomi</code> / <code>google</code> / <code>none</code>。翻訳の題名でも探すか、どこで訳すか。</td></tr></table><pre><code>GET /api/v1/okazuri/search?q=快楽天+2026+7
 {
   "input": "快楽天 2026 7",
   "query": "kairakuten 2026 7",
@@ -16,7 +16,7 @@
   "results": [
     { "website": "DLsite", "is_legal": true, "url": "https://www.dlsite.com/...",
       "title": "COMIC快楽天 2026年11月号", "title_romaji": "comic kairakuten 2026 nen 11 gatsu gou",
-      "title_english": "COMIC Kairakuten 2026 November", "title_english_source": "google" }
+      "title_english": { "text": "COMIC Kairakuten 2026 November", "source": "google" } }
   ],
   "translation": { "text": "COMIC Kairakuten", "source": "Hitomi" },
   "sites": [ { "website": "DLsite", "status": "searched", "count": 30 } ]
