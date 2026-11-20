@@ -191,6 +191,28 @@ test('a magazine: the heading is its name, and the romaji line is only for a dif
     ]);
 });
 
+test('a query in Latin letters (English or romaji) has no romaji line and no English line', () => {
+    // romaji that was typed: the API's romaji only differs in letter case or punctuation
+    assert.deepEqual(resultToText({ "siblings shouldn't do it": [] }, ["Siblings Shouldn't Do It!"], ['シブリング']), [
+        '# 検索結果',
+        "## Siblings Shouldn't Do It!",
+        '### なし',
+    ]);
+    assert.deepEqual(resultToText({ 'kairakuten 2026': [] }, ['kairakuten  2026'], ['pleasure heaven']), [
+        '# 検索結果',
+        '## kairakuten  2026',
+        '### なし',
+    ]);
+    // Japanese: both lines stay
+    assert.deepEqual(resultToText({ kairakuten: [] }, ['快楽天'], ['pleasure heaven']), [
+        '# 検索結果',
+        '## 快楽天',
+        'ローマ字：kairakuten',
+        '英語　　：pleasure heaven',
+        '### なし',
+    ]);
+});
+
 test('splitTextWithin keeps at most the given number of messages and says how many links were left out', () => {
     const lines = ['# 検索結果', '## q', '### 合法：'];
     for (let i = 1; i <= 60; i++) lines.push(`${i}. ${'x'.repeat(95)}`);
