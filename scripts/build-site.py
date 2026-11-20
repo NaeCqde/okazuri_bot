@@ -61,14 +61,15 @@ def build(lang: str):
         t = f'<table><tr><th>{T("パラメータ", "Parameter")}</th><th></th></tr>{rows}</table>' if params else ''
         return f'''<h2 id="{path.strip('/').replace('/', '-')}"><span class="method">{m}</span><code>/api/v1{path}</code></h2><p>{desc}</p>{t}<pre><code>{example}</code></pre>{tryit(path, fields)}'''
 
-    docs = nav('dev', '/dev') + f'''<main><div class="docs"><nav class="side"><b>API</b><a href="#start">{T('はじめに', 'Start')}</a><a href="#okazuri-search">{T('検索', 'Search')}</a><a href="#okazuri-sites">{T('サイト一覧', 'Sites')}</a><a href="#translate">{T('翻訳', 'Translate')}</a><a href="#romaji">{T('ローマ字', 'Romaji')}</a><a href="#cache">{T('キャッシュ', 'Cache')}</a></nav>
+    docs = nav('dev', '/dev') + f'''<main><div class="docs"><nav class="side"><b>API</b><a href="#start">{T('はじめに', 'Start')}</a><a href="#okazuri-search">{T('検索', 'Search')}</a><a href="#okazuri-title">{T('タイトル', 'Title')}</a><a href="#okazuri-magazine">{T('雑誌', 'Magazine')}</a><a href="#okazuri-works">{T('号の作品', 'Works')}</a><a href="#okazuri-magazines">{T('雑誌一覧', 'Magazines')}</a><a href="#okazuri-sites">{T('サイト一覧', 'Sites')}</a><a href="#translate">{T('翻訳', 'Translate')}</a><a href="#romaji">{T('ローマ字', 'Romaji')}</a><a href="#cache">{T('キャッシュ', 'Cache')}</a></nav>
 <article><h1>{T('API ドキュメント', 'API documentation')}</h1><p class="note">{T('okazuri-search-api の公開サーバーです。認証は要りません。', 'The public server of okazuri-search-api. No authentication.')}</p>
 <h2 id="start">{T('はじめに', 'Start')}</h2><p>{T('ベース URL は <code>https://okazuri.nae.quest/api/v1</code>。すべて <code>GET</code> で、JSON(<code>/romaji</code> と <code>/health</code> はテキスト)を返します。不正なリクエストは <code>422</code> と <code>{"detail": "..."}</code> です。', 'The base URL is <code>https://okazuri.nae.quest/api/v1</code>. Everything is a <code>GET</code> and answers JSON (<code>/romaji</code> and <code>/health</code> answer text). A bad request is a <code>422</code> with <code>{"detail": "..."}</code>.')}</p>
 <pre><code>curl "https://okazuri.nae.quest/api/v1/okazuri/search?q=快楽天+2026+11"</code></pre>'''
     docs += ep('GET', '/okazuri/search', T('各サイトの作品を検索します。クエリはまずローマ字にされ、題名のローマ字と全部の語が合うものを返します。日本語のクエリには英語訳(<code>translation</code>)、日本語を含まないクエリには日本語訳(<code>translation_ja</code>)の題名の作品も含まれます。各結果には <code>title_english</code>(英語のタイトル、<code>英語 | 日本語</code> の英語側、または保存済みの翻訳)は <code>{text, source}</code> の形で、<code>source</code> は <code>official</code>(作品自身のタイトル。Hitomi.La のものも)か <code>google</code>(機械翻訳)です。なければ <code>null</code> です。このリクエストのために翻訳はしません。', 'Searches the works of the sites. The query is turned into romaji first, and the works whose title has all its words are answered. A query in Japanese also finds the works of its English title (<code>translation</code>), a query without Japanese the works of its Japanese title (<code>translation_ja</code>). Each result has <code>title_english</code> (the title if it is English, the English side of an <code>English | 日本語</code> title, or a saved translation) is <code>{text, source}</code>, where <code>source</code> is <code>official</code> (the work\'s own title, Hitomi.La\'s too) or <code>google</code> (a machine translation); it is <code>null</code> when there is none. Nothing is translated for the request.'),
         [('q', T('検索語。必須、1〜300 文字。空白で語を分けます。', 'The words. Required, 1 to 300 characters. White space separates them.')),
-         ('live', T('<code>off</code>: DB だけで答える。<code>diff</code>(既定): 未取得か古い組み合わせだけサイトに聞く。<code>on</code>: 全サイトに聞く。', '<code>off</code>: answer from the database only. <code>diff</code> (default): ask only the combinations that are missing or old. <code>on</code>: ask every site.')),
-         ('limit', T('結果の最大数(1〜100)。', 'The most results (1 to 100).')),
+         ('live', T('<code>off</code>: DB だけで答える。<code>diff</code>(既定): 未取得か古い組み合わせだけサイトに聞く。<code>force</code>: 全サイトに聞く。', '<code>off</code>: answer from the database only. <code>diff</code> (default): ask only the combinations that are missing or old. <code>force</code>: ask every site.')),
+         ('limit', T('1 回の結果の最大数(1〜100、既定 100)。', 'The most results of one request (1 to 100, default 100).')),
+         ('offset', T('先頭から飛ばす件数(0〜10000、既定 0)。<code>limit</code> と合わせて、長い答えを 100 件ずつ読めます。', 'How many results to skip at the head (0 to 10000, default 0). With <code>limit</code> it reads a long answer 100 at a time.')),
          ('exclude', T('除くサイトの名前(カンマ区切り)。', 'Sites to leave out, by name, separated by commas.')),
          ('translator', T('<code>auto</code>(既定) / <code>hitomi</code> / <code>google</code> / <code>none</code>。翻訳の題名でも探すか、どこで訳すか。', '<code>auto</code> (default), <code>hitomi</code>, <code>google</code> or <code>none</code>: whether the translated title is searched too, and where it is translated.'))],
         '''GET /api/v1/okazuri/search?q=快楽天+2026+7
@@ -76,6 +77,8 @@ def build(lang: str):
   "input": "快楽天 2026 7",
   "query": "kairakuten 2026 7",
   "total": 12,
+  "total_legal": 9,
+  "total_illegal": 3,
   "results": [
     { "website": "DLsite", "is_legal": true, "url": "https://www.dlsite.com/...",
       "title": "COMIC快楽天 2026年11月号", "title_romaji": "comic kairakuten 2026 nen 11 gatsu gou",
@@ -83,13 +86,42 @@ def build(lang: str):
   ],
   "translation": { "text": "COMIC Kairakuten", "source": "Hitomi" },
   "sites": [ { "website": "DLsite", "status": "searched", "count": 30 } ]
-}''', fields=[('q', 'text', '快楽天 2026 11'), ('live', 'select', ['', 'diff', 'off', 'on']), ('limit', 'number', '10'), ('exclude', 'text', ''), ('translator', 'select', ['', 'auto', 'hitomi', 'google', 'none'])])
-    docs += ep('GET', '/okazuri/sites', T('検索の対象のサイトと、いま検索しているかを返します。', 'The sites that can be searched, and whether each is searched now.'), [], 'GET /api/v1/okazuri/sites\n[ { "name": "DLsite", "is_legal": true, "support": "ready", "hasSearch": true, "japanese": true, "active": true } ]', fields=[])
+}''', fields=[('q', 'text', '快楽天 2026 11'), ('live', 'select', ['', 'diff', 'off', 'force']), ('limit', 'number', '10'), ('offset', 'number', '0'), ('exclude', 'text', ''), ('translator', 'select', ['', 'auto', 'hitomi', 'google', 'none'])])
+    docs += f'''<p class="note">{T('<code>total</code> はヒットした作品の実際の数で、<code>total_legal</code> と <code>total_illegal</code> は合法なサイトと違法なサイトの内訳です(足すと <code>total</code>)。どれも <code>limit</code> と <code>offset</code> では変わりません。', '<code>total</code> is the real number of hits, and <code>total_legal</code> and <code>total_illegal</code> split it by the legality of the site (they add up to <code>total</code>). None of them changes with <code>limit</code> or <code>offset</code>.')}</p>'''
+    docs += ep('GET', '/okazuri/title', T('作品ページの URL からタイトルを取り出します。まず保存済みの作品から、なければページを取得して読みます。URL に余計なパラメータが付いていても、同じ作品に当たります。', 'Reads the title of a work from the URL of its page: from the saved works first, and from the page when it is not saved. Extra parameters in the URL still find the same work.'),
+        [('url', T('作品ページの URL。必須、1〜10 回まで繰り返せます(パーセントエンコードしてください)。', 'The URL of a work page. Required, 1 to 10 times (percent-encoded).')),
+         ('live', T('<code>off</code>: 保存済みだけ。<code>diff</code>(既定): 保存済み、なければページ。<code>force</code>: いつもページを取得。', '<code>off</code>: saved works only. <code>diff</code> (default): saved, else the page. <code>force</code>: always the page.'))],
+        '''GET /api/v1/okazuri/title?url=https%3A%2F%2Fwww.dlsite.com%2Fbooks%2Fwork%2F%3D%2Fproduct_id%2FBJ03044883.html
+{ "total": 1, "results": [
+  { "url": "https://www.dlsite.com/books/work/=/product_id/BJ03044883.html", "website": "DLsite",
+    "title": "COMIC快楽天 2026年11月号", "title_japanese": "COMIC快楽天 2026年11月号",
+    "title_romaji": "comic kairakuten 2026 nen 11 gatsu gou", "title_english": null,
+    "source": "database", "error": null } ] }''', fields=[('url', 'text', 'https://www.dlsite.com/books/work/=/product_id/BJ03044883.html'), ('live', 'select', ['', 'diff', 'off', 'force'])])
+    docs += ep('GET', '/okazuri/magazine', T('作品名(完全一致)が載っている号を、新しい号から返します。同名の作品は複数返ります。', 'The issues that printed a work (exact title), newest first. A title shared by several works gives several results.'),
+        [('q', T('作品名。必須、1〜300 文字。', 'The title of the work. Required, 1 to 300 characters.')),
+         ('limit', T('最大件数(1〜50、既定 10)。', 'The most results (1 to 50, default 10).'))],
+        '''GET /api/v1/okazuri/magazine?q=作品名
+{ "input": "作品名", "total": 1, "results": [ {
+  "id": "BJ9", "title": "作品名", "url": "https://www.dlsite.com/...", "author": "作者", "position": 4,
+  "magazine": { "id": "LBL1", "name": "COMIC快楽天" },
+  "issue": { "id": "BJ2", "name": "COMIC快楽天 2026年07月号", "url": "https://www.dlsite.com/...", "date": 1793181281 } } ] }''', fields=[('q', 'text', '作品名'), ('limit', 'number', '10')])
+    docs += ep('GET', '/okazuri/works', T('号の名前(号の id でも可。完全一致)から、掲載作品を号の中の順に返します。', 'The works of an issue, by its name (or its id; exact), in the order of the issue.'),
+        [('q', T('号の名前。必須、1〜300 文字。', 'The name of the issue. Required, 1 to 300 characters.'))],
+        '''GET /api/v1/okazuri/works?q=COMIC快楽天 2026年07月号
+{ "input": "COMIC快楽天 2026年07月号",
+  "issue": { "id": "BJ2", "name": "COMIC快楽天 2026年07月号", "url": "...", "date": 1793181281 },
+  "magazine": { "id": "LBL1", "name": "COMIC快楽天" }, "total": 1,
+  "results": [ { "id": "BJ9", "title": "作品名", "url": "...", "author": "作者", "position": 4 } ] }''', fields=[('q', 'text', 'COMIC快楽天 2026年07月号')])
+    docs += ep('GET', '/okazuri/magazines', T('雑誌の一覧を名前順に返します。号の数 <code>issues</code> と、いちばん新しい号 <code>latest</code> が付きます。', 'Every magazine by name, with the number of its issues (<code>issues</code>) and its newest issue (<code>latest</code>).'), [],
+        '''GET /api/v1/okazuri/magazines
+{ "total": 1, "results": [ { "id": "LBL1", "name": "COMIC快楽天", "issues": 120,
+  "latest": { "id": "BJ2", "name": "COMIC快楽天 2026年07月号", "url": "...", "date": 1793181281 } } ] }''', fields=[])
+    docs += ep('GET', '/okazuri/sites', T('検索の対象のサイトと、いま検索しているかを返します。', 'The sites that can be searched, and whether each is searched now.'), [], 'GET /api/v1/okazuri/sites\n[ { "name": "DLsite", "is_legal": true, "support": "ready", "has_search": true, "japanese": true, "active": true } ]', fields=[])
     docs += f'''<h2 id="translate"><span class="method">GET</span><code>/api/v1/{{hitomila,google,auto}}/translate</code></h2><p>{T('題名の翻訳です。日本語の語は英語に、英語の語は日本語に訳します。<code>auto</code> は Hitomi.La、だめなら Google 翻訳。', 'Translates a title: Japanese into English, English into Japanese. <code>auto</code> uses Hitomi.La, and Google Translate if that fails.')}</p>
 <table><tr><th>{T('パラメータ', 'Parameter')}</th><th></th></tr><tr><td><code>q</code></td><td>{T('翻訳する語。必須。', 'The text. Required.')}</td></tr><tr><td><code>live</code></td><td><code>off</code> / <code>diff</code> ({T('既定', 'default')}) / <code>force</code>.</td></tr></table>
 <pre><code>GET /api/v1/auto/translate?q=姉弟</code></pre>''' + tryit('/{engine}/translate', [('engine', 'select', ['auto', 'hitomila', 'google']), ('q', 'text', '姉弟'), ('live', 'select', ['', 'diff', 'off', 'force'])])
     docs += ep('GET', '/romaji', T('日本語のローマ字を <code>text/plain</code> で返します。', 'The romaji of a Japanese text, as <code>text/plain</code>.'), [('q', T('テキスト。必須。', 'The text. Required.')), ('loanwords', T('<code>romaji</code>(既定) / <code>english</code>: ひらがなの外来語の書き方。', '<code>romaji</code> (default) or <code>english</code>: how a loanword spelled in hiragana is written.'))], 'GET /api/v1/romaji?q=チートアイテム管理局のお仕事\nchiito aitemu kanrikyoku no oshigoto', fields=[('q', 'text', 'チートアイテム管理局のお仕事'), ('loanwords', 'select', ['', 'romaji', 'english'])])
-    docs += f'''<h2 id="cache">{T('キャッシュ', 'Cache')}</h2><p>{T('Cloudflare が成功(<code>200</code>)の応答を保持します。検索は 5 分、サイト一覧は 1 時間、翻訳とローマ字は 1 日です。<code>live=on</code>、エラー、<code>/health</code> は保持されません。応答の <code>Cache-Control</code> と <code>cf-cache-status</code> で確認できます。', 'Cloudflare keeps the successful (<code>200</code>) answers: 5 minutes for a search, an hour for the sites, a day for translations and romaji. <code>live=on</code>, errors and <code>/health</code> are not kept. See <code>Cache-Control</code> and <code>cf-cache-status</code> in the answer.')}</p>
+    docs += f'''<h2 id="cache">{T('キャッシュ', 'Cache')}</h2><p>{T('Cloudflare が成功(<code>200</code>)の応答を保持します。検索とカタログの検索は 5 分、サイト一覧は 1 時間、翻訳とローマ字は 1 日です。<code>live=force</code>、エラー、<code>/health</code> は保持されません。応答の <code>Cache-Control</code> と <code>cf-cache-status</code> で確認できます。', 'Cloudflare keeps the successful (<code>200</code>) answers: 5 minutes for a search and a catalogue lookup, an hour for the sites, a day for translations and romaji. <code>live=force</code>, errors and <code>/health</code> are not kept. See <code>Cache-Control</code> and <code>cf-cache-status</code> in the answer.')}</p>
 <p class="note">{T('正確な仕様は', 'The exact specification is')} <a href="https://github.com/NaeCqde/okazuri-search-api/blob/main/docs/API.md">API.md (GitHub)</a>.</p></article></div></main>''' + foot
     try_js = '''<script>
 document.querySelectorAll('form.try').forEach(form=>{
