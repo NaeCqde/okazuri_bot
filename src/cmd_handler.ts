@@ -1,7 +1,7 @@
 import type { CommandContext, ComponentContext } from 'discord-hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { ERROR_MESSAGE } from './consts';
-import { MAX_REPLY_MESSAGES } from './consts';
+import { MAX_REPLY_MESSAGES, WEB_SEARCH_URL } from './consts';
 import { createErrorLog, resultToText, splitTextWithin } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
@@ -80,5 +80,12 @@ export async function searchHandler(
     const sent = [...new Set(queries)];
     const headings = sent.map((q) => names[queries.indexOf(q)]);
 
-    await reply(ctx, splitTextWithin(resultToText(result, headings, english, sent, japanese), MAX_REPLY_MESSAGES), editOriginal);
+    // 省略したときの行は、サイトの検索ページへのリンク(# 以降を、サイトが読む)
+    const moreUrl = `${WEB_SEARCH_URL}#q=${encodeURIComponent(originalQueries.join(' '))}&by_magazine=${toMagazine}`;
+
+    await reply(
+        ctx,
+        splitTextWithin(resultToText(result, headings, english, sent, japanese), MAX_REPLY_MESSAGES, 2000, moreUrl),
+        editOriginal
+    );
 }

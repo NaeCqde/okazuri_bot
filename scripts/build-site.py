@@ -40,7 +40,7 @@ def build(lang: str):
 <div class="card"><h3>{T('雑誌のチェック', 'Magazines')}</h3><p>{T('COMIC快楽天など、DLsite のレーベルの最新号を毎日取り込んで、検索で見つけられます。', 'The latest issues of DLsite labels such as COMIC Kairakuten are fetched every day and can be found by search.')}</p></div>
 <div class="card"><h3>{T('公開 API', 'Public API')}</h3><p>{T('同じ検索を、誰でも使える HTTP API として公開しています。', 'The same search is a public HTTP API that anyone can use.')} <a href="{base}/dev">{T('ドキュメント', 'Documentation')}</a></p></div></div>
 <h2 class="sec">{T('使いかた', 'How to use')}</h2>
-<p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>to_magazine</code> をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>to_magazine</code> on.')}</p>
+<p>{T('Discord で <code>/search</code> に探したい語を入れるだけです。雑誌の名前で探すときは <code>by_magazine</code>(雑誌で検索)をオンにします。', 'In Discord, type what you look for after <code>/search</code>. To look for a magazine by its name, turn <code>by_magazine</code> on.')}</p>
 <p class="note">{T('あなたが違法行為に関与した場合、運営は一切の責任を負いません。BOT を使うことで、この条件に同意したことになります。', 'If you take part in anything illegal, the operator is not responsible in any way. By using the bot you agree to this.')}</p></main>''' + foot)
 
     def tryit(path, fields):
@@ -125,6 +125,7 @@ document.querySelectorAll('form.try').forEach(form=>{
 
     search = nav('search', '/search') + f'''<main><h1 style="margin-top:48px;font-size:32px">{T('検索', 'Search')}</h1><p class="note">{T('日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。', 'Search in Japanese, romaji or English. Separate several words with spaces.')}</p>
 <form class="sbox" id="f"><input id="q" placeholder="{T('例: 快楽天 2026 11', 'e.g. kairakuten 2026 11')}" autocomplete="off" autofocus><button class="btn primary">{T('検索', 'Search')}</button></form>
+<label class="note"><input type="checkbox" id="bm"> {T('雑誌で検索(この作品が載っている号を探す)', 'By magazine (find the issue that printed this work)')}</label>
 <div id="out"></div></main>''' + foot
     tx = {'ja': dict(busy='検索しています…(初めての語は少し時間がかかります)', err='エラーです', net='通信に失敗しました。', none='見つかりませんでした。', legal='合法', illegal='違法', romaji='ローマ字　', en='英語　　', ja='日本語　', count="n+' 件'", first="'(先頭の '+n+' 件)'"),
           'en': dict(busy='Searching… (a new word takes a little while)', err='Error', net='The request failed.', none='Nothing found.', legal='Legal', illegal='Illegal', romaji='Romaji　', en='English　', ja='Japanese ', count="n+' works'", first="' (first '+n+')'")}[lang]
@@ -133,9 +134,15 @@ const $=s=>document.querySelector(s),out=$('#out');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function run(q){
   if(!q.trim())return;
-  history.replaceState(null,'','?q='+encodeURIComponent(q));
+  const bm=$('#bm').checked;
+  history.replaceState(null,'','#q='+encodeURIComponent(q)+'&by_magazine='+bm);
   out.innerHTML='<p class="note">%(busy)s</p>';
   try{
+    if(bm){
+      const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
+      if(!m.ok){out.innerHTML='<p class="note">'+esc(md.detail||'%(err)s')+'</p>';return}
+      q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+    }
     const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
     const d=await r.json();
     if(!r.ok){out.innerHTML='<p class="note">'+esc(d.detail||'%(err)s')+'</p>';return}
@@ -157,7 +164,9 @@ async function run(q){
   }catch(e){out.innerHTML='<p class="note">%(net)s</p>'}
 }
 $('#f').addEventListener('submit',e=>{e.preventDefault();run($('#q').value)});
-const init=new URLSearchParams(location.search).get('q');if(init){$('#q').value=init;run(init)}
+const hash=new URLSearchParams(location.hash.slice(1)),init=hash.get('q')||new URLSearchParams(location.search).get('q');
+if(hash.get('by_magazine')==='true')$('#bm').checked=true;
+if(init){$('#q').value=init;run(init)}
 </script>''' % tx
     out['search/index.html'] = page(T('検索 | オカズリBOT', 'Search | Okazuri BOT'), T('複数のサイトの作品をまとめて検索', 'Search the works of many sites at once'), '/search', search, js)
     return out

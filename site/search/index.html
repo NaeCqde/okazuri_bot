@@ -7,14 +7,21 @@
 <a class="lang" href="/ja/search" hreflang="ja">日本語</a>
 <a class="btn primary" href="/bot/add">Add</a></div></header><main><h1 style="margin-top:48px;font-size:32px">Search</h1><p class="note">Search in Japanese, romaji or English. Separate several words with spaces.</p>
 <form class="sbox" id="f"><input id="q" placeholder="e.g. kairakuten 2026 11" autocomplete="off" autofocus><button class="btn primary">Search</button></form>
+<label class="note"><input type="checkbox" id="bm"> By magazine (find the issue that printed this work)</label>
 <div id="out"></div></main><footer>オカズリBOT ・ <a href="/support/invite">Support server</a> ・ <a href="/dev">API</a></footer><script>
 const $=s=>document.querySelector(s),out=$('#out');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 async function run(q){
   if(!q.trim())return;
-  history.replaceState(null,'','?q='+encodeURIComponent(q));
+  const bm=$('#bm').checked;
+  history.replaceState(null,'','#q='+encodeURIComponent(q)+'&by_magazine='+bm);
   out.innerHTML='<p class="note">Searching… (a new word takes a little while)</p>';
   try{
+    if(bm){
+      const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
+      if(!m.ok){out.innerHTML='<p class="note">'+esc(md.detail||'Error')+'</p>';return}
+      q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+    }
     const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
     const d=await r.json();
     if(!r.ok){out.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
@@ -36,5 +43,7 @@ async function run(q){
   }catch(e){out.innerHTML='<p class="note">The request failed.</p>'}
 }
 $('#f').addEventListener('submit',e=>{e.preventDefault();run($('#q').value)});
-const init=new URLSearchParams(location.search).get('q');if(init){$('#q').value=init;run(init)}
+const hash=new URLSearchParams(location.hash.slice(1)),init=hash.get('q')||new URLSearchParams(location.search).get('q');
+if(hash.get('by_magazine')==='true')$('#bm').checked=true;
+if(init){$('#q').value=init;run(init)}
 </script></body></html>

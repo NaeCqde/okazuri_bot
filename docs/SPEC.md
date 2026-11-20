@@ -33,7 +33,7 @@ DLsite のオカズリ(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## Discord コマンド
 
-- `/search`: 作品名などを検索する。`to_magazine` を付けると、入力した作品が載った号の名前に直して検索する。
+- `/search`: 作品名などを検索する。`by_magazine`(日本語名は「雑誌で検索」) を付けると、入力した作品が載った号の名前に直して検索する。
 - `/works`: 雑誌の作品一覧。号の名前(オートコンプリート付き)から掲載作品を一覧する(`listWorks`、`searchNumberNames`)。
 - コンテキストメニュー「これらを検索」(`search_this`、設定付きは `search_this_option`):メッセージ中の URL からタイトルを取り(`titlesByUrls`。API の `GET /okazuri/title` が、保存済みの作品、なければページから答える。非対応サイトや失敗は除く)、検索する。
 - `/magazine`(旧 `from_work`): 作品名から雑誌を探す。
