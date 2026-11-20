@@ -28,6 +28,8 @@ export async function searchHandler(
 ): Promise<void> {
     const db = drizzle(ctx.env.DB);
     const queries = [...originalQueries];
+    // 見出しに出す名前。雑誌のときは雑誌の名前、そうでなければ入力された語
+    const names = [...originalQueries];
     let result: SearchResultMap;
     let english: (string | null)[];
 
@@ -35,7 +37,12 @@ export async function searchHandler(
         for (const [i, original] of originalQueries.entries()) {
             let query = original;
 
-            if (toMagazine) query = (await toNumber(db, query)).name.replaceAll(/年|月号?/g, " ");
+            if (toMagazine) {
+                const name = (await toNumber(db, query)).name;
+
+                names[i] = name;
+                query = name.replaceAll(/年|月号?/g, " ");
+            }
 
             queries[i] = query;
         }
@@ -68,8 +75,10 @@ export async function searchHandler(
         return;
     }
 
-    // 見出しは入力された語。検索は重複を除いて順に行うので、見出しも同じ順に合わせる
-    const headings = [...new Set(queries)].map((q) => originalQueries[queries.indexOf(q)]);
+    // 見出しは入力された語(雑誌のときは雑誌の名前)。検索は重複を除いて順に行うので、見出しも同じ順に合わせる。
+    // ローマ字の行は、API に渡した語(雑誌の名前の「年」「月号」は空白にしたもの)とローマ字に差があるときだけ付ける
+    const sent = [...new Set(queries)];
+    const headings = sent.map((q) => names[queries.indexOf(q)]);
 
-    await reply(ctx, splitTextWithin(resultToText(result, headings, english), MAX_REPLY_MESSAGES), editOriginal);
+    await reply(ctx, splitTextWithin(resultToText(result, headings, english, sent), MAX_REPLY_MESSAGES), editOriginal);
 }
