@@ -62,7 +62,10 @@ th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vert
 
 /* Primer Brand feel: the large buttons are rounder and heavier */
 .btn-large{border-radius:12px;font-weight:600;padding:12px 24px;font-size:16px}
-.btn-primary.btn-large{box-shadow:0 8px 24px -8px rgba(46,160,67,.55)}
+.btn.btn-primary{color:#fff;border:0;background:linear-gradient(135deg,#7c8cff,#b07cff)}
+.btn.btn-primary:hover:not(:disabled),.btn.btn-primary:active:not(:disabled){color:#fff;background:linear-gradient(135deg,#7c8cff,#b07cff);filter:brightness(1.1)}
+.btn.btn-primary:focus-visible{outline:2px solid #b07cff;outline-offset:2px}
+.btn-primary.btn-large{box-shadow:0 8px 24px -8px rgba(176,124,255,.6)}
 .sbox input.input-lg{border-radius:12px}
 .docs h1{font-size:clamp(34px,5vw,56px);font-weight:600;letter-spacing:-.03em}
 main>h1{letter-spacing:-.03em;font-weight:600}
