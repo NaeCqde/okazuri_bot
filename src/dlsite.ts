@@ -99,11 +99,11 @@ function parseItem(id: string, block: string): ListItem {
 
 export function parseDetail(html: string): Detail | null {
     // 販売日はページ上部の表にあるので、そこまでの文字列から探す
-    const date = cell(html, '販売日')?.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
+    const date = cell(html, RELEASE_DATE)?.match(/(\d{4})年(\d{1,2})月(\d{1,2})日/);
 
     if (!date) return null;
 
-    const label = cell(html, 'レーベル')?.match(/<a\s[^>]*>([\s\S]*?)<\/a>/);
+    const label = cell(html, LABEL)?.match(/<a\s[^>]*>([\s\S]*?)<\/a>/);
 
     return {
         date: new Date(Date.UTC(Number(date[1]), Number(date[2]) - 1, Number(date[3]))),
@@ -112,11 +112,14 @@ export function parseDetail(html: string): Detail | null {
 }
 
 // <th>header</th><td>…</td> の td の中身(HTML)
-function cell(html: string, header: string): string | null {
-    const m = html.match(new RegExp(`<th>\\s*${header}\\s*</th>\\s*<td[^>]*>([\\s\\S]*?)</td>`));
-
-    return m?.[1] ?? null;
+function cell(html: string, header: RegExp): string | null {
+    return html.match(header)?.[1] ?? null;
 }
+
+// the patterns are made once, not for every page
+const cellOf = (header: string) => new RegExp(`<th>\\s*${header}\\s*</th>\\s*<td[^>]*>([\\s\\S]*?)</td>`);
+const RELEASE_DATE = cellOf('販売日');
+const LABEL = cellOf('レーベル');
 
 function productType(className: string): ProductType {
     if (className.includes('type_magazine')) return 'magazine';
