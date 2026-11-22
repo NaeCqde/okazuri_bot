@@ -3,20 +3,9 @@ import { getHitomiLaGalleryInfo } from './websites';
 
 export const PARENTHE_PATTERN = /`[（）「」\(\)\[\]]+`/g;
 export const DOUBLE_SPACE_PATTERN = /` {2,}`/g;
-export const SHARP_PATTERN = /#|%23/g;
 export const LOCALE_QUERY_PATTERN = /([?&])(locale=[A-Za-z_]+)&?/g;
 
 export async function noClean(s: string): Promise<string> {
-    return s;
-}
-
-export function deleteSharp(s: string): string {
-    const match = SHARP_PATTERN.exec(s);
-
-    if (match && match.index) {
-        s = s.slice(0, match.index);
-    }
-
     return s;
 }
 
