@@ -46,18 +46,6 @@ export async function searchMultiple(
     return { resultMap, english, japanese };
 }
 
-export async function titleByUrl(url: string): Promise<string> {
-    for (const website of WEBSITES) {
-        if (website.pattern.exec(url)) {
-            const title: string = await website.title(url);
-
-            return title;
-        }
-    }
-
-    throw Error('okazuri: Unsupported website');
-}
-
 /**
  * Bing で検索する。画像検索(画像が載っているページ)が結果を返すなら、それだけを使う。
  * 画像検索が使えない(失敗した、結果がない)ときだけ、Web 検索にする。

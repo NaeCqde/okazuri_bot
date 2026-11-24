@@ -11,9 +11,9 @@ import { reply } from '../../reply';
 import { listWorks, NotFoundError, searchNumberNames } from '../../magazines';
 
 export const worksCommand = factory.autocomplete(
-    makeSlashCommand('works', 'Show a list of works published in the magazine')
+    makeSlashCommand('works', 'List the works in a magazine')
         .description_localizations({
-            [Locale.Japanese]: '雑誌に掲載されている作品一覧を表示します',
+            [Locale.Japanese]: '雑誌の作品一覧を表示します',
         })
         .integration_types([
             ApplicationIntegrationType.GuildInstall,

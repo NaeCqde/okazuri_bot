@@ -70,7 +70,7 @@ export const searchComponent = factory.component(SEARCH_BUTTON, (c) => {
             components: [],
         });
 
-        const queries: string[] = await titlesFromUrls(state.urls);
+        const queries: string[] = await titlesFromUrls(c.env.OKAZURI_API_URL, state.urls);
 
         if (!queries.length) {
             await reply(c, ['# 検索結果\n## なし'], false);

@@ -19,17 +19,18 @@ export const searchCommand = factory.command(
                     [Locale.Japanese]: 'タイトルまたはURLを入力してください',
                 })
                 .required(true),
-            makeBooleanOption('to_magazine', 'Find the magazine in which this work appears')
+            makeBooleanOption('by_magazine', 'Find the magazine in which this work appears')
+                .name_localizations({ [Locale.Japanese]: '雑誌で検索' })
                 .description_localizations({
                     [Locale.Japanese]: 'この作品が掲載されている雑誌を探します',
                 })
                 .required(false),
         ]),
     (c) => {
-        const { query, to_magazine } = c.var;
+        const { query, by_magazine } = c.var;
 
         if (!query) return c.res(ERROR_RESPONSE);
 
-        return c.resDefer((c) => searchHandler(c, [query], to_magazine ?? false));
+        return c.resDefer((c) => searchHandler(c, [query], by_magazine ?? false));
     }
 );

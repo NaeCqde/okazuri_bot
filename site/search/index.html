@@ -1,37 +1,137 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>検索 | オカズリBOT</title><meta name="description" content="複数のサイトの作品をまとめて検索"><meta name="color-scheme" content="dark">
+<!doctype html><html lang="en" data-color-mode="dark" data-dark-theme="dark"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search | Okazuri BOT</title><meta name="description" content="Search the works of many sites at once"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#7c8cff">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Okazuri BOT"><meta property="og:title" content="Search | Okazuri BOT"><meta property="og:description" content="Search the works of many sites at once"><meta property="og:url" content="https://okazuri.nae.quest/search"><meta property="og:locale" content="en_US"><meta property="og:image" content="https://okazuri.nae.quest/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Search | Okazuri BOT"><meta name="twitter:description" content="Search the works of many sites at once"><meta name="twitter:image" content="https://okazuri.nae.quest/og.png">
+<link rel="alternate" hreflang="ja" href="/ja/search"><link rel="alternate" hreflang="en" href="/search">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css"></head><body><header class="nav"><div class="nav-in"><a class="brand" href="/">オカズリBOT</a>
-<a class="link active" href="/search/">検索</a><a class="link" href="/dev/">API</a><span class="sp"></span>
-<a class="btn primary" href="/add">追加</a></div></header><main><h1 style="margin-top:48px;font-size:32px">検索</h1><p class="note">日本語、ローマ字、英語で探せます。複数の語は空白で区切ります。</p>
-<form class="sbox" id="f"><input id="q" placeholder="例: 快楽天 2026 11" autocomplete="off" autofocus><button class="btn primary">検索</button></form>
-<div id="out"></div></main><footer>オカズリBOT ・ <a href="/invite">サポートサーバー</a> ・ <a href="/dev/">API</a></footer><script>
-const $=s=>document.querySelector(s),out=$('#out');
+<link rel="stylesheet" href="/primer.css"><link rel="stylesheet" href="/style.css"></head><body><header class="Header nav"><div class="nav-in"><a class="brand" href="/">Okazuri BOT</a>
+<a class="link active" href="/search">Search</a><a class="link" href="/dev">API</a><span class="sp"></span><a class="gh" href="https://github.com/NaeCqde/okazuri_bot" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"><svg class="gh-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+<a class="btn btn-primary" href="/bot/add">Add</a></div></header><main><h1 style="margin-top:48px;font-size:32px">Search</h1><p class="note">Search in Japanese, romaji or English. Separate several words with spaces.</p>
+<form id="f"><div id="rows"></div><div class="sbox"><button type="button" class="btn" id="add">+ Add a field</button><button class="btn btn-primary">Search</button><button type="button" class="btn" id="share">Share URL</button></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<label class="note"><input type="checkbox" id="bm"> By magazine (find the issue that printed this work)</label>
+<div class="opts"><label>Group <select class="form-select" id="grp"><option value="legal">Legal / illegal</option><option value="site">Site</option><option value="lang">Language</option><option value="none">None</option></select></label>
+<label>Sort <select class="form-select" id="srt"><option value="lang">Language → site → title</option><option value="site">Site → title</option><option value="title">Title</option></select></label></div></form>
+<div id="out"></div></main><footer>Okazuri BOT ・ <a href="/support/invite">Support server (ja)</a> ・ <a href="/dev">API</a> ・ <a class="gh-link" href="https://github.com/NaeCqde/okazuri_bot" target="_blank" rel="noopener noreferrer"><svg class="gh-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> okazuri_bot</a> ・ <a class="gh-link" href="https://github.com/NaeCqde/okazuri-search-api" target="_blank" rel="noopener noreferrer"><svg class="gh-icon" viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg> okazuri-search-api</a></footer><script>
+const $=s=>document.querySelector(s),out=$('#out'),rows=$('#rows');
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function run(q){
-  if(!q.trim())return;
-  history.replaceState(null,'','?q='+encodeURIComponent(q));
-  out.innerHTML='<p class="note">検索しています…(初めての語は少し時間がかかります)</p>';
-  try{
-    const r=await fetch('/api/v1/okazuri/search?live=diff&q='+encodeURIComponent(q));
-    const d=await r.json();
-    if(!r.ok){out.innerHTML='<p class="note">'+esc(d.detail||'エラーです')+'</p>';return}
-    const ja=/[\u3040-\u30ff\u3400-\u9fff]/.test(q);
-    let h='<div class="lines">';
-    if(ja&&d.query.replace(/\s+/g,' ')!==q.trim().toLowerCase())h+='<div>ローマ字　<b>'+esc(d.query)+'</b></div>';
-    if(d.translation?.text)h+='<div>英語　　<b>'+esc(d.translation.text)+'</b></div>';
-    if(d.translationJa?.text)h+='<div>日本語　<b>'+esc(d.translationJa.text)+'</b></div>';
-    h+='<div>'+d.total+' 件'+(d.total>d.results.length?'(先頭の '+d.results.length+' 件)':'')+'</div></div>';
-    for(const [legal,label,color] of [[true,'合法','var(--ok)'],[false,'違法','var(--ng)']]){
-      const rs=d.results.filter(x=>x.isLegal===legal);
-      if(!rs.length)continue;
-      h+='<div class="group"><span class="dot" style="background:'+color+'"></span>'+label+'</div><div class="res">'+rs.map(x=>'<div class="item"><small>'+esc(x.website)+'</small><a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(x.title)+'</a></div>').join('')+'</div>';
-    }
-    if(!d.results.length)h+='<p class="note">見つかりませんでした。</p>';
-    h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="chip'+(s.status==='failed'?' bad':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
-    out.innerHTML=h;
-  }catch(e){out.innerHTML='<p class="note">通信に失敗しました。</p>'}
+function addRow(v){
+  const d=document.createElement('div');d.className='sbox';
+  d.innerHTML='<input class="form-control" placeholder="e.g. kairakuten 2026 11" autocomplete="off"><button type="button" class="btn" title="Remove">×</button>';
+  d.querySelector('input').value=v||'';
+  d.querySelector('button').onclick=()=>{if(rows.children.length>1)d.remove();else d.querySelector('input').value='';syncShare()};
+  rows.append(d);syncShare();return d;
 }
-$('#f').addEventListener('submit',e=>{e.preventDefault();run($('#q').value)});
-const init=new URLSearchParams(location.search).get('q');if(init){$('#q').value=init;run(init)}
+const queries=()=>[...rows.querySelectorAll('input')].map(i=>i.value.trim()).filter(Boolean);
+// ? 以降: 検索語(q を語の数だけ)、雑誌で検索、グループ、並び順
+const queryOf=qs=>'?'+qs.map(q=>'q='+encodeURIComponent(q)).join('&')+'&by_magazine='+$('#bm').checked+'&group='+$('#grp').value+'&sort='+$('#srt').value;
+// 検索語が 1 つもないときは、共有を押せない
+function syncShare(){$('#share').disabled=!queries().length}
+rows.addEventListener('input',syncShare);
+let toastTimer;
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.classList.remove('on'),2200)}
+$('#add').onclick=()=>addRow('').querySelector('input').focus();
+const LANGS=['en','zh','ko','es','fr','de','ru','it','th','pt','id','pl','tr','vi','ar'],FLAGS=['🇺🇸','🇨🇳','🇰🇷','🇪🇸','🇫🇷','🇩🇪','🇷🇺','🇮🇹','🇹🇭','🇵🇹','🇮🇩','🇵🇱','🇹🇷','🇻🇳','🇸🇦'];
+const LW=new Set('EN ENG JP JA JPN CN ZH TW KR KO ES SPA FR DE RU IT TH PT ID PL TR VN VI JAP RUS VIE ENGLISH JAPANESE CHINESE KOREAN SPANISH FRENCH GERMAN RUSSIAN ITALIAN THAI PORTUGUESE INDONESIAN POLISH TURKISH VIETNAMESE ARABIC SUB SUBS'.split(' '));
+const CL=/^(中国翻訳|中国語|中文|简体中文|簡體中文|繁體中文|繁体中文|汉化|漢化)$/;
+function clean(t){
+  return t.trim().replace(/^(?:\p{Regional_Indicator}{2}\s*)+/u,'').replace(/\s*[\[(【]([^\[\]()【】]{1,40})[\])】]/g,(w,i)=>{
+    const b=i.trim();if(CL.test(b))return '';
+    const ws=b.toUpperCase().split(/[\s,/&+-]+/).filter(Boolean);return ws.length&&ws.every(x=>LW.has(x))?'':w}).replace(/\s+/g,' ').trim();
+}
+function codes(x){const c=[];for(const l of x.language||[]){const k=l.trim();if(LANGS.includes(k)&&!c.includes(k))c.push(k)}return c}
+function rank(x){const c=codes(x).slice(0,2);return c.length===1?LANGS.indexOf(c[0])+1:0}
+const col=new Intl.Collator('en',{numeric:true,sensitivity:'base'});
+const SORTS={
+  lang:(a,b)=>a.r-b.r||col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
+  site:(a,b)=>col.compare(a.x.website,b.x.website)||col.compare(a.t,b.t)||a.i-b.i,
+  title:(a,b)=>col.compare(a.t,b.t)||a.i-b.i,};
+function arrange(hits){
+  const rows=hits.map((x,i)=>({x,i,r:rank(x),t:clean(x.title||'')}));
+  rows.sort(SORTS[$('#srt').value]);
+  const g=$('#grp').value,groups=new Map();
+  for(const r of rows){
+    let key,label,color='';
+    if(g==='legal'){key=r.x.is_legal?'1':'0';label=r.x.is_legal?'Legal':'Illegal';color=r.x.is_legal?'var(--ok)':'var(--ng)'}
+    else if(g==='site'){key=label=r.x.website}
+    else if(g==='lang'){const c=codes(r.x);key=String(r.r);label=r.r?FLAGS[LANGS.indexOf(c[0])]+' '+c[0]:'Japanese / unknown'}
+    else{key='';label=''}
+    if(!groups.has(key))groups.set(key,{label,color,rows:[]});groups.get(key).rows.push(r);
+  }
+  let list=[...groups.entries()];
+  if(g==='legal')list.sort((a,b)=>b[0]-a[0]);
+  else if(g==='lang')list.sort((a,b)=>a[0]-b[0]);
+  else if(g==='site')list.sort((a,b)=>col.compare(a[1].label,b[1].label));
+  return list.map(e=>e[1]);
+}
+function items(rows){
+  return '<div class="res">'+rows.map(({x,t})=>{const c=codes(x),f=c.length?FLAGS[LANGS.indexOf(c[0])]+' ':'';
+    return '<div class="item"><small>'+esc(x.website)+'</small>'+f+'<a href="'+esc(x.url)+'" target="_blank" rel="noopener noreferrer">'+esc(t||x.title||x.url)+'</a></div>'}).join('')+'</div>';
+}
+function show(st){
+  const d=st.d;let h='<div class="lines">';
+  if(st.ja&&d.query.replace(/\s+/g,' ')!==st.q.trim().toLowerCase())h+='<div>Romaji　<b>'+esc(d.query)+'</b></div>';
+  if(d.translation?.text)h+='<div>English　<b>'+esc(d.translation.text)+'</b></div>';
+  if(d.translation_ja?.text)h+='<div>Japanese <b>'+esc(d.translation_ja.text)+'</b></div>';
+  h+='<div>'+st.hits.length+' works'+(st.more?'…':'')+'</div></div>';
+  for(const g of arrange(st.hits)){
+    if(g.label)h+='<div class="group">'+(g.color?'<span class="dot" style="background:'+g.color+'"></span>':'')+esc(g.label)+' <small>'+g.rows.length+'</small></div>';
+    h+=items(g.rows);
+  }
+  if(!st.hits.length)h+='<p class="note">Nothing found.</p>';
+  h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="Label'+(s.status==='failed'?' Label--danger':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
+  return h;
+}
+let states=[],lastQs=[];
+function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=view(st)})}
+const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' works loaded…</p>':'');
+async function one(q,bm,i){
+  const el=document.getElementById('res'+i);
+  if(bm){
+    const m=await fetch('/api/v1/okazuri/magazine?q='+encodeURIComponent(q)),md=await m.json();
+    if(!m.ok){el.innerHTML='<p class="note">'+esc(md.detail||'Error')+'</p>';return}
+    q=md.results[0].issue.name.replace(/年|月号?/g,' ');
+  }
+  const st={q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null};states[i]=st;
+  // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
+  for(let offset=0;;offset+=100){
+    const r=await fetch('/api/v1/okazuri/search?live=diff&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
+    const d=await r.json();
+    if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
+    if(!st.d)st.d=d;
+    // offset を知らない古いサーバーは、同じ 100 件を返し続ける
+    if(st.hits.length&&d.results.length&&st.hits[0].url===d.results[0].url)break;
+    st.hits.push(...d.results);
+    st.more=d.results.length>0&&d.has_more;
+    // 取れた分から、順に表示する
+    el.innerHTML=view(st);
+    if(!st.more)break;
+  }
+  st.more=false;
+  el.innerHTML=view(st);
+}
+async function run(){
+  const qs=queries(),bm=$('#bm').checked;
+  if(!qs.length)return;
+  lastQs=qs;
+  history.replaceState(null,'',queryOf(qs));
+  states=[];
+  out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">Searching… (a new word takes a little while)</p></div></section>').join('');
+  await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">The request failed.</p>'})));
+}
+$('#grp').onchange=$('#srt').onchange=()=>{paint();if(lastQs.length)history.replaceState(null,'',queryOf(lastQs))};
+$('#share').onclick=async()=>{
+  const qs=queries();
+  if(!qs.length)return;
+  // 共有する URL に /ja は付けない(日本語の表示の人は、Cloudflare のルールで /ja に転送される)
+  const u=location.origin+location.pathname.replace(/^\/ja(?=\/|$)/,'')+queryOf(qs);
+  try{await navigator.clipboard.writeText(u);toast('Link copied')}
+  catch(e){prompt('URL',u)}
+};
+$('#f').addEventListener('submit',e=>{e.preventDefault();run()});
+const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
+if(hash.get('by_magazine')==='true')$('#bm').checked=true;
+for(const [id,key] of [['#grp','group'],['#srt','sort']]){const v=hash.get(key);if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v}
+(init.length?init:['']).forEach(addRow);
+if(init.length)run();
 </script></body></html>

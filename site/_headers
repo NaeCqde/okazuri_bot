@@ -3,3 +3,5 @@
   Referrer-Policy: strict-origin-when-cross-origin
 /style.css
   Cache-Control: public, max-age=3600
+/primer.css
+  Cache-Control: public, max-age=3600

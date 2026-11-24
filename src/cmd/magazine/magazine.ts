@@ -10,8 +10,8 @@ import { factory } from '../../init';
 import { reply } from '../../reply';
 import { findWorks, NotFoundError, searchWorkNames } from '../../magazines';
 
-export const fromWorkCommand = factory.autocomplete(
-    makeSlashCommand('from_work', 'Search for magazine by title')
+export const magazineCommand = factory.autocomplete(
+    makeSlashCommand('magazine', 'Search for magazine by title')
         .description_localizations({
             [Locale.Japanese]: 'タイトルから雑誌を検索します',
         })
@@ -33,7 +33,7 @@ export const fromWorkCommand = factory.autocomplete(
         try {
             names = await searchWorkNames(drizzle(c.env.DB), String(c.focused?.value ?? ''));
         } catch (e) {
-            console.error('okazuri: from_work autocomplete failed', e);
+            console.error('okazuri: magazine autocomplete failed', e);
         }
 
         return c.resAutocomplete(
@@ -70,7 +70,7 @@ export const fromWorkCommand = factory.autocomplete(
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        content: createErrorLog([title], 'from_work', true, e as Error),
+                        content: createErrorLog([title], 'magazine', true, e as Error),
                     }),
                 });
 

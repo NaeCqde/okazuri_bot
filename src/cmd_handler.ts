@@ -1,18 +1,17 @@
 import type { CommandContext, ComponentContext } from 'discord-hono';
 import { drizzle } from 'drizzle-orm/d1';
 import { ERROR_MESSAGE } from './consts';
-import { MAX_REPLY_MESSAGES } from './consts';
+import { MAX_REPLY_MESSAGES, WEB_SEARCH_URL } from './consts';
 import { createErrorLog, resultToText, splitTextWithin } from './formatter';
 import { NotFoundError, toNumber } from './magazines';
 import { reply } from './reply';
-import { searchMultiple, titleByUrl } from './search/search';
+import { titlesByUrls } from './search/okazuri';
+import { searchMultiple } from './search/search';
 import type { SearchResultMap } from './types';
 
-/** URL からタイトルを取る。対応していないサイトや取れなかったURLは除く */
-export async function titlesFromUrls(urls: string[]): Promise<string[]> {
-    const titles = await Promise.all(urls.map((url) => titleByUrl(url).catch(() => '')));
-
-    return titles.filter(Boolean);
+/** URL からタイトルを取る(okazuri-search-api)。対応していないサイトや取れなかった URL は除く */
+export async function titlesFromUrls(api: string, urls: string[]): Promise<string[]> {
+    return titlesByUrls(api, urls);
 }
 
 /**
@@ -81,5 +80,12 @@ export async function searchHandler(
     const sent = [...new Set(queries)];
     const headings = sent.map((q) => names[queries.indexOf(q)]);
 
-    await reply(ctx, splitTextWithin(resultToText(result, headings, english, sent, japanese), MAX_REPLY_MESSAGES), editOriginal);
+    // 省略したときの行は、サイトの検索ページへのリンク(# 以降を、サイトが読む)
+    const moreUrl = `${WEB_SEARCH_URL}?${originalQueries.map((q) => `q=${encodeURIComponent(q)}`).join('&')}&by_magazine=${toMagazine}`;
+
+    await reply(
+        ctx,
+        splitTextWithin(resultToText(result, headings, english, sent, japanese), MAX_REPLY_MESSAGES, 2000, moreUrl),
+        editOriginal
+    );
 }

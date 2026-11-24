@@ -37,22 +37,26 @@
     // Worker が動くのは run_worker_first のパスだけ(BOT)
     "assets": {
         "directory": "./site",
+        "binding": "ASSETS",
+        // /dev/ ではなく /dev(末尾の / なし)で配る。/dev/ は /dev に転送される
+        "html_handling": "drop-trailing-slash",
         // アセットにないパスは 404.html を返す(Worker を呼ばないので、無駄な呼び出しが増えない)
         "not_found_handling": "404-page",
-        "run_worker_first": ["/api/bot/interaction*", "/api/bot/internal/*", "/interaction*", "/internal/*"],
+        // /search と /ja/search は、検索語(?q=)をリンクの埋め込み(OGP)のタイトルに入れるために Worker を通す
+        "run_worker_first": ["/api/bot/interaction*", "/api/bot/internal/*", "/interaction*", "/internal/*", "/search", "/ja/search"],
     },
     "routes": [
-        { "pattern": "okazuri-api.nae.quest/interaction*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri-api.nae.quest/internal/*", "zone_name": "nae.quest" },
         // okazuri.nae.quest のうち Worker(静的アセットと BOT)に割り当てるパスだけを並べる。/api/v1/* などそれ以外は、Worker を通らず webarena に届く
         { "pattern": "okazuri.nae.quest/api/bot/interaction*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/api/bot/internal/*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/dev*", "zone_name": "nae.quest" },
+        // 英語が /, /search, /dev。日本語は /ja, /ja/search, /ja/dev
         { "pattern": "okazuri.nae.quest/search*", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/invite", "zone_name": "nae.quest" },
-        { "pattern": "okazuri.nae.quest/add", "zone_name": "nae.quest" },
+        { "pattern": "okazuri.nae.quest/dev*", "zone_name": "nae.quest" },
+        { "pattern": "okazuri.nae.quest/ja*", "zone_name": "nae.quest" },
         { "pattern": "okazuri.nae.quest/style.css", "zone_name": "nae.quest" },
+        { "pattern": "okazuri.nae.quest/primer.css", "zone_name": "nae.quest" },
+        { "pattern": "okazuri.nae.quest/og.png", "zone_name": "nae.quest" },
     ],
     "d1_databases": [
         {
