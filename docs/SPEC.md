@@ -43,7 +43,7 @@ DLsite のオカズリ(LBL レーベル)雑誌の掲載作品を検索する Dis
 
 ## 検索
 
-- オカズリ検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=diff`。応答の JSON のキーは snake_case(`is_legal`、`translation_ja` など)。
+- オカズリ検索 API: `GET {OKAZURI_API_URL}/okazuri/search?q=…&live=off`。応答の JSON のキーは snake_case(`is_legal`、`translation_ja` など)。
 - URL からタイトル: `GET {OKAZURI_API_URL}/okazuri/title?url=…`(1 回に 10 件まで。`titlesByUrls` が分けて呼ぶ)。
 - `GET /:engine/search`、`GET /:engine/images/search`: engine は `google` か `bing`。`q` は 1〜150 文字、`start` は 0 以上(任意)。
 
