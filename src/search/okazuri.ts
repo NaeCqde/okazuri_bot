@@ -6,7 +6,7 @@ import type { SearchResult } from '../types';
  * 検索語はそのまま渡す。API が検索語をローマ字にして、各サイトの検索に問い合わせ、
  * 保存した作品のうち、題名が検索語の語をすべて含むものを返す。書き換え(rewrite)は要らない。
  *
- * live=diff は、未取得か期限切れ(1ヶ月)の、検索語とサイトの組み合わせだけサイトに問い合わせる指定。
+ * live=off は、サイトには問い合わせず、保存した作品(データベース)だけで答える指定(API の既定値でもある)。
  *
  * query は、API が検索に使った検索語(ローマ字にしたもの)。結果の見出しに使える。
  * translationJa(API では translation_ja)は、日本語を含まない検索語(英語、ローマ字)の日本語訳(同じく API が取り、その題名の作品も結果に含めている)。なければ null。
@@ -19,7 +19,7 @@ export async function searchOkazuri(
 ): Promise<{ query: string; results: SearchResult[]; translation: string | null; translationJa: string | null }> {
     if (!query) throw Error('okazuri: Title not found');
 
-    const resp = await fetch(api + `/okazuri/search?q=${encodeURIComponent(query)}&live=diff`);
+    const resp = await fetch(api + `/okazuri/search?q=${encodeURIComponent(query)}&live=off`);
 
     if (!resp.ok) {
         throw Error(
