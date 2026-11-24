@@ -13,7 +13,7 @@ export const ERROR_RESPONSE: APIInteractionResponseCallbackData = {
 };
 
 /** 検索結果の返信に使うメッセージの最大数。超えた分は省略する */
-export const MAX_REPLY_MESSAGES: number = 2;
+export const MAX_REPLY_MESSAGES: number = 1;
 
 /** 結果が多くて省略したときに、続きを見てもらうサイトの検索ページ */
 export const WEB_SEARCH_URL: string = 'https://okazuri.nae.quest/search';
