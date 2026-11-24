@@ -79,7 +79,9 @@ function show(st){
     h+=items(g.rows);
   }
   if(!st.hits.length)h+='<p class="note">Nothing found.</p>';
-  h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="Label'+(s.status==='failed'?' Label--danger':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
+  // with live=off no site is asked: a row of "not searched" says nothing
+  if((d.sites||[]).some(s=>['searched','cached','failed'].includes(s.status)))h+='<div class="sites">'+(d.sites||[]).map(s=>{const n=['searched','cached'].includes(s.status)&&typeof s.count==='number'?' · '+s.count:'',e=s.status==='failed'&&s.error?': '+s.error:'';
+    return '<span class="Label'+(s.status==='failed'?' Label--danger':'')+'"'+(s.error?' title="'+esc(s.error)+'"':'')+'>'+esc(s.website)+' '+esc(s.status)+n+esc(e)+'</span>'}).join('')+'</div>';
   return h;
 }
 let states=[],lastQs=[];
@@ -95,7 +97,7 @@ async function one(q,bm,i){
   const st={q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null};states[i]=st;
   // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
   for(let offset=0;;offset+=100){
-    const r=await fetch('/api/v1/okazuri/search?live=diff&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
+    const r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
     const d=await r.json();
     if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
     if(!st.d)st.d=d;

@@ -73,19 +73,20 @@ function show(st){
   if(st.ja&&d.query.replace(/\s+/g,' ')!==st.q.trim().toLowerCase())h+='<div>ローマ字　<b>'+esc(d.query)+'</b></div>';
   if(d.translation?.text)h+='<div>英語　　<b>'+esc(d.translation.text)+'</b></div>';
   if(d.translation_ja?.text)h+='<div>日本語　<b>'+esc(d.translation_ja.text)+'</b></div>';
-  const n=d.total;
-  h+='<div>'+(n+' 件')+(st.hits.length<d.total?(function(n){return '(先頭の '+n+' 件)'})(st.hits.length):'')+'</div></div>';
+  h+='<div>'+st.hits.length+' 件'+(st.more?'…':'')+'</div></div>';
   for(const g of arrange(st.hits)){
     if(g.label)h+='<div class="group">'+(g.color?'<span class="dot" style="background:'+g.color+'"></span>':'')+esc(g.label)+' <small>'+g.rows.length+'</small></div>';
     h+=items(g.rows);
   }
   if(!st.hits.length)h+='<p class="note">見つかりませんでした。</p>';
-  h+='<div class="sites">'+(d.sites||[]).map(s=>'<span class="Label'+(s.status==='failed'?' Label--danger':'')+'">'+esc(s.website)+' '+esc(s.status)+'</span>').join('')+'</div>';
+  // with live=off no site is asked: a row of "not searched" says nothing
+  if((d.sites||[]).some(s=>['searched','cached','failed'].includes(s.status)))h+='<div class="sites">'+(d.sites||[]).map(s=>{const n=['searched','cached'].includes(s.status)&&typeof s.count==='number'?' · '+s.count:'',e=s.status==='failed'&&s.error?': '+s.error:'';
+    return '<span class="Label'+(s.status==='failed'?' Label--danger':'')+'"'+(s.error?' title="'+esc(s.error)+'"':'')+'>'+esc(s.website)+' '+esc(s.status)+n+esc(e)+'</span>'}).join('')+'</div>';
   return h;
 }
 let states=[],lastQs=[];
 function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=view(st)})}
-const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' / '+st.d.total+' 件を取得しています…</p>':'');
+const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' 件を取得しています…</p>':'');
 async function one(q,bm,i){
   const el=document.getElementById('res'+i);
   if(bm){
@@ -96,14 +97,14 @@ async function one(q,bm,i){
   const st={q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null};states[i]=st;
   // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
   for(let offset=0;;offset+=100){
-    const r=await fetch('/api/v1/okazuri/search?live=diff&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
+    const r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
     const d=await r.json();
     if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'エラーです')+'</p>';return}
-    if(!st.d)st.d=d;else st.d.total=d.total;
+    if(!st.d)st.d=d;
     // offset を知らない古いサーバーは、同じ 100 件を返し続ける
     if(st.hits.length&&d.results.length&&st.hits[0].url===d.results[0].url)break;
     st.hits.push(...d.results);
-    st.more=d.results.length>0&&st.hits.length<d.total;
+    st.more=d.results.length>0&&d.has_more;
     // 取れた分から、順に表示する
     el.innerHTML=view(st);
     if(!st.more)break;
