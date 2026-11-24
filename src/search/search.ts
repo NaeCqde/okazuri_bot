@@ -18,25 +18,27 @@ export async function searchMultiple(
     const english: (string | null)[] = [];
     const japanese: (string | null)[] = [];
 
-    for (const q of new Set(queries)) {
-        let key = q;
-        let results: SearchResult[] = [];
-        let translation: string | null = null;
-        let translationJa: string | null = null;
+    // the queries do not depend on each other: they are asked together, and put in the order of the queries
+    const answers = await Promise.all(
+        [...new Set(queries)].map(async (q) => {
+            try {
+                return await searchOkazuri(api, q);
+            } catch (e: any) {
+                if (
+                    !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
+                        (e as Error).message
+                    )
+                ) {
+                    throw e;
+                }
 
-        try {
-            ({ query: key, results, translation, translationJa } = await searchOkazuri(api, q));
-        } catch (e: any) {
-            if (
-                !['okazuri: Unsupported website', 'okazuri: Title not found'].includes(
-                    (e as Error).message
-                )
-            ) {
-                throw e;
+                return { query: q, results: [] as SearchResult[], translation: null, translationJa: null };
             }
-        }
+        })
+    );
 
-        resultMap[key] = results;
+    for (const { query, results, translation, translationJa } of answers) {
+        resultMap[query] = results;
         english.push(translation);
         japanese.push(translationJa);
     }

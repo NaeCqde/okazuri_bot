@@ -155,19 +155,21 @@ function languageRank(language: string[] | undefined): number {
     return rank < 0 ? 0 : rank + 1;
 }
 
+// building a collator is far dearer than comparing with it: one for the whole Worker
+const COLLATOR = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
+
 /**
  * 結果を、言語(国旗のないものを先に、国旗のあるものは LANGUAGE_FLAGS の順)、サイト名、タイトルの順に並べる。同じなら元の並びのまま。
  */
 export function sortResults<T extends { title: string; website?: string; language?: string[] }>(results: T[]): T[] {
-    const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
-
+    // the title is parsed once per result, not once per comparison
     return results
-        .map((result, index) => ({ result, index, rank: languageRank(result.language) }))
+        .map((result, index) => ({ result, index, rank: languageRank(result.language), text: parseTitle(result.title ?? '').text }))
         .sort(
             (a, b) =>
                 a.rank - b.rank ||
-                collator.compare(a.result.website ?? '', b.result.website ?? '') ||
-                collator.compare(parseTitle(a.result.title ?? '').text, parseTitle(b.result.title ?? '').text) ||
+                COLLATOR.compare(a.result.website ?? '', b.result.website ?? '') ||
+                COLLATOR.compare(a.text, b.text) ||
                 a.index - b.index
         )
         .map(({ result }) => result);

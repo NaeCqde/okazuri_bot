@@ -109,11 +109,18 @@ async function numberEntries(db: DrizzleD1Database): Promise<IndexedNumber[]> {
 export async function searchNumberNames(db: DrizzleD1Database, query: string): Promise<string[]> {
     const q = nameKey(query);
 
-    return (await numberEntries(db))
-        .filter((entry) => matches(q, entry.key))
-        .sort((a, b) => tier(q, a.key) - tier(q, b.key))
-        .slice(0, MAX_CHOICES)
-        .map((entry) => entry.name);
+    // the matches whose name ends like the input first, each group in its own order (what a stable sort by tier gives), and only as many as
+    // the choices: no sort, and `tier` is asked once per entry
+    const first: string[] = [];
+    const rest: string[] = [];
+
+    for (const entry of await numberEntries(db)) {
+        if (!matches(q, entry.key)) continue;
+
+        (tier(q, entry.key) === 0 ? first : rest).push(entry.name);
+    }
+
+    return first.concat(rest).slice(0, MAX_CHOICES);
 }
 
 /**

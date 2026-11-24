@@ -13,13 +13,7 @@ export async function rewrite(api: string, text: string) {
     return text;
 }
 
-const hasJapanese = (target: string) => {
-    // ひらがな
-    if (/\p{Script=Hiragana}/u.test(target)) return true;
-    // カタカナ
-    if (/\p{Script=Katakana}/u.test(target)) return true;
-    // 漢字
-    if (/\p{Script=Han}/u.test(target)) return true;
+// ひらがな、カタカナ、漢字のどれか
+const JAPANESE = /[\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Han}]/u;
 
-    return false;
-};
+const hasJapanese = (target: string) => JAPANESE.test(target);
