@@ -73,7 +73,7 @@ function show(st){
   if(st.ja&&d.query.replace(/\s+/g,' ')!==st.q.trim().toLowerCase())h+='<div>Romaji　<b>'+esc(d.query)+'</b></div>';
   if(d.translation?.text)h+='<div>English　<b>'+esc(d.translation.text)+'</b></div>';
   if(d.translation_ja?.text)h+='<div>Japanese <b>'+esc(d.translation_ja.text)+'</b></div>';
-  h+='<div>'+st.hits.length+' works'+(st.more?'…':'')+'</div></div>';
+  h+='<div>'+st.hits.length+' works'+(st.more?'… <button type="button" class="btn btn-sm" data-stop="'+st.i+'">Stop</button>':'')+'</div>'+(st.stopped?'<div>Stopped. There are more; narrow the words to see the rest.</div>':st.limited?'<div>Only the first '+st.hits.length+' works are shown (the server gives up to 10,000). Narrow the words to see the rest.</div>':'')+'</div>';
   for(const g of arrange(st.hits)){
     if(g.label)h+='<div class="group">'+(g.color?'<span class="dot" style="background:'+g.color+'"></span>':'')+esc(g.label)+' <small>'+g.rows.length+'</small></div>';
     h+=items(g.rows);
@@ -86,7 +86,7 @@ function show(st){
 }
 let states=[],lastQs=[],runId=0;
 function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=view(st)})}
-const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' works loaded… <button type="button" class="btn btn-sm" data-stop="'+st.i+'">Stop</button></p>':st.stopped?'<p class="note">Stopped at '+st.hits.length+' works. There are more; narrow the words to see the rest.</p>':'');
+const view=show;
 async function one(q,bm,i){
   const el=document.getElementById('res'+i);
   if(bm){
@@ -100,6 +100,8 @@ async function one(q,bm,i){
     if(st.stop||st.run!==runId)break;
     const r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
     const d=await r.json();
+    // the server gives the first 10,000 only: what is loaded stays on the page
+    if(!r.ok&&st.hits.length){st.limited=true;break}
     if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
     if(!st.d)st.d=d;
     // offset を知らない古いサーバーは、同じ 100 件を返し続ける
@@ -113,7 +115,7 @@ async function one(q,bm,i){
   }
   if(st.run!==runId)return; // a newer search owns the element now
   // stopped by the button (or by a newer search) while more were left
-  st.stopped=st.stop&&st.more;
+  st.stopped=st.stop&&st.more&&!st.limited;
   st.more=false;
   el.innerHTML=view(st);
 }
