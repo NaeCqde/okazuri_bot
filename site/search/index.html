@@ -84,9 +84,9 @@ function show(st){
     return '<span class="Label'+(s.status==='failed'?' Label--danger':'')+'"'+(s.error?' title="'+esc(s.error)+'"':'')+'>'+esc(s.website)+' '+esc(s.status)+n+esc(e)+'</span>'}).join('')+'</div>';
   return h;
 }
-let states=[],lastQs=[];
+let states=[],lastQs=[],runId=0;
 function paint(){states.forEach((st,i)=>{const el=document.getElementById('res'+i);if(el&&st.d)el.innerHTML=view(st)})}
-const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' works loaded…</p>':'');
+const view=st=>show(st)+(st.more?'<p class="note">'+st.hits.length+' works loaded… <button type="button" class="btn btn-sm" data-stop="'+st.i+'">Stop</button></p>':st.stopped?'<p class="note">Stopped at '+st.hits.length+' works. There are more; narrow the words to see the rest.</p>':'');
 async function one(q,bm,i){
   const el=document.getElementById('res'+i);
   if(bm){
@@ -94,21 +94,26 @@ async function one(q,bm,i){
     if(!m.ok){el.innerHTML='<p class="note">'+esc(md.detail||'Error')+'</p>';return}
     q=md.results[0].issue.name.replace(/年|月号?/g,' ');
   }
-  const st={q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null};states[i]=st;
+  const st={i,run:runId,q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null,stop:false,stopped:false};states[i]=st;
   // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
   for(let offset=0;;offset+=100){
+    if(st.stop||st.run!==runId)break;
     const r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
     const d=await r.json();
     if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
     if(!st.d)st.d=d;
     // offset を知らない古いサーバーは、同じ 100 件を返し続ける
     if(st.hits.length&&d.results.length&&st.hits[0].url===d.results[0].url)break;
+    if(st.stop||st.run!==runId)break;
     st.hits.push(...d.results);
     st.more=d.results.length>0&&d.has_more;
     // 取れた分から、順に表示する
     el.innerHTML=view(st);
     if(!st.more)break;
   }
+  if(st.run!==runId)return; // a newer search owns the element now
+  // stopped by the button (or by a newer search) while more were left
+  st.stopped=st.stop&&st.more;
   st.more=false;
   el.innerHTML=view(st);
 }
@@ -117,7 +122,7 @@ async function run(){
   if(!qs.length)return;
   lastQs=qs;
   history.replaceState(null,'',queryOf(qs));
-  states=[];
+  states=[];runId++;
   out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">Searching… (a new word takes a little while)</p></div></section>').join('');
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">The request failed.</p>'})));
 }
@@ -130,6 +135,7 @@ $('#share').onclick=async()=>{
   try{await navigator.clipboard.writeText(u);toast('Link copied')}
   catch(e){prompt('URL',u)}
 };
+out.addEventListener('click',e=>{const b=e.target.closest('[data-stop]');if(b&&states[+b.dataset.stop])states[+b.dataset.stop].stop=true});
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;

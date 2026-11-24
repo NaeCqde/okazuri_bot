@@ -234,14 +234,14 @@ test('splitTextWithin keeps at most the given number of messages and says how ma
     assert.equal(within.length, 2);
     assert.ok(within.every((m) => m.length <= 2000));
     const last = within[1].split('\n').at(-1)!;
-    assert.match(last, /^…残り\d+件＋はWEBでご覧ください$/);
+    assert.match(last, /^…残り\d+件＋はウェブでご覧ください$/);
     const kept = within.join('\n').split('\n').filter((l) => /^\d+\. /.test(l)).length;
     assert.equal(kept + Number(last.match(/\d+/)![0]), 61, 'every link is either shown or counted');
     assert.ok(!within[1].split('\n').at(-2)!.startsWith('#'), 'no heading is left alone before the note');
 
     // with a URL the whole note line is the link
     const linked = splitTextWithin(lines, 2, 2000, 'https://example.com/search?q=a&by_magazine=false');
-    assert.match(linked[1].split('\n').at(-1)!, /^\[…残り\d+件＋はWEBでご覧ください\]\(<https:\/\/example\.com\/search\?q=a&by_magazine=false>\)$/);
+    assert.match(linked[1].split('\n').at(-1)!, /^\[…残り\d+件＋はウェブでご覧ください\]\(<https:\/\/example\.com\/search\?q=a&by_magazine=false>\)$/);
 
     // what fits is not touched
     const small = ['# 検索結果', '## q', '1. a'];
