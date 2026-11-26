@@ -16,14 +16,19 @@ hono.mount('/api/bot/interaction', bot.fetch.bind(bot));
 // The search page is a static asset; with ?q= the title of the link embed (Open Graph) names the searched words
 hono.get('/search', (c) => searchPage(c.req.raw, c.env, false));
 hono.get('/ja/search', (c) => searchPage(c.req.raw, c.env, true));
+// A Cloudflare rule (URL Rewrite, when the query has q=) puts /__og in front of the path of a search with words, so only those reach the Worker
+// and a search page with no words is a free static asset. The original path is given back here.
+hono.get('/__og/search', (c) => searchPage(c.req.raw, c.env, false));
+hono.get('/__og/ja/search', (c) => searchPage(c.req.raw, c.env, true));
 hono.route('/', endpoints);
 
 const MAX_TITLE_QUERIES = 3;
 const MAX_QUERY_CHARS = 40;
 
 async function searchPage(request: Request, env: Env, ja: boolean): Promise<Response> {
-    const response = await env.ASSETS.fetch(request);
     const url = new URL(request.url);
+    url.pathname = url.pathname.replace(/^\/__og(?=\/)/, '');
+    const response = await env.ASSETS.fetch(new Request(url, request));
     const queries = url.searchParams
         .getAll('q')
         .map((q) => q.trim().slice(0, MAX_QUERY_CHARS))
