@@ -125,6 +125,8 @@ async function run(){
   if(!qs.length)return;
   lastQs=qs;
   history.replaceState(null,'',queryOf(qs));
+  // the title of the tab shows the search words too (on the button, and when a URL with words is opened)
+  document.title=qs.join(' / ')+' | '+baseTitle;
   states=[];runId++;
   out.innerHTML=qs.map((q,i)=>'<section class="query">'+(qs.length>1?'<h2 class="sec">'+esc(q)+'</h2>':'')+'<div id="res'+i+'"><p class="note">Searching… (a new word takes a little while)</p></div></section>').join('');
   await Promise.all(qs.map((q,i)=>one(q,bm,i).catch(()=>{document.getElementById('res'+i).innerHTML='<p class="note">The request failed.</p>'})));
@@ -139,6 +141,7 @@ $('#share').onclick=async()=>{
   catch(e){prompt('URL',u)}
 };
 out.addEventListener('click',e=>{const b=e.target.closest('[data-stop]');if(b&&states[+b.dataset.stop])states[+b.dataset.stop].stop=true});
+const baseTitle=document.title;
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;
