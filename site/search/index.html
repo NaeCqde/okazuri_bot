@@ -95,12 +95,14 @@ async function one(q,bm,i){
     if(!m.ok){el.innerHTML='<p class="note">'+esc(md.detail||'Error')+'</p>';return}
     q=md.results[0].issue.name.replace(/年|月号?/g,' ');
   }
-  const st={i,run:runId,q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null,stop:false,stopped:false};states[i]=st;
+  const st={i,run:runId,q,ja:/[぀-ヿ㐀-鿿]/.test(q),hits:[],d:null,stop:false,stopped:false,ctl:new AbortController()};states[i]=st;
   // 1 回に取れるのは 100 件まで。全部取れるまで、offset をずらして繰り返す
   for(let offset=0;;offset+=100){
     if(st.stop||st.run!==runId)break;
-    const r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q));
-    const d=await r.json();
+    let r,d;
+    // the Stop button aborts the request that is on the way: it does not wait for the page to come
+    try{r=await fetch('/api/v1/okazuri/search?live=off&limit=100&offset='+offset+'&q='+encodeURIComponent(q),{signal:st.ctl.signal});d=await r.json()}
+    catch(e){if(st.stop||st.run!==runId)break;throw e}
     // the server gives the first 10,000 only: what is loaded stays on the page
     if(!r.ok&&st.hits.length){st.limited=true;break}
     if(!r.ok){el.innerHTML='<p class="note">'+esc(d.detail||'Error')+'</p>';return}
@@ -142,7 +144,10 @@ $('#share').onclick=async()=>{
   try{await navigator.clipboard.writeText(u);toast('Link copied')}
   catch(e){prompt('URL',u)}
 };
-out.addEventListener('click',e=>{const b=e.target.closest('[data-stop]');if(b&&states[+b.dataset.stop])states[+b.dataset.stop].stop=true});
+// pointerdown, not click: the page is drawn again while the results come, and a button that is replaced between the press and the release gets no click
+function stopRun(e){const b=e.target.closest('[data-stop]'),st=b&&states[+b.dataset.stop];if(!st||st.stop)return;st.stop=true;st.ctl.abort();b.disabled=true;b.textContent='Stopping…'}
+out.addEventListener('pointerdown',stopRun);
+out.addEventListener('click',stopRun);
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
 const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
 if(hash.get('by_magazine')==='true')$('#bm').checked=true;
