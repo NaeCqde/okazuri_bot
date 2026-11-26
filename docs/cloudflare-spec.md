@@ -67,7 +67,7 @@
 | サイト | 観測 | 推測される要因 |
 |---|---|---|
 | HentaiName | ブラウザの User-Agent のときだけチャレンジ。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら通る | カスタムルールの穴（素の User-Agent は、ルールの対象外になっている） |
-| abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | カスタムルールの穴（検索エンジンの Referer は、ルールの対象外になっている） |
+| abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403。vultr と Workers は、IP で止められていて、`Referer` を付けても通らない | カスタムルールの穴（検索エンジンの Referer は、ルールの対象外になっている）。vultr と Workers は、IP による遮断 |
 | HentaiOMG、HentaiCore、twivideo.net | 3 サイトとも Under Attack がオン。HentaiOMG と HentaiCore は、操作が要るチャレンジ（Turnstile）が出るので、突破せず対象から外している | サイトの設定（Under Attack） |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件がある（5.1） | クライアントの指紋とサイトの設定の組み合わせ |
 
