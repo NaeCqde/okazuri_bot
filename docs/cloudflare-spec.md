@@ -54,12 +54,14 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 
 ### 2.4 Linux サーバーでの結果（観測、NukiBooks、HTTP/2）
 
-データセンターの Linux サーバー 3 台から取りました。
+データセンターの Linux サーバー 3 台から取りました。1 台につき、Referer あり・なしで、2 回ずつです。
 
 | クライアント | 結果（3 台とも） |
 |---|---|
 | reqwest（rustls、既定） | 200 |
-| wreq（指紋なし、Chrome 147、Safari 18.5） | 200 |
+| wreq（指紋なし） | 200 |
+| wreq + Chrome 147 の指紋 | 200 |
+| wreq + Safari 18.5 の指紋 | 200 |
 
 - Mac では 403 だった wreq（指紋なし）が、Linux サーバーでは 200 でした。指紋だけでなく、IP や回線の違いも効いています。
 - 1 台（vultr）では、Debian の curl（OpenSSL）は 403 でした。ヘッダー、HTTP のバージョン、暗号スイートを変えても、通りませんでした。同じ台で reqwest と wreq は 200 でした。
