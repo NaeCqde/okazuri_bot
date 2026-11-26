@@ -147,8 +147,6 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 
 ## 5. Cloudflare Workers で試した結果
 
-Workers の仕様は、この書類には書きません。試して観測したことだけを書きます。
-
 ### 5.1 `fetch()` で、Cloudflare 配下のサイトを取る（観測）
 
 `wrangler dev --remote` の `fetch` で、各サイトを 2 回ずつ取りました。
