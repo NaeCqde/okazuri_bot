@@ -8,7 +8,7 @@
 ## 1. 対象
 
 - Cloudflare のプロキシ経由
-- Under Attack モードはオフ（twivideo.net を除く。3 章）
+- Under Attack モードはオフ（HentaiOMG、HentaiCore、twivideo.net を除く。3 章）
 - 素の HTTP クライアントで取ると 403
 
 ## 2. 全般の傾向
@@ -68,7 +68,7 @@
 |---|---|---|
 | HentaiName | ブラウザの User-Agent のときだけチャレンジ。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら通る | User-Agent を見るルール |
 | abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | Referer を見るルール |
-| HentaiOMG、HentaiCore、twivideo.net | HentaiOMG と HentaiCore：操作が要るチャレンジ（Turnstile）。突破しないので対象から外している。twivideo.net：Under Attack がオン | サイトの設定 |
+| HentaiOMG、HentaiCore、twivideo.net | 3 サイトとも Under Attack がオン。HentaiOMG と HentaiCore は、操作が要るチャレンジ（Turnstile）が出るので、突破せず対象から外している | サイトの設定（Under Attack） |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件がある（5.1） | クライアントの指紋とサイトの設定の組み合わせ |
 
 - 2 章の NukiBooks の結果が、NukiBooks 自身の設定か、Cloudflare 共通の判定かは、切り分けていない
