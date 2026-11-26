@@ -10,7 +10,7 @@ okazuri-search-api で、Cloudflare 配下のサイトを取りに行くため�
 ## 1. 対象のサイト
 
 - Cloudflare のプロキシを通っています。
-- Under Attack モードは、オフです（twivideo.net の過去の記録を除く。6 章）。
+- Under Attack モードは、オフです（twivideo.net を除く。3 章）。
 - 素の HTTP クライアントで取りに行くと、403 が返ります。
 
 ## 2. 普通の説明：サイトごとの設定に関係なく見えた傾向
@@ -77,7 +77,7 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | abuseipdb.com | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
 | HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）が出ます。突破しないので、対象から外しています。 | サイトの設定 |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件があります（5.1 の表）。 | クライアントの指紋とサイトの設定の組み合わせ |
-| twivideo.net | 当時はチャレンジなしで、最近 Under Attack がオンになりました（6 章）。 | サイトの設定の変更 |
+| twivideo.net | 過去に Under Attack がオフの時期があり、最近オンになったとのことです。本番の Workers では、通っていませんでした（6 章）。 | サイトの設定（Under Attack） |
 
 - 2 章の NukiBooks の結果が、NukiBooks 自身の設定によるものか、Cloudflare の共通の判定によるものかは、切り分けていません。ほかのサイトで、同じ結果になるとは限りません。
 - 通らないサイトでは、ブラウザの User-Agent と素の User-Agent、HTTP/2 と HTTP/1.1 を、それぞれ試してください。
@@ -162,6 +162,17 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 - 通るのは、HentaiName（既定の User-Agent）だけでした。HentaiName は、3 章のとおり、User-Agent で結果が変わるサイトです。ほかの 4 サイトは、再試行しても 403 でした。
 - 当初「HentaiName は Workers では動かなかった」とされていましたが、これは誤りでした。サイトは Under Attack モードではありませんでした。
 
+同じ Worker を、`wrangler dev --local`（手元の Mac で動かす）でも試しました（NukiBooks だけ、3 回ずつ）。
+
+| 条件 | 結果 |
+|---|---|
+| 既定の User-Agent | 403、3 回とも（「Attention Required! \| Cloudflare」） |
+| ブラウザ風ヘッダー | 200、3 回とも（本物のページ） |
+
+- 同じヘッダーで、`--remote`（Cloudflare 上）は 403、`--local`（Mac から出る）は 200 でした。
+- 5.1 の `--remote` の結果は、Workers が本番で動くときの結果に近いものです。`--local` の 200 は、Mac の IP と、手元のランタイムの結果です。
+- IP と TLS の指紋のどちらが効いたかは、切り分けていません。
+
 ### 5.2 Workers の `connect()` で、SOCKS5 を話した実験（観測）
 
 Workers の `fetch` にはプロキシの設定がないので、`connect()`（`cloudflare:sockets`）で、自分で SOCKS5 を話しました。経由先は、contabo 上のプロキシです。
@@ -172,17 +183,14 @@ Workers の `fetch` にはプロキシの設定がないので、`connect()`（`
 - **経由先のサーバーで TLS を行う形では、動きました。** Worker が平文の HTTP をサーバーに送り、サーバーが目的地へ TLS で取りに行きます。NukiBooks では 403 でした。理由は、推測です（そのサーバーの Python（OpenSSL）の指紋が、止められたとみられます）。
 - **Workers の送信元の IP は、公開されている Cloudflare の範囲（`ips-v4`）の外でした**（104.28.x.x が見えました）。そのため、経由先の許可を、Cloudflare の範囲で絞る方法は使えませんでした。経由先には、認証をかけました。
 
-## 6. 過去の記録：Workers で、別のサイトを取っていた方法（現在は再現できていません）
+## 6. 過去の記録：twivideo.net が通ったように見えた件（ローカルだけの結果だった）
 
-過去に、別の Cloudflare Workers のプロジェクトが、twivideo.net を取っていました。当時、このサイトは Under Attack モードがオフでした（最近、オンになりました）。
+別のプロジェクト（heros）が、Cloudflare Workers で twivideo.net を取っていて、通っていると考えられていました。2026-11-27 に、本番の heros を確かめたところ、**Cloudflare のプロキシを突破できていませんでした**。成功に見えたのは、手元で動かしている間だけでした。
 
-注意：この章は、過去の記録です。このサイトは今は Under Attack がオンで、今の Workers では確かめられません。5.1 の今の結果と合わないので、この章の方法をそのまま使わないでください。
-
-- **クライアント。** Workers の標準 `fetch` だけです。TLS の細工も、プロキシも、クッキー取得の仕組みもありません。
-- **ヘッダー。** Edge/Chrome 134 風の一式でした。`Accept`、`Accept-Language: ja`、`Accept-Encoding: gzip, deflate, br, zstd`、`Sec-Ch-Ua*` 一式、`Sec-Fetch-Dest/Mode/Site/User` です。
-- **再試行。** 初回だけ 403 が返ることがあるので、失敗したら 1 回だけやり直していました。
-- **TLS セッション再開の仮説（Workers の外での調査）。** Node と curl で調べたところ、毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。セッション再開ができる 2 回目以降は、ほぼ 200 でした。
-- **この仮説は、NukiBooks では成り立ちません**（2.2 の「TLS セッション再開」）。サイトごとに違います。
+- **出どころ。** Windows ノートの Claude の記録（2026-10-28 の 04:10〜05:05）です。手元の Node（`node:https`）と本物の curl で試した結果で、Workers で試したものではありません。記録には「Workers の fetch がどう扱われるかは、ここからは分かりません」と書かれています。私たちは、この記録を再現していません。
+- **記録の内容。** 毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。セッションを再利用できる状態（同じプロセスの 2 回目以降）は、ほぼ 200 でした。`Referer` や `Origin` を足しても、変わりませんでした。この結果と、「TLS セッション再開」という説明は、手元の Node と curl のものです。説明は、のちに私たち（Claude）が付けた解釈で、確かめていません。
+- **今の理解。** 手元（`--local`、または手元の Node と curl）で通り、本番の Workers で通らない、という違いがありました。5.1 の `--local` と `--remote` の差と、同じ形です。
+- **この章の方法は、使えません。** 本番の Workers では通りませんでした。
 
 ## 7. 結果の古さ
 
