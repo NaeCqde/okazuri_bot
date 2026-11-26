@@ -66,8 +66,8 @@
 
 | サイト | 観測 | 推測される要因 |
 |---|---|---|
-| HentaiName | ブラウザの User-Agent のときだけチャレンジ。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら通る | User-Agent を見るルール |
-| abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | Referer を見るルール |
+| HentaiName | ブラウザの User-Agent のときだけチャレンジ。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら通る | カスタムルールの穴（素の User-Agent は、ルールの対象外になっている） |
+| abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | カスタムルールの穴（検索エンジンの Referer は、ルールの対象外になっている） |
 | HentaiOMG、HentaiCore、twivideo.net | 3 サイトとも Under Attack がオン。HentaiOMG と HentaiCore は、操作が要るチャレンジ（Turnstile）が出るので、突破せず対象から外している | サイトの設定（Under Attack） |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件がある（5.1） | クライアントの指紋とサイトの設定の組み合わせ |
 
@@ -189,7 +189,7 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 ## 6. twivideo.net（heros）：Workers の本番では通らない
 
 - 本番の heros は、Cloudflare のプロキシを突破できていない（確認：2026-11-27）
-- Workers で通らないのは、サイトの設定によらず、どのサイトでも同じ
+- Workers の本番（`--remote`）は、どのサイトでも通らない。通るのは、サイトのカスタムルールに穴がある場合だけ（3 章の HentaiName）
 - 通るのは手元で動かしたときだけ。5.1 と 5.2 の `--remote` と `--local` の差と同じ形
 - 手元の結果の出どころ：Windows ノートの Claude の記録（2026-10-28 04:10〜05:05）
   - 手元の Node（`node:https`）と本物の curl での結果。Workers では未実施
