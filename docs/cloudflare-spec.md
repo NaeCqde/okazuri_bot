@@ -74,7 +74,7 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | サイト | 観測 | 推測される要因 |
 |---|---|---|
 | HentaiName | ブラウザの User-Agent のときだけチャレンジが出ます。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら、通ります。 | User-Agent を見るルール |
-| 検索エンジンの Referer で通るサイト（1 つ） | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
+| abuseipdb.com | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
 | HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）が出ます。突破しないので、対象から外しています。 | サイトの設定 |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件があります（5.1 の表）。 | クライアントの指紋とサイトの設定の組み合わせ |
 | twivideo.net | 当時はチャレンジなしで、最近 Under Attack がオンになりました（6 章）。 | サイトの設定の変更 |
