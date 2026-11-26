@@ -1,60 +1,53 @@
-# Cloudflare 配下のサイトを取るときに分かったこと
+# Cloudflare 配下のサイトの取得結果
 
-okazuri-search-api で、Cloudflare 配下のサイトを取りに行くために調べたことの記録です。次の 2 種類に分けて書きます。
+- 観測：試して確かめた結果
+- 推測：確かめていない説明
+- 測定は 2026-11。Cloudflare 側の設定や判定が変わると、結果も変わる
+- 各サイトの Cloudflare の設定（カスタムルール、しきい値）は見えない。「サイトの設定」は推測
 
-- **観測：** 自分で試して確かめた結果です。日付と条件が違えば、変わることがあります。
-- **推測：** 観測から考えただけで、確かめていません。
+## 1. 対象
 
-**この書類の大きな限界。** 調べた側は、各サイトの Cloudflare の設定（カスタムルール、しきい値）を見られません。「サイトの設定による」と書いた分は、結果からの推測です。
+- Cloudflare のプロキシ経由
+- Under Attack モードはオフ（twivideo.net を除く。3 章）
+- 素の HTTP クライアントで取ると 403
 
-## 1. 対象のサイト
+## 2. 全般の傾向
 
-- Cloudflare のプロキシを通っています。
-- Under Attack モードは、オフです（twivideo.net を除く。3 章）。
-- 素の HTTP クライアントで取りに行くと、403 が返ります。
+どのサイトでも似た傾向。通る・通らないのしきい値は、サイトの設定しだいの可能性あり（3 章）。
 
-## 2. 普通の説明：サイトごとの設定に関係なく見えた傾向
+### 2.1 結果に効く要素（観測）
 
-どのサイトでも、似た傾向が見えたものです。ただし、通る・通らないのしきい値は、サイトの設定しだいかもしれません（3 章）。
-
-### 2.1 結果に効いたもの（観測）
-
-同じ条件なら、毎回同じ結果でした。
-
-| 要素 | 観測 |
-|---|---|
-| TLS の ClientHello（暗号スイート、拡張、ALPN） | 効きます。同じ OS でも、クライアントごとに結果が違います（2.3）。 |
-| HTTP のバージョン | クライアントごとに、通るほうが違います（2.3）。 |
-| 送信元の IP | 同じクライアントでも、Mac では 403、Linux のサーバーでは 200 になる例があります（2.4）。 |
-| リクエストのヘッダー（`Accept`、`Sec-CH-UA`、`Sec-Fetch-*`） | 1 つずつの効果は、切り分けていません。念のため付けています。 |
+- TLS の ClientHello（暗号スイート、拡張、ALPN）：効く。同じ OS でも、クライアントごとに結果が違う（2.3）
+- HTTP のバージョン：クライアントごとに、通る側が違う（2.3）
+- 送信元の IP：同じクライアントで、Mac は 403、Linux のサーバーは 200 の例あり（2.4）
+- リクエストのヘッダー（`Accept`、`Sec-CH-UA`、`Sec-Fetch-*`）：1 つずつの効果は未切り分け。念のため付けている
+- 同じ条件なら、毎回同じ結果
 
 ### 2.2 効かなかったもの（観測、NukiBooks）
 
-- **暗号スイートの数や並び。** curl は減らすと通りましたが、wreq（指紋なし）は 4〜28 個のどれでも通りませんでした。
-- **TLS セッション再開。** 毎回完全なハンドシェイクをしても、reqwest は 10 回続けて 200 でした。
+- 暗号スイートの数や並び：curl は減らすと通る。wreq（指紋なし）は 4〜28 個のどれでも通らない
+- TLS セッション再開：毎回完全なハンドシェイクでも、reqwest は 10 回続けて 200
 
-### 2.3 クライアントごとの結果（観測、HTTP/2 を既定とする）
-
-NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る」とは言えません。
+### 2.3 クライアント別の結果（観測、NukiBooks、Mac、HTTP/2 が既定）
 
 | クライアント | 結果 |
 |---|---|
-| Rust reqwest（rustls）、HTTP/2 | 200。HTTP/1.1 では全サイトが 403 でした。 |
+| Rust reqwest（rustls）、HTTP/2 | 200（HTTP/1.1 は全サイトで 403） |
 | macOS 標準の curl（SecureTransport）、既定の HTTP/2 | 403（暗号スイート 49 個） |
 | 同、HTTP/1.1 | 200 |
-| 同、`--ciphers` で暗号スイートを 1 種類以上に絞る | 200 |
+| 同、`--ciphers` で 1 種類以上に絞る | 200 |
 | Go（net/http） | 暗号スイート 3〜25 個で 200 |
 | Rust wreq（BoringSSL、指紋なし） | 403 |
 | wreq + Chrome / Firefox / Safari の指紋 | 200 |
 | Node の `fetch`（undici） | 403（暗号スイート 4〜52 個すべて） |
 
-手元のクライアントで、HTTP/2 と HTTP/1.1 の両方を試してください。
-
-**推測：** 送られる ClientHello は、curl の HTTP/2 と HTTP/1.1 で ALPN だけが違います（JA4 の `h2` と `h1`）。暗号スイートを変えると、JA4 の中ほどのハッシュも変わります。「JA4 の指紋ごとに、Cloudflare が評価している」と考えると、結果が説明できます。
+- 「HTTP/2 にすれば通る」とは言えない
+- 手元のクライアントで、HTTP/2 と HTTP/1.1 の両方を試す
+- 推測：curl の HTTP/2 と HTTP/1.1 は、ClientHello の ALPN だけが違う（JA4 の `h2` と `h1`）。暗号スイートを変えると、JA4 の中ほどのハッシュも変わる。「JA4 の指紋ごとに評価している」と考えると説明がつく
 
 ### 2.4 Linux サーバーでの結果（観測、NukiBooks、HTTP/2）
 
-データセンターの Linux サーバー 3 台から取りました。1 台につき、Referer あり・なしで、2 回ずつです。
+3 台のデータセンターの Linux サーバー。1 台につき、Referer あり・なしで 2 回ずつ。
 
 | クライアント | 結果（3 台とも） |
 |---|---|
@@ -63,24 +56,25 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | wreq + Chrome 147 の指紋 | 200 |
 | wreq + Safari 18.5 の指紋 | 200 |
 
-- Mac では 403 だった wreq（指紋なし）が、Linux サーバーでは 200 でした。指紋だけでなく、IP や回線の違いも効いています。
-- 1 台（vultr）では、Debian の curl（OpenSSL）は 403 でした。ヘッダー、HTTP のバージョン、暗号スイートを変えても、通りませんでした。同じ台で reqwest と wreq は 200 でした。
-- 推測：IP ごとの評判が、あるとみられます。
+- Mac で 403 の wreq（指紋なし）が、Linux サーバーでは 200。指紋だけでなく、IP や回線も効く
+- vultr：Debian の curl（OpenSSL）は 403。ヘッダー、HTTP のバージョン、暗号スイートを変えても通らない。同じ台で reqwest と wreq は 200
+- 推測：IP ごとの評判がある
 
-## 3. サイトごとの設定が要因とみられるもの
+## 3. サイトごとの設定が要因とみられるもの（推測）
 
-次は、1 つのサイトで見えた、ほかと違う振る舞いです。サイトの設定（カスタムルールなど）によるとみていますが、設定は見えないので、**推測**です。
+1 つのサイトだけで見えた、ほかと違う振る舞い。
 
 | サイト | 観測 | 推測される要因 |
 |---|---|---|
-| HentaiName | ブラウザの User-Agent のときだけチャレンジが出ます。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら、通ります。 | User-Agent を見るルール |
-| abuseipdb.com | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
-| HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）が出ます。突破しないので、対象から外しています。 | サイトの設定 |
-| IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件があります（5.1 の表）。 | クライアントの指紋とサイトの設定の組み合わせ |
-| twivideo.net | 本番の Workers では通っていません（6 章）。Under Attack がオンです。 | サイトの設定（Under Attack） |
+| HentaiName | ブラウザの User-Agent のときだけチャレンジ。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら通る | User-Agent を見るルール |
+| abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | Referer を見るルール |
+| HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）。突破しないので、対象から外している | サイトの設定 |
+| IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件がある（5.1） | クライアントの指紋とサイトの設定の組み合わせ |
+| twivideo.net | 本番の Workers では通らない（6 章）。Under Attack がオン | サイトの設定 |
 
-- 2 章の NukiBooks の結果が、NukiBooks 自身の設定によるものか、Cloudflare の共通の判定によるものかは、切り分けていません。ほかのサイトで、同じ結果になるとは限りません。
-- 通らないサイトでは、ブラウザの User-Agent と素の User-Agent、HTTP/2 と HTTP/1.1 を、それぞれ試してください。
+- 2 章の NukiBooks の結果が、NukiBooks 自身の設定か、Cloudflare 共通の判定かは、切り分けていない
+- ほかのサイトで、同じ結果になるとは限らない
+- 通らないサイトでは、ブラウザの User-Agent と素の User-Agent、HTTP/2 と HTTP/1.1 を、それぞれ試す
 
 ## 4. reqwest のサンプルコード
 
@@ -91,11 +85,11 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 ```
 
-- 機能 `http2` を有効にするだけで、rustls は ALPN で `h2,http/1.1` を出します。
-- **ALPN は、手で設定しないでください。** `http2` 機能が無効のとき、手で `h2` を設定すると、実行時にパニックします。
-- `http1_only()` は呼びません。
+- 機能 `http2` を有効にするだけで、rustls は ALPN で `h2,http/1.1` を出す
+- ALPN は手で設定しない。`http2` 機能が無効のときに手で `h2` を設定すると、実行時にパニックする
+- `http1_only()` は呼ばない
 
-`main.rs`（実際に動かして、HTTP/2 と 200 を確認しました）:
+`main.rs`（実行して、HTTP/2 と 200 を確認）:
 
 ```rust
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, ACCEPT, ACCEPT_LANGUAGE, UPGRADE_INSECURE_REQUESTS, USER_AGENT};
@@ -138,18 +132,16 @@ async fn main() -> reqwest::Result<()> {
 }
 ```
 
-出力は、次のとおりでした。
+出力:
 
 ```
 https://nukibooks.com/?s=a -> 200 OK HTTP/2.0
 https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 ```
 
-## 5. Cloudflare Workers で試した結果
+## 5. Cloudflare Workers の実験
 
-### 5.1 `fetch()` で、Cloudflare 配下のサイトを取る（観測）
-
-`wrangler dev --remote` の `fetch` で、各サイトを 2 回ずつ取りました。
+### 5.1 `wrangler dev --remote` の `fetch()`（観測、各サイト 2 回ずつ）
 
 | サイト | 既定の User-Agent | ブラウザ風ヘッダー |
 |---|---|---|
@@ -159,38 +151,49 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 | NukiBooks | 403 | 403（チャレンジ） |
 | HentaiPaw | 403 | 403 |
 
-- 通ったのは、HentaiName（既定の User-Agent）だけです（3 章）。ほかの 4 サイトは、再試行しても 403 でした。
+- 通ったのは HentaiName（既定の User-Agent）だけ（3 章）
+- ほかの 4 サイトは、再試行しても 403
 
-### 5.2 `wrangler dev --local` の `fetch()`（NukiBooks、3 回ずつ）
+### 5.2 `wrangler dev --local` の `fetch()`（観測、NukiBooks、3 回ずつ）
 
 | 条件 | 結果 |
 |---|---|
 | 既定の User-Agent | 403（「Attention Required! \| Cloudflare」） |
 | ブラウザ風ヘッダー | 200（本物のページ） |
 
-- 同じヘッダーで、`--remote` は 403、`--local` は 200 です。
-- IP（`--local` は Mac から出る）と TLS の指紋のどちらが効いたかは、切り分けていません。
+- 同じヘッダーで、`--remote` は 403、`--local` は 200
+- IP（`--local` は Mac から出る）と TLS の指紋のどちらが効いたかは、未切り分け
 
-### 5.3 Workers の `connect()` で、SOCKS5 を話した実験（観測）
+### 5.3 `connect()` で SOCKS5（観測、経由先は contabo のプロキシ）
 
-Workers の `fetch` にはプロキシの設定がないので、`connect()`（`cloudflare:sockets`）で、自分で SOCKS5 を話しました。経由先は、contabo 上のプロキシです。
+- Workers の `fetch` にはプロキシ設定がないので、`connect()`（`cloudflare:sockets`）で SOCKS5 を話した
+- SOCKS5 の手順は通る
+  - あいさつ：`05 01 02`
+  - 認証：RFC 1929
+  - 接続の依頼：`05 01 00 03` + ホスト名の長さ + ホスト名 + ポート
+- `startTls()` で TLS を始めると、Cloudflare 配下のサイトとはつながらない
+  - プロキシ側で記録した ClientHello に、SNI がない
+  - `expectedServerHostname` を渡しても、SNI は入らない
+  - Cloudflare 配下のサイトは `handshake_failure` で閉じる
+  - SNI がなくても答えるサイトは通る
+- `startTls()` の仕様は未確認
+  - SNI が入らない理由（接続先に IP を渡したためか、仕様か）は不明
+  - 暗号化の範囲も、公式資料の原文で未確認
+  - 上の結果は、この実験の範囲だけのもの
+- 経由先のサーバーで TLS を行う形（Worker が平文の HTTP を送り、サーバーが TLS で取る）は動く
+  - NukiBooks は 403
+  - 推測：サーバーの Python（OpenSSL）の指紋が止められている
+- Workers の送信元 IP は、公開の `ips-v4` の外（104.28.x.x）
+  - Cloudflare の範囲で、経由先の許可を絞る方法は使えない
+  - 経由先には認証をかけた
 
-- **SOCKS5 の手順は、通りました。** 順番は、あいさつ（`05 01 02`）、認証（RFC 1929）、接続の依頼（`05 01 00 03` + ホスト名の長さ + ホスト名 + ポート）です。
-- **そのあと `startTls()` で TLS を始めると、Cloudflare 配下のサイトとは、つながりませんでした。** プロキシ側で ClientHello を記録したところ、SNI が入っていませんでした。`expectedServerHostname` を渡しても、入りませんでした。Cloudflare 配下のサイトは、`handshake_failure` で閉じました。SNI がなくても答えるサイトは、通りました。
-- **`startTls()` の仕様は、確かめていません。** SNI が入らなかった理由（接続先に IP を渡したためか、`startTls()` の仕様か）は、分かっていません。`startTls()` が、どこからどこまでを暗号化するかも、公式の資料の原文で確かめていません。上の結果は、この実験の範囲だけのものです。
-- **経由先のサーバーで TLS を行う形では、動きました。** Worker が平文の HTTP をサーバーに送り、サーバーが目的地へ TLS で取りに行きます。NukiBooks では 403 でした。理由は、推測です（そのサーバーの Python（OpenSSL）の指紋が、止められたとみられます）。
-- **Workers の送信元の IP は、公開されている Cloudflare の範囲（`ips-v4`）の外でした**（104.28.x.x が見えました）。そのため、経由先の許可を、Cloudflare の範囲で絞る方法は使えませんでした。経由先には、認証をかけました。
+## 6. twivideo.net（heros）：Workers の本番では通らない
 
-## 6. twivideo.net（heros）：Workers の本番では通っていない
-
-- 2026-11-27 に、本番の heros が Cloudflare のプロキシを突破できていないことを確認しました。
-- 通ったのは、手元で動かしたときだけです。5.1 と 5.2 の `--remote` と `--local` の差と、同じ形です。
-- 手元の結果の出どころは、Windows ノートの Claude の記録（2026-10-28 の 04:10〜05:05）です。手元の Node（`node:https`）と本物の curl で試したもので、Workers では試していません。
-  - 毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。
-  - セッションを再利用できる状態（同じプロセスの 2 回目以降）は、ほぼ 200 でした。
-  - `Referer`、`Origin` を足しても、変わりませんでした。
-- 「TLS セッション再開が原因」という説明は、Claude の解釈で、確かめていません。
-
-## 7. 結果の古さ
-
-この書類の結果は、2026-11 のものです。Cloudflare 側の設定や判定が変わると、結果も変わります。
+- 本番の heros は、Cloudflare のプロキシを突破できていない（確認：2026-11-27）
+- 通るのは手元で動かしたときだけ。5.1 と 5.2 の `--remote` と `--local` の差と同じ形
+- 手元の結果の出どころ：Windows ノートの Claude の記録（2026-10-28 04:10〜05:05）
+  - 手元の Node（`node:https`）と本物の curl での結果。Workers では未実施
+  - 毎回完全なハンドシェイク：6 回中 6 回が 403
+  - セッションを再利用できる状態（同じプロセスの 2 回目以降）：ほぼ 200
+  - `Referer`、`Origin` を足しても変わらない
+- 「TLS セッション再開が原因」は Claude の解釈。未確認
