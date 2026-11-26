@@ -1,43 +1,41 @@
-# Cloudflare 仕様まとめ：ボット判定と Workers
+# Cloudflare 配下のサイトを取るときに分かったこと
 
-okazuri-search-api で、Cloudflare 配下のサイトを取りに行くために調べたことの記録です。次の 3 種類に分けて書きます。
+okazuri-search-api で、Cloudflare 配下のサイトを取りに行くために調べたことの記録です。次の 2 種類に分けて書きます。
 
 - **観測：** 自分で試して確かめた結果です。日付と条件が違えば、変わることがあります。
-- **公式：** Cloudflare の資料に書いてある仕様です。数字は変わるので、使う前に資料を見直してください。
 - **推測：** 観測から考えただけで、確かめていません。
+
+**この書類の大きな限界。** 調べた側は、各サイトの Cloudflare の設定（カスタムルール、しきい値）を見られません。「サイトの設定による」と書いた分は、結果からの推測です。
 
 ## 1. 対象のサイト
 
-調べたのは、次の条件のサイトです。
-
 - Cloudflare のプロキシを通っています。
-- Under Attack モードは、オフです。
-- 全ページを止める強制チャレンジ（Turnstile など）のルールは、ありません。
+- Under Attack モードは、オフです（twivideo.net の過去の記録を除く。6 章）。
+- 素の HTTP クライアントで取りに行くと、403 が返ります。
 
-それでも、素の HTTP クライアントで取りに行くと、403 が返ります。
+## 2. 普通の説明：サイトごとの設定に関係なく見えた傾向
 
-## 2. ボット判定について分かったこと
+どのサイトでも、似た傾向が見えたものです。ただし、通る・通らないのしきい値は、サイトの設定しだいかもしれません（3 章）。
 
-### 2.1 判定に効くもの（観測）
+### 2.1 結果に効いたもの（観測）
 
-通るかどうかは、次の組み合わせで決まります。同じ条件なら、毎回同じ結果でした。
+同じ条件なら、毎回同じ結果でした。
 
 | 要素 | 観測 |
 |---|---|
-| TLS の ClientHello（暗号スイート、拡張、ALPN） | 決め手になります。同じ OS でも、クライアントごとに結果が違います。 |
-| HTTP のバージョン | クライアントごとに、通るほうが違います（2.2 の表）。 |
-| 送信元の IP | 同じクライアントでも、Mac では 403、Linux のサーバーでは 200 になる例があります。 |
-| `Referer` | 検索エンジン（Google）の Referer を付けると、通るサイトがあります。 |
-| `User-Agent` | サイトによっては、ブラウザの User-Agent にだけチャレンジを出します。 |
+| TLS の ClientHello（暗号スイート、拡張、ALPN） | 効きます。同じ OS でも、クライアントごとに結果が違います（2.3）。 |
+| HTTP のバージョン | クライアントごとに、通るほうが違います（2.3）。 |
+| 送信元の IP | 同じクライアントでも、Mac では 403、Linux のサーバーでは 200 になる例があります（2.4）。 |
 | リクエストのヘッダー（`Accept`、`Sec-CH-UA`、`Sec-Fetch-*`） | 1 つずつの効果は、切り分けていません。念のため付けています。 |
 
-### 2.2 効かなかったもの（観測）
+### 2.2 効かなかったもの（観測、NukiBooks）
 
-- **暗号スイートの数や並び。** curl は減らすと通りましたが、wreq は 4〜28 個のどれでも通りませんでした。
+- **暗号スイートの数や並び。** curl は減らすと通りましたが、wreq（指紋なし）は 4〜28 個のどれでも通りませんでした。
 - **TLS セッション再開。** 毎回完全なハンドシェイクをしても、reqwest は 10 回続けて 200 でした。
-- **`Referer` や `Origin` の追加**（あるサイトでは）。変わりませんでした。
 
-### 2.3 「HTTP/2 にすれば通る」とは言えない（観測）
+### 2.3 クライアントごとの結果（観測、HTTP/2 を既定とする）
+
+NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る」とは言えません。
 
 | クライアント | 結果 |
 |---|---|
@@ -46,7 +44,7 @@ okazuri-search-api で、Cloudflare 配下のサイトを取りに行くため�
 | 同、HTTP/1.1 | 200 |
 | 同、`--ciphers` で暗号スイートを 1 種類以上に絞る | 200 |
 | Go（net/http） | 暗号スイート 3〜25 個で 200 |
-| Rust wreq（BoringSSL、指紋なし） | 403（Mac） |
+| Rust wreq（BoringSSL、指紋なし） | 403 |
 | wreq + Chrome / Firefox / Safari の指紋 | 200 |
 | Node の `fetch`（undici） | 403（暗号スイート 4〜52 個すべて） |
 
@@ -54,33 +52,37 @@ okazuri-search-api で、Cloudflare 配下のサイトを取りに行くため�
 
 **推測：** 送られる ClientHello は、curl の HTTP/2 と HTTP/1.1 で ALPN だけが違います（JA4 の `h2` と `h1`）。暗号スイートを変えると、JA4 の中ほどのハッシュも変わります。「JA4 の指紋ごとに、Cloudflare が評価している」と考えると、結果が説明できます。
 
-### 2.4 Linux サーバーでの結果（観測、HTTP/2）
+### 2.4 Linux サーバーでの結果（観測、NukiBooks、HTTP/2）
 
-データセンターの Linux サーバー 3 台から、NukiBooks を取りました。
+データセンターの Linux サーバー 3 台から取りました。1 台につき、Referer あり・なしで、2 回ずつです。
 
 | クライアント | 結果（3 台とも） |
 |---|---|
 | reqwest（rustls、既定） | 200 |
-| wreq（指紋なし、Chrome 147、Safari 18.5） | 200 |
+| wreq（指紋なし） | 200 |
+| wreq + Chrome 147 の指紋 | 200 |
+| wreq + Safari 18.5 の指紋 | 200 |
 
 - Mac では 403 だった wreq（指紋なし）が、Linux サーバーでは 200 でした。指紋だけでなく、IP や回線の違いも効いています。
 - 1 台（vultr）では、Debian の curl（OpenSSL）は 403 でした。ヘッダー、HTTP のバージョン、暗号スイートを変えても、通りませんでした。同じ台で reqwest と wreq は 200 でした。
-- 経路上の IP の評価（IP ごとの評判）が、あるとみられます。
+- 推測：IP ごとの評判が、あるとみられます。
 
-### 2.5 `Referer`（観測）
+## 3. サイトごとの設定が要因とみられるもの
 
-あるサイトでは、Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。
+次は、1 つのサイトで見えた、ほかと違う振る舞いです。サイトの設定（カスタムルールなど）によるとみていますが、設定は見えないので、**推測**です。
 
-### 2.6 ブラウザの User-Agent にだけチャレンジを出すサイト（観測）
+| サイト | 観測 | 推測される要因 |
+|---|---|---|
+| HentaiName | ブラウザの User-Agent のときだけチャレンジが出ます。素の User-Agent（`okazuri-search-api/1.0`）と簡単な `Accept` だけなら、通ります。 | User-Agent を見るルール |
+| abuseipdb.com | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
+| HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）が出ます。突破しないので、対象から外しています。 | サイトの設定 |
+| IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件があります（5.1 の表）。 | クライアントの指紋とサイトの設定の組み合わせ |
+| twivideo.net | 当時はチャレンジなしで、最近 Under Attack がオンになりました（6 章）。 | サイトの設定の変更 |
 
-HentaiName は、ブラウザの User-Agent のときだけチャレンジを出します。素の User-Agent（例：`okazuri-search-api/1.0`）で、簡単な `Accept` だけを付けて取ると、通ります。通らないサイトでは、両方の User-Agent を試してください。
+- 2 章の NukiBooks の結果が、NukiBooks 自身の設定によるものか、Cloudflare の共通の判定によるものかは、切り分けていません。ほかのサイトで、同じ結果になるとは限りません。
+- 通らないサイトでは、ブラウザの User-Agent と素の User-Agent、HTTP/2 と HTTP/1.1 を、それぞれ試してください。
 
-### 2.7 チャレンジが出るサイトの扱い
-
-- Turnstile のような、操作が要るチャレンジは、突破しません。HentaiOMG と HentaiCore は、これに当たるので、対象から外しています。
-- チャレンジが出るのは、サイトの設定しだいです。ブラウザでクッキーを消しても、出ないサイトもありました。ブラウザで出ないことは、クライアントでも出ない保証にはなりません。
-
-## 3. reqwest のサンプルコード
+## 4. reqwest のサンプルコード
 
 `Cargo.toml`:
 
@@ -143,47 +145,9 @@ https://nukibooks.com/?s=a -> 200 OK HTTP/2.0
 https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 ```
 
-## 4. Cloudflare Workers でできること
+## 5. Cloudflare Workers で試した結果
 
-### 4.1 外へ出す通信（公式）
-
-| 手段 | できること |
-|---|---|
-| `fetch()` | HTTP(S) で取りに行く。プロキシの設定はない。TLS の指紋は、Workers のランタイムが決める（変えられない）。 |
-| `connect()`（`cloudflare:sockets`） | 生の TCP ソケット。`secureTransport: 'starttls'` で作れば、あとで `startTls()` により TLS に上げられる。 |
-| WebSocket | `fetch()` の `Upgrade` で、クライアントとしてつなげる。 |
-
-`connect()` の決まり：
-
-- `startTls()` を使うなら、`connect()` を呼ぶときに `secureTransport: 'starttls'` を指定する必要があります。あとから変えられません。
-- ソケットは、グローバルスコープで作れません。`fetch()`、`scheduled()`、`queue()`、`alarm()` などのハンドラーの中で作ります。
-- **Cloudflare の IP の範囲への、外向きの TCP ソケットは、禁止されています。** Cloudflare 配下のサイトへは、`connect()` で直接つなげません（`fetch()` を使います）。
-
-### 4.2 実行の制限（公式、2026-11 に検索で確認。使う前に資料を見てください）
-
-| 項目 | 値 |
-|---|---|
-| CPU 時間 | Free は 10 ms。有料は最大 5 分（既定 30 秒）。`fetch()` などの待ち時間は数えない。超えると Error 1102。 |
-| メモリ | 1 つの isolate で 128 MB |
-| サブリクエスト（1 回の呼び出しあたり） | Free は外部 50 件。有料は設定できる（資料で数字が食い違っていた） |
-| バンドルの大きさ | Free は 3 MB、有料は 10 MB |
-| リクエストのボディ | 100 MB（Free と Pro）、200 MB（Business） |
-| ヘッダー、URL | リクエストのヘッダー 128 KB、レスポンスのヘッダー 128 KB、URL 16 KB |
-| レスポンスのボディ | 上限なし |
-
-出典：[Workers の制限](https://developers.cloudflare.com/workers/platform/limits/)、[サブリクエストの変更履歴](https://developers.cloudflare.com/changelog/2026-02-11-subrequests-limit)、[TCP ソケット](https://developers.cloudflare.com/workers/runtime-apis/tcp-sockets/)。
-
-### 4.3 Workers が持つ機能（公式、一般的な知識。このプロジェクトでは、使っていないものを含む）
-
-- **トリガー：** HTTP リクエスト（`fetch`）、Cron（`scheduled`）、キュー（`queue`）、メール、Durable Object のアラーム（`alarm`）。
-- **保存：** KV（結果整合のキーと値）、R2（オブジェクトストレージ）、D1（SQLite）、Durable Objects（1 つの ID に 1 つの実体で、状態を持つ）、Cache API。
-- **静的ファイル：** Workers Assets で、Worker と一緒に配信する（このサイトの `site/` がこれ）。
-- **デプロイ：** `wrangler deploy`。このプロジェクトでは、Workers Builds が失敗するので、手元から `npx wrangler deploy` で行っています。
-- **開発：** `wrangler dev` はローカル実行。`--remote` は、Cloudflare の上で実行する（下の 5 章の実験は、これで行った）。
-
-## 5. Workers で試した結果（観測）
-
-### 5.1 `fetch()` で、Cloudflare 配下のサイトを取る
+### 5.1 `fetch()` で、Cloudflare 配下のサイトを取る（観測）
 
 `wrangler dev --remote` の `fetch` で、各サイトを 2 回ずつ取りました。
 
@@ -195,19 +159,18 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 | NukiBooks | 403 | 403（チャレンジ） |
 | HentaiPaw | 403 | 403 |
 
-- 通るのは、HentaiName（既定の User-Agent）だけでした。ほかの 4 サイトは、再試行しても 403 でした。
+- 通るのは、HentaiName（既定の User-Agent）だけでした。HentaiName は、3 章のとおり、User-Agent で結果が変わるサイトです。ほかの 4 サイトは、再試行しても 403 でした。
 - 当初「HentaiName は Workers では動かなかった」とされていましたが、これは誤りでした。サイトは Under Attack モードではありませんでした。
-- Workers の `fetch` の TLS の指紋は変えられないので、通らないサイトは、ほかの手を探すことになります（Workers から別のサーバーを経由する手は、5.2）。
 
-### 5.2 Workers から、別のサーバーを経由する
+### 5.2 Workers の `connect()` で、SOCKS5 を話した実験（観測）
 
-Workers の `fetch` にはプロキシの設定がありません。`connect()` で、自分で SOCKS5 を話せます。
+Workers の `fetch` にはプロキシの設定がないので、`connect()`（`cloudflare:sockets`）で、自分で SOCKS5 を話しました。経由先は、contabo 上のプロキシです。
 
-- **SOCKS5 の手順は、通ります。** 順番は、あいさつ（`05 01 02`、認証方式は「ユーザー名とパスワード」）、認証（RFC 1929）、接続の依頼（`05 01 00 03` + ホスト名の長さ + ホスト名 + ポート）です。そのあと `startTls()` で TLS を始めます。
-- **`startTls()` が暗号化するのは、Worker と目的のサイトの間です。** Worker と経由先のサーバーの間は、暗号化されません。HTTP の CONNECT プロキシでも同じで、HTTPS のサイトとの TLS は、クライアント（ここでは Worker）が行います。経由先は、中身を見られません（TLS を自分で終わらせる、中間者型のプロキシは別です）。
-- **ただし、Cloudflare 配下のサイトには、HTTPS でつなげませんでした。** `startTls()` が送る ClientHello に、SNI が入っていません（`expectedServerHostname` を渡しても、入りませんでした）。Cloudflare 配下のサイトは、`handshake_failure` で閉じます。SNI がなくても答えるサイトは、通ります。SNI が入らない原因は、推測です（IP でつなぐと、SNI が付かないのかもしれません）。
-- **経由先のサーバーで TLS を行う形なら、動きます。** Worker が平文の HTTP をサーバーに送り、サーバーが目的地へ TLS で取りに行きます。NukiBooks では 403 でした（そのサーバーの Python（OpenSSL）の指紋が、止められたとみられます）。
-- **Workers の送信元の IP は、公開されている Cloudflare の範囲（`ips-v4`）の外でした**（104.28.x.x が見えました）。送信元の IP で許可する使い方は、できません。経由先には、認証が必要です。
+- **SOCKS5 の手順は、通りました。** 順番は、あいさつ（`05 01 02`）、認証（RFC 1929）、接続の依頼（`05 01 00 03` + ホスト名の長さ + ホスト名 + ポート）です。
+- **そのあと `startTls()` で TLS を始めると、Cloudflare 配下のサイトとは、つながりませんでした。** プロキシ側で ClientHello を記録したところ、SNI が入っていませんでした。`expectedServerHostname` を渡しても、入りませんでした。Cloudflare 配下のサイトは、`handshake_failure` で閉じました。SNI がなくても答えるサイトは、通りました。
+- **`startTls()` の仕様は、確かめていません。** SNI が入らなかった理由（接続先に IP を渡したためか、`startTls()` の仕様か）は、分かっていません。`startTls()` が、どこからどこまでを暗号化するかも、公式の資料の原文で確かめていません。上の結果は、この実験の範囲だけのものです。
+- **経由先のサーバーで TLS を行う形では、動きました。** Worker が平文の HTTP をサーバーに送り、サーバーが目的地へ TLS で取りに行きます。NukiBooks では 403 でした。理由は、推測です（そのサーバーの Python（OpenSSL）の指紋が、止められたとみられます）。
+- **Workers の送信元の IP は、公開されている Cloudflare の範囲（`ips-v4`）の外でした**（104.28.x.x が見えました）。そのため、経由先の許可を、Cloudflare の範囲で絞る方法は使えませんでした。経由先には、認証をかけました。
 
 ## 6. 過去の記録：Workers で、別のサイトを取っていた方法（現在は再現できていません）
 
@@ -218,12 +181,9 @@ Workers の `fetch` にはプロキシの設定がありません。`connect()` 
 - **クライアント。** Workers の標準 `fetch` だけです。TLS の細工も、プロキシも、クッキー取得の仕組みもありません。
 - **ヘッダー。** Edge/Chrome 134 風の一式でした。`Accept`、`Accept-Language: ja`、`Accept-Encoding: gzip, deflate, br, zstd`、`Sec-Ch-Ua*` 一式、`Sec-Fetch-Dest/Mode/Site/User` です。
 - **再試行。** 初回だけ 403 が返ることがあるので、失敗したら 1 回だけやり直していました。
-- **TLS セッション再開の仮説（Workers の外での調査）。** Node と curl で調べたところ、毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。セッション再開ができる 2 回目以降は、ほぼ 200 でした。Workers のランタイムが同じことをしているかは、未確認です。
+- **TLS セッション再開の仮説（Workers の外での調査）。** Node と curl で調べたところ、毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。セッション再開ができる 2 回目以降は、ほぼ 200 でした。
 - **この仮説は、NukiBooks では成り立ちません**（2.2 の「TLS セッション再開」）。サイトごとに違います。
 
-## 7. まだ確かめていないこと
+## 7. 結果の古さ
 
-- Workers の `connect()` が、SNI を送らない原因（`connect({hostname})` に、ホスト名ではなく IP を渡したためか）。
-- Workers の `fetch` の ClientHello の中身（JA4）。
-- 有料の Workers で、サブリクエストの上限が、実際にいくつか。
-- 2 章の結果は、2026-11 のものです。Cloudflare 側の設定や判定が変わると、結果も変わります。
+この書類の結果は、2026-11 のものです。Cloudflare 側の設定や判定が変わると、結果も変わります。
