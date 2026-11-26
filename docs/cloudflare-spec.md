@@ -48,7 +48,7 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | wreq + Chrome / Firefox / Safari の指紋 | 200 |
 | Node の `fetch`（undici） | 403（暗号スイート 4〜52 個すべて） |
 
-まず手元のクライアントで、HTTP/2 と HTTP/1.1 の両方を試してください。
+手元のクライアントで、HTTP/2 と HTTP/1.1 の両方を試してください。
 
 **推測：** 送られる ClientHello は、curl の HTTP/2 と HTTP/1.1 で ALPN だけが違います（JA4 の `h2` と `h1`）。暗号スイートを変えると、JA4 の中ほどのハッシュも変わります。「JA4 の指紋ごとに、Cloudflare が評価している」と考えると、結果が説明できます。
 
@@ -77,7 +77,7 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | abuseipdb.com | Google の `Referer` を付けると、403 が 200 に変わりました。IPv4 と IPv6、Safari と Chrome の User-Agent のどれでも同じでした。curl の既定の User-Agent では、`Referer` があっても 403 でした。 | Referer を見るルール |
 | HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）が出ます。突破しないので、対象から外しています。 | サイトの設定 |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件があります（5.1 の表）。 | クライアントの指紋とサイトの設定の組み合わせ |
-| twivideo.net | 本番の Workers では通っていません（6 章）。Under Attack は、過去にオフ、最近オンです。 | サイトの設定（Under Attack） |
+| twivideo.net | 本番の Workers では通っていません（6 章）。Under Attack がオンです。 | サイトの設定（Under Attack） |
 
 - 2 章の NukiBooks の結果が、NukiBooks 自身の設定によるものか、Cloudflare の共通の判定によるものかは、切り分けていません。ほかのサイトで、同じ結果になるとは限りません。
 - 通らないサイトでは、ブラウザの User-Agent と素の User-Agent、HTTP/2 と HTTP/1.1 を、それぞれ試してください。
@@ -189,7 +189,7 @@ Workers の `fetch` にはプロキシの設定がないので、`connect()`（`
   - 毎回完全なハンドシェイクをすると、6 回中 6 回が 403 でした。
   - セッションを再利用できる状態（同じプロセスの 2 回目以降）は、ほぼ 200 でした。
   - `Referer`、`Origin` を足しても、変わりませんでした。
-- 「TLS セッション再開が原因」という説明は、あとから付けた解釈で、確かめていません。
+- 「TLS セッション再開が原因」という説明は、Claude の解釈で、確かめていません。
 
 ## 7. 結果の古さ
 
