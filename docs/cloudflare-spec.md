@@ -152,8 +152,8 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 
 - 通ったのは HentaiName（既定の User-Agent）だけ（3 章）
 - ほかの 4 サイトは、再試行しても 403
-- チャレンジ：本文に `Just a moment`、`cf-chl`、`challenge-platform` のどれかがある
-- ブロック：チャレンジの目印がない 403
+- チャレンジ：タイトルが「Just a moment...」のページ（本文に `Just a moment`、`cf-chl`、`challenge-platform` のどれかがある。表のチャレンジ 5 か所すべてで確認）
+- ブロック：タイトルが「Attention Required! | Cloudflare」のページ（表のブロック 5 か所すべてで確認、チャレンジの目印なし）
 
 ### 5.2 `wrangler dev --local` の `fetch()`（観測、NukiBooks、3 回ずつ）
 
