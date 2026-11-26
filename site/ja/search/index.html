@@ -122,11 +122,14 @@ async function one(q,bm,i){
   st.more=false;
   el.innerHTML=view(st);
 }
-async function run(){
+async function run(replace){
   const qs=queries(),bm=$('#bm').checked;
   if(!qs.length)return;
   lastQs=qs;
-  history.replaceState(null,'',queryOf(qs));
+  // a search that starts puts its URL in the history, unless the page is on that very URL already
+  // (replace: the page was opened or came back with this URL, so it must not add another entry)
+  const url=queryOf(qs);
+  if(replace===true||url===location.search)history.replaceState(null,'',url);else history.pushState(null,'',url);
   // the title of the tab shows the search words too (on the button, and when a URL with words is opened)
   // the same form as the title the Worker gives to the link preview of the page (src/index.ts)
   const words=qs.slice(0,3).map(q=>q.trim().slice(0,40)).filter(Boolean);
@@ -149,9 +152,19 @@ function stopRun(e){const b=e.target.closest('[data-stop]'),st=b&&states[+b.data
 out.addEventListener('pointerdown',stopRun);
 out.addEventListener('click',stopRun);
 $('#f').addEventListener('submit',e=>{e.preventDefault();run()});
-const hash=new URLSearchParams(location.search),init=hash.getAll('q').filter(Boolean);
-if(hash.get('by_magazine')==='true')$('#bm').checked=true;
-for(const [id,key] of [['#grp','group'],['#srt','sort']]){const v=hash.get(key);if(v&&[...$(id).options].some(o=>o.value===v))$(id).value=v}
-(init.length?init:['']).forEach(addRow);
-if(init.length)run();
+const baseTitle=document.title,DEF={'#grp':$('#grp').value,'#srt':$('#srt').value};
+// the form is filled from the URL: when the page opens, and when the user goes back or forward in the history
+function applyUrl(){
+  const p=new URLSearchParams(location.search),qs=p.getAll('q').filter(Boolean);
+  $('#bm').checked=p.get('by_magazine')==='true';
+  for(const [id,key] of [['#grp','group'],['#srt','sort']]){const v=p.get(key);$(id).value=v&&[...$(id).options].some(o=>o.value===v)?v:DEF[id]}
+  rows.innerHTML='';(qs.length?qs:['']).forEach(addRow);
+  return qs;
+}
+if(applyUrl().length)run(true);
+window.addEventListener('popstate',()=>{
+  if(applyUrl().length){run(true);return}
+  // back to the page without words: what was shown goes, and a search on the way is dropped
+  runId++;states=[];lastQs=[];out.innerHTML='';document.title=baseTitle;
+});
 </script></body></html>
