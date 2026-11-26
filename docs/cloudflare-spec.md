@@ -146,18 +146,20 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 |---|---|---|
 | HentaiName | 200 | 403（チャレンジ） |
 | IMHentai | 403（チャレンジ） | 403（チャレンジ） |
-| NijiGazo | 403 | 403 |
-| NukiBooks | 403 | 403（チャレンジ） |
-| HentaiPaw | 403 | 403 |
+| NijiGazo | 403（ブロック） | 403（ブロック） |
+| NukiBooks | 403（ブロック） | 403（チャレンジ） |
+| HentaiPaw | 403（ブロック） | 403（ブロック） |
 
 - 通ったのは HentaiName（既定の User-Agent）だけ（3 章）
 - ほかの 4 サイトは、再試行しても 403
+- チャレンジ：本文に `Just a moment`、`cf-chl`、`challenge-platform` のどれかがある
+- ブロック：チャレンジの目印がない 403
 
 ### 5.2 `wrangler dev --local` の `fetch()`（観測、NukiBooks、3 回ずつ）
 
 | 条件 | 結果 |
 |---|---|
-| 既定の User-Agent | 403（「Attention Required! \| Cloudflare」） |
+| 既定の User-Agent | 403（ブロック。「Attention Required! \| Cloudflare」） |
 | ブラウザ風ヘッダー | 200（本物のページ） |
 
 - 同じヘッダーで、`--remote` は 403、`--local` は 200
