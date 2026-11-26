@@ -8,7 +8,7 @@
 ## 1. 対象
 
 - Cloudflare のプロキシ経由
-- Under Attack モードはオフ（twivideo.net を除く。3 章）
+- Under Attack モードはオフ（twivideo.net を除く。6 章）
 - 素の HTTP クライアントで取ると 403
 
 ## 2. 全般の傾向
@@ -70,7 +70,6 @@
 | abuseipdb.com | Google の `Referer` で 403 が 200 に変わる。IPv4・IPv6、Safari・Chrome の User-Agent のどれでも同じ。curl の既定の User-Agent では、`Referer` があっても 403 | Referer を見るルール |
 | HentaiOMG、HentaiCore | 操作が要るチャレンジ（Turnstile）。突破しないので、対象から外している | サイトの設定 |
 | IMHentai、NukiBooks（一部の条件） | チャレンジの画面が返る条件がある（5.1） | クライアントの指紋とサイトの設定の組み合わせ |
-| twivideo.net | 本番の Workers では通らない（6 章）。Under Attack がオン | サイトの設定 |
 
 - 2 章の NukiBooks の結果が、NukiBooks 自身の設定か、Cloudflare 共通の判定かは、切り分けていない
 - ほかのサイトで、同じ結果になるとは限らない
@@ -190,6 +189,8 @@ https://www.hentai.name/search/a/ -> 200 OK HTTP/2.0
 ## 6. twivideo.net（heros）：Workers の本番では通らない
 
 - 本番の heros は、Cloudflare のプロキシを突破できていない（確認：2026-11-27）
+- twivideo.net は Under Attack がオン
+- Workers で通らないのは、サイトの設定によらず、どのサイトでも同じ
 - 通るのは手元で動かしたときだけ。5.1 と 5.2 の `--remote` と `--local` の差と同じ形
 - 手元の結果の出どころ：Windows ノートの Claude の記録（2026-10-28 04:10〜05:05）
   - 手元の Node（`node:https`）と本物の curl での結果。Workers では未実施
