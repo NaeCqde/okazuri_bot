@@ -44,8 +44,8 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | 同、HTTP/1.1 | 200 |
 | 同、`--ciphers` で暗号スイートを 1 種類以上に絞る | 200 |
 | Go（net/http） | 暗号スイート 3〜25 個で 200 |
-| Rust wreq（BoringSSL、指紋なし） | 403 |
-| wreq + Chrome / Firefox / Safari の指紋 | 200 |
+| Rust wreq（BoringSSL、ブラウザのエミュレーションなしの既定） | 403 |
+| wreq + Chrome / Firefox / Safari のエミュレーション | 200 |
 | Node の `fetch`（undici） | 403（暗号スイート 4〜52 個すべて） |
 
 まず手元のクライアントで、HTTP/2 と HTTP/1.1 の両方を試してください。
@@ -59,9 +59,9 @@ NukiBooks を、Mac から取った結果です。「HTTP/2 にすれば通る�
 | クライアント | 結果（3 台とも） |
 |---|---|
 | reqwest（rustls、既定） | 200 |
-| wreq（指紋なし、Chrome 147、Safari 18.5） | 200 |
+| wreq（Chrome 147、Safari 18.5 のエミュレーション） | 200 |
 
-- Mac では 403 だった wreq（指紋なし）が、Linux サーバーでは 200 でした。指紋だけでなく、IP や回線の違いも効いています。
+- Mac では 403 だった wreq（エミュレーションなしの既定）が、Linux サーバーでは 200 でした。指紋だけでなく、IP や回線の違いも効いています。
 - 1 台（vultr）では、Debian の curl（OpenSSL）は 403 でした。ヘッダー、HTTP のバージョン、暗号スイートを変えても、通りませんでした。同じ台で reqwest と wreq は 200 でした。
 - 推測：IP ごとの評判が、あるとみられます。
 
